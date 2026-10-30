@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="Võ Thái Anh (CK)">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Mô phỏng bảng điện</title>
 <style>
@@ -151,7 +152,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 </head>
 <body>
 <header>
-  <h1>⚡ Bảng điện mô phỏng</h1>
+  <h1>⚡ Bảng điện mô phỏng<small style="display:block;font-size:10.5px;font-weight:600;color:#facc15;opacity:.85;margin-top:1px">© Võ Thái Anh (CK)</small></h1>
   <span style="display:flex;gap:6px"><button id="dogBtn" class="btn" style="padding:8px 10px" title="Bật/tắt chú chó">🐶</button><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -211,6 +212,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 <script>
 (function(){
 const NS='http://www.w3.org/2000/svg';
+const AUTHOR='Võ Thái Anh (CK)';
 const WW=1400,WH=2000,GRID=10;
 const PCOL={L1:'#dc2626',L2:'#eab308',L3:'#2563eb',N:'#111827'};
 const P_=(id,x,y,p,src)=>({id,x,y,p:p===undefined?id:p,src});
@@ -1482,6 +1484,7 @@ async function buildPages(){
     x.fillStyle='#fff';x.fillRect(0,0,PW,PH);x.strokeStyle='#0f172a';x.lineWidth=4;x.strokeRect(M/2,M/2,PW-M,PH-M);
     x.fillStyle='#0f172a';x.font='800 46px '+FONT;x.textAlign='left';x.fillText(title,M,M+66);
     x.font='500 24px '+FONT;x.fillStyle='#475569';x.textAlign='right';x.fillText((S.meta&&S.meta.prj?S.meta.prj+'   ·   ':'')+'Ngày xuất: '+date+'   ·   Trang '+(pages.length+1),PW-M,M+62);x.textAlign='left';
+    x.font='600 20px '+FONT;x.fillStyle='#94a3b8';x.fillText('Bảng điện mô phỏng  ·  © '+AUTHOR,M,PH-M/2-14);
     x.strokeStyle='#cbd5e1';x.lineWidth=2;x.beginPath();x.moveTo(M,M+92);x.lineTo(PW-M,M+92);x.stroke();
     pages.push(c);y=M+130;};
   const TW=PW-2*M,LH=28;
@@ -1989,6 +1992,7 @@ function buildSchematic(){
   rows.forEach((r,i)=>{const yy=ty+i*rh;if(i)s+=Ln(tx,yy,tx+tw,yy,{w:1});s+=T_(tx+10,yy+rh/2+4,r[0],{fs:10,b:1,c:'#444'})+T_(tx+120,yy+rh/2+5,r[1],{fs:12,b:i===1});});
   const yy=ty+rows.length*rh;s+=Ln(tx,yy,tx+tw,yy,{w:1})+Ln(tx+110,ty,tx+110,yy,{w:1})+Ln(tx+tw/2,yy,tx+tw/2,ty+th,{w:1});
   s+=T_(tx+10,yy+rh/2+4,'TỶ LỆ: KHÔNG TỶ LỆ',{fs:10,b:1})+T_(tx+tw/2+10,yy+rh/2+4,'SỐ BV: ĐL-01',{fs:10,b:1});
+  s+=`<text x="${W-M}" y="${H-8}" text-anchor="end" font-size="10" font-weight="600" fill="#64748b">Bảng điện mô phỏng · © ${AUTHOR}</text>`;
   const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif'>${s}</svg>`;
   return{svg:svgStr,W,H,C};
 }
@@ -2080,7 +2084,7 @@ function refreshSheet(){
   sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
   const C=r.C;
   const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(typeName(d))}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
-  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+guideHTML();
+  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+guideHTML()+'<p class="mut" style="text-align:center;margin-top:18px">Bảng điện mô phỏng · © '+AUTHOR+'</p>';
 }
 
 document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d)openParams(d);};
