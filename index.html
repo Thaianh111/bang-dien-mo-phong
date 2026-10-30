@@ -108,12 +108,46 @@ h1{font-size:16px;margin:0}
 .card p{color:#cbd5e1;margin:0 0 16px;line-height:1.45;font-size:14px}
 .card .row{display:flex;gap:10px}
 .card .row .btn{flex:1;padding:12px;font-size:15px}
+/* ===== chú chó trỏ chuột ===== */
+#dog{position:fixed;left:0;top:0;z-index:70;pointer-events:none;width:64px;height:70px;display:none;will-change:transform}
+html.dogcur #dog,#dog.show{display:block}
+html.dogcur,html.dogcur *{cursor:none!important}
+html.dogcur input,html.dogcur textarea{cursor:text!important}
+html.dogcur.dogbusy,html.dogcur.dogbusy *{cursor:default!important}
+#dog.corner{left:auto;top:auto;right:12px;bottom:12px;transform:none!important}
+#dogIn{width:100%;height:100%;transform-origin:0 0;transition:transform .28s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 3px 4px #0008)}
+#dog.big #dogIn{transform:scale(2)}
+#dog.fx #dogIn{transform-origin:100% 0}
+#dog.fy #dogIn{transform-origin:0 100%}
+#dog.fx.fy #dogIn{transform-origin:100% 100%}
+#dog svg{width:100%;height:100%;overflow:visible;display:block}
+#dog svg *{transform-box:view-box}
+.dg-ok,.dg-laugh{display:none}
+#dog.ok .dg-idle,#dog.laugh .dg-idle{display:none}
+#dog.ok .dg-ok,#dog.laugh .dg-laugh{display:inline}
+#dog.ok #dogBody{animation:dhop .45s ease-in-out 4}
+#dog.laugh #dogBody{animation:dshake .16s linear infinite;transform-origin:60px 104px}
+#dog.ok .dg-tail,#dog.laugh .dg-tail{animation:dwag .16s ease-in-out infinite alternate;transform-origin:82px 92px}
+.dg-tear{animation:dtear .55s ease-in infinite}
+.dg-tear+.dg-tear{animation-delay:.27s}
+.dg-ha{animation:dha .7s ease-out infinite}
+.dg-star{animation:dstar .6s ease-in-out infinite alternate;transform-origin:96px 18px}
+@keyframes dhop{50%{transform:translateY(-7px)}}
+@keyframes dshake{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg) translateY(-3px)}100%{transform:rotate(-8deg)}}
+@keyframes dwag{from{transform:rotate(-20deg)}to{transform:rotate(20deg)}}
+@keyframes dtear{from{transform:translateY(0);opacity:1}to{transform:translateY(16px);opacity:0}}
+@keyframes dha{from{transform:translateY(4px);opacity:0}30%{opacity:1}to{transform:translateY(-12px);opacity:0}}
+@keyframes dstar{from{transform:scale(.6) rotate(0)}to{transform:scale(1.2) rotate(40deg)}}
+#dogBub{position:absolute;left:124px;top:4px;background:#fff;color:#0f172a;font-weight:800;font-size:14px;line-height:1.3;padding:8px 12px;border-radius:14px;width:max-content;max-width:220px;box-shadow:0 6px 20px #0007;opacity:0;transform:scale(.5);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
+#dog.fx #dogBub{left:auto;right:124px}
+#dog.fy #dogBub{top:-66px}
+#dog.big #dogBub{opacity:1;transform:scale(1)}
 </style>
 </head>
 <body>
 <header>
   <h1>⚡ Bảng điện mô phỏng</h1>
-  <span style="display:flex;gap:6px"><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
+  <span style="display:flex;gap:6px"><button id="dogBtn" class="btn" style="padding:8px 10px" title="Bật/tắt chú chó">🐶</button><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
 </header>
 <div class="tabs" id="tabs"></div>
 <div class="items" id="items"></div>
@@ -166,6 +200,63 @@ h1{font-size:16px;margin:0}
   <div class="bdAct"><button class="btn big" id="bdManual">✋ Tự đấu mạch<small>Đặt thiết bị lên bảng, mình tự nối dây</small></button><button class="btn run big" id="bdAuto">⚡ Đấu tự động<small>Hệ thống tự đấu hoàn chỉnh</small></button></div>
 </div>
 <div id="modal" class="modal" hidden></div>
+<div id="dog" aria-hidden="true"><div id="dogIn"><svg viewBox="0 0 100 110">
+  <g id="dogBody">
+    <path class="dg-tail" d="M82 92q14-4 14-20" stroke="#3b2416" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path class="dg-tail" d="M82 92q14-4 14-20" stroke="#a8693a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="62" cy="88" rx="23" ry="19" fill="#d9a066" stroke="#3b2416" stroke-width="1.6"/>
+    <ellipse cx="62" cy="92" rx="13" ry="12" fill="#f6e3c8"/>
+    <ellipse cx="49" cy="105" rx="9" ry="5" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+    <ellipse cx="75" cy="105" rx="9" ry="5" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+    <!-- tay chỉ: đầu ngón ở (6,6) = điểm trỏ chuột -->
+    <g class="dg-idle">
+      <path d="M44 74L18 20" stroke="#3b2416" stroke-width="11" stroke-linecap="round"/>
+      <path d="M44 74L18 20" stroke="#d9a066" stroke-width="8" stroke-linecap="round"/>
+      <path d="M14 14L6 6" stroke="#3b2416" stroke-width="6.5" stroke-linecap="round"/>
+      <path d="M14 14L6.5 6.5" stroke="#f6e3c8" stroke-width="3.8" stroke-linecap="round"/>
+      <circle cx="17" cy="17" r="6.5" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+    </g>
+    <ellipse cx="41" cy="40" rx="7" ry="14" transform="rotate(25 41 40)" fill="#7a4a26" stroke="#3b2416" stroke-width="1.4"/>
+    <ellipse cx="79" cy="40" rx="7" ry="14" transform="rotate(-25 79 40)" fill="#7a4a26" stroke="#3b2416" stroke-width="1.4"/>
+    <circle cx="60" cy="46" r="21" fill="#d9a066" stroke="#3b2416" stroke-width="1.6"/>
+    <ellipse cx="60" cy="56" rx="12" ry="9" fill="#f6e3c8"/>
+    <!-- mặt thường -->
+    <g class="dg-idle">
+      <circle cx="52" cy="42" r="2.8" fill="#1f130a"/><circle cx="68" cy="42" r="2.8" fill="#1f130a"/>
+      <circle cx="53" cy="41" r=".9" fill="#fff"/><circle cx="69" cy="41" r=".9" fill="#fff"/>
+      <path d="M55 58q5 4 10 0" stroke="#3b2416" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- OK: nháy mắt, giơ ngón cái -->
+    <g class="dg-ok">
+      <path d="M49 43q3-3 6 0" stroke="#1f130a" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="68" cy="42" r="2.8" fill="#1f130a"/><circle cx="69" cy="41" r=".9" fill="#fff"/>
+      <path d="M53 58q7 9 14 0z" fill="#7f1d1d" stroke="#3b2416" stroke-width="1.2"/>
+      <ellipse cx="60" cy="62" rx="3" ry="2.3" fill="#f472b6"/>
+      <ellipse cx="42" cy="88" rx="6" ry="8" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+      <path d="M80 78L92 46" stroke="#3b2416" stroke-width="11" stroke-linecap="round"/>
+      <path d="M80 78L92 46" stroke="#d9a066" stroke-width="8" stroke-linecap="round"/>
+      <rect x="89" y="24" width="7" height="15" rx="3.5" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+      <circle cx="93" cy="41" r="7.5" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+      <path d="M87 40h11M87 44h11" stroke="#3b2416" stroke-width="1"/>
+      <path class="dg-star" d="M96 10l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#facc15"/>
+    </g>
+    <!-- Cười: nhắm tít, há miệng, ôm bụng, chảy nước mắt -->
+    <g class="dg-laugh">
+      <path d="M48 39l6 3-6 3M72 39l-6 3 6 3" stroke="#1f130a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M49 56q11 18 22 0z" fill="#7f1d1d" stroke="#3b2416" stroke-width="1.2"/>
+      <ellipse cx="60" cy="65" rx="5" ry="3.5" fill="#f472b6"/>
+      <path class="dg-tear" d="M44 46q-3 5 0 7q3-2 0-7z" fill="#60a5fa"/>
+      <path class="dg-tear" d="M76 46q-3 5 0 7q3-2 0-7z" fill="#60a5fa"/>
+      <path d="M42 76q2 14 14 14M82 76q-2 14-14 14" stroke="#3b2416" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <path d="M42 76q2 14 14 14M82 76q-2 14-14 14" stroke="#d9a066" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <circle cx="55" cy="90" r="6" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+      <circle cx="69" cy="90" r="6" fill="#d9a066" stroke="#3b2416" stroke-width="1.4"/>
+      <text class="dg-ha" x="10" y="26" font-size="13" font-weight="900" fill="#facc15" stroke="#3b2416" stroke-width=".6">HA</text>
+      <text class="dg-ha" x="84" y="18" font-size="11" font-weight="900" fill="#facc15" stroke="#3b2416" stroke-width=".6" style="animation-delay:.35s">HA</text>
+    </g>
+    <ellipse cx="60" cy="51" rx="4.5" ry="3.2" fill="#3b2416"/>
+  </g>
+</svg></div><div id="dogBub"></div></div>
 
 <script>
 (function(){
@@ -605,7 +696,7 @@ function evaluate(){
     const tripped=tryTrip();
     if(tripped){
       tripped.forEach(cb=>{const T=TYPES[cb.t];spark(cb.x+T.w/2,cb.y+T.h/2);msgs.push(['🔌','Aptomat '+tagOf(cb)+' NHẢY do chập mạch – nhờ có CB bảo vệ! Sửa lỗi rồi chạm vào CB để đóng lại.']);});
-      res.tripped=true;settle(newBurn);f=nets('cur');P=pots(f);sh=shortNets(f,P);
+      res.tripped=true;dogReact('trip');settle(newBurn);f=nets('cur');P=pots(f);sh=shortNets(f,P);
     }
   }
   if(sh.length){
@@ -731,7 +822,7 @@ function evaluate(){
     const col=res.short||errors||res.tripped?'#f87171':warns?'#fbbf24':'#4ade80';
     box.innerHTML='<h3 style="color:'+col+'">'+title+'</h3><ul>'+msgs.map(m=>'<li>'+m[0]+' '+m[1]+'</li>').join('')+'</ul>';
     const okC=!res.short&&!res.tripped&&errors===0&&S.wires.length>0&&S.devs.some(x=>{const t=TYPES[x.t];return t.load||t.cat==='t3'||x.t==='socket';});
-    if(running&&!askedRun&&okC){askedRun=true;setTimeout(()=>{if(running&&result&&result.errors===0&&!result.short)askExport();},900);}
+    if(running&&!askedRun&&okC){askedRun=true;dogReact('ok');setTimeout(()=>{if(running&&result&&result.errors===0&&!result.short)askExport();},900);}
   }
   function tryTrip(){
     const cbs=S.devs.filter(d=>TYPES[d.t].ctl==='cb'&&d.on);if(!cbs.length)return null;
@@ -806,6 +897,85 @@ function syncSound(){
 function flushSfx(){if(sfxQ.has('alarm'))sfx('alarm');if(sfxQ.has('clack'))sfx('clack');else if(sfxQ.has('tick'))sfx('tick');sfxQ.clear();}
 document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';
 document.getElementById('muteBtn').onclick=()=>{muted=!muted;try{localStorage.setItem('md_mute',muted?'1':'0');}catch(e){}document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';if(!muted){unlockAudio();sfx('click');}syncSound();};
+/* ================= chú chó trỏ chuột ================= */
+const dogEl=document.getElementById('dog'),dogBub=document.getElementById('dogBub');
+const FINE=matchMedia('(pointer:fine)').matches;
+const DOG_HOT=4;/* px: đầu ngón tay trong hình 64px */
+let dogOn=true;try{dogOn=localStorage.getItem('md_dog')!=='0';}catch(e){}
+let dogX=-200,dogY=-200,dogRaf=0,dogTO=null,dogKind='',dogT=0;
+const DOG_LINES={
+  ok:['Chuẩn không cần chỉnh! 👍','Gâu! Thợ xịn đây rồi 😎','Đấu ngon lành cành đào! 🌸','Đỉnh của chóp luôn sếp ơi! 🏆','Ok luôn! Thưởng cục xương 🦴'],
+  laugh:['Há há há! Nổ banh xác rồi 🤣','Thợ điện hay thợ pháo hoa vậy? 🎆','Gâu gâu… khét lẹt rồi đại ca ơi! 🔥','Tết chưa tới mà đốt pháo rồi 🧨','Ôi bụng tui… cười đau cả bụng 😂','Đấu kiểu này chắc mất điện cả xóm 🏘️'],
+  trip:['Hên mà có CB đỡ đó nha 😏','Aptomat cứu bồ một bàn thua trông thấy 🤭','Xém nữa là nổ rồi đó hí hí 😆']
+};
+function dogApply(){
+  document.documentElement.classList.toggle('dogcur',dogOn&&FINE);
+  dogEl.classList.toggle('corner',!FINE);
+  document.getElementById('dogBtn').style.opacity=dogOn?1:.45;
+}
+function dogPos(){dogRaf=0;dogEl.style.transform=`translate(${dogX-DOG_HOT}px,${dogY-DOG_HOT}px)`;}
+window.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;dogX=e.clientX;dogY=e.clientY;dogEl.style.visibility='';if(!dogRaf)dogRaf=requestAnimationFrame(dogPos);},{passive:true});
+document.documentElement.addEventListener('mouseleave',()=>{dogEl.style.visibility='hidden';});
+document.getElementById('dogBtn').onclick=()=>{dogOn=!dogOn;try{localStorage.setItem('md_dog',dogOn?'1':'0');}catch(e){}dogApply();if(dogOn){unlockAudio();dogReact('ok');}};
+function dogReact(kind){
+  if(!dogOn)return;const now=Date.now();
+  if(dogKind&&dogKind!=='ok'&&kind==='ok')return;/* đang cười thì không chen OK */
+  if(dogKind===kind&&now-dogT<1500)return;
+  dogKind=kind;dogT=now;
+  const L=DOG_LINES[kind];dogBub.textContent=L[Math.floor(Math.random()*L.length)];
+  if(FINE){dogEl.classList.toggle('fx',dogX>innerWidth-340);dogEl.classList.toggle('fy',dogY>innerHeight-170);}
+  else dogEl.classList.add('fx','fy','show');
+  dogEl.classList.remove('ok','laugh');void dogEl.offsetWidth;
+  dogEl.classList.add(kind==='ok'?'ok':'laugh','big');
+  document.documentElement.classList.add('dogbusy');
+  dogSound(kind);
+  clearTimeout(dogTO);
+  dogTO=setTimeout(()=>{dogEl.classList.remove('ok','laugh','big');document.documentElement.classList.remove('dogbusy');dogKind='';
+    if(!FINE)setTimeout(()=>{if(!dogKind)dogEl.classList.remove('show');},300);},kind==='ok'?2600:kind==='trip'?2600:3600);
+}
+/* ---- âm thanh dí dỏm ---- */
+function tone(t,f,type,g,d){const o=AC.createOscillator(),gn=AC.createGain();o.type=type;o.frequency.value=f;env(gn,t,0.005,g,d);o.connect(gn);gn.connect(MG);o.start(t);o.stop(t+d+0.05);}
+function slide(t,f0,f1,d,type,g){const o=AC.createOscillator(),gn=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+d);env(gn,t,0.01,g,d);o.connect(gn);gn.connect(MG);o.start(t);o.stop(t+d+0.05);}
+function bark(t,p){/* "gâu": răng cưa qua lọc formant, cao độ vọt lên rồi tụt + chút hơi */
+  const o=AC.createOscillator(),bp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';
+  o.frequency.setValueAtTime(380*p,t);o.frequency.exponentialRampToValueAtTime(640*p,t+0.03);o.frequency.exponentialRampToValueAtTime(250*p,t+0.15);
+  bp.type='bandpass';bp.frequency.value=1100*p;bp.Q.value=1.2;env(g,t,0.008,0.9,0.14);
+  o.connect(bp);bp.connect(g);g.connect(MG);o.start(t);o.stop(t+0.22);
+  const n=AC.createBufferSource();n.buffer=noiseBuf();const nb=AC.createBiquadFilter();nb.type='bandpass';nb.frequency.value=1800;const ng=AC.createGain();env(ng,t,0.003,0.2,0.06);
+  n.connect(nb);nb.connect(ng);ng.connect(MG);n.start(t,Math.random()*0.5);n.stop(t+0.1);
+}
+function trombone(t,f,d,last){/* kèn "oa oa oa oaaa" kiểu hoạt hình */
+  const o=AC.createOscillator(),lp=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';
+  o.frequency.setValueAtTime(f*1.03,t);o.frequency.exponentialRampToValueAtTime(f,t+0.08);
+  if(last){const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=6;lg.gain.value=f*0.035;lfo.connect(lg);lg.connect(o.frequency);lfo.start(t+0.15);lfo.stop(t+d);
+    o.frequency.setValueAtTime(f,t+d*0.45);o.frequency.exponentialRampToValueAtTime(f*0.82,t+d);}
+  lp.type='lowpass';lp.frequency.setValueAtTime(400,t);lp.frequency.linearRampToValueAtTime(1700,t+0.08);lp.frequency.linearRampToValueAtTime(650,t+d);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+0.04);g.gain.setValueAtTime(0.3,t+d*0.7);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(lp);lp.connect(g);g.connect(MG);o.start(t);o.stop(t+d+0.05);
+}
+function laughBurst(t,f){/* "ha": nguyên âm a ~ formant 800/1250 Hz + hơi thở */
+  const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*0.78,t+0.11);
+  env(g,t,0.012,2.2,0.1);
+  [[800,5],[1250,7]].forEach(([fq,q])=>{const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=fq;bp.Q.value=q;o.connect(bp);bp.connect(g);});
+  g.connect(MG);o.start(t);o.stop(t+0.16);
+  const n=AC.createBufferSource();n.buffer=noiseBuf();const hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=1500;const ng=AC.createGain();env(ng,t,0.004,0.12,0.05);
+  n.connect(hp);hp.connect(ng);ng.connect(MG);n.start(t,Math.random()*0.5);n.stop(t+0.07);
+}
+function dogSound(kind){
+  if(muted)return;try{unlockAudio();if(!AC||!MG)return;const t=AC.currentTime+0.03;
+  if(kind==='ok'){
+    bark(t,1);bark(t+0.22,1.15);
+    [523,659,784,1047].forEach((f,i)=>tone(t+0.5+i*0.09,f,'triangle',0.16,0.2));
+    slide(t+0.92,700,1900,0.22,'sine',0.1);
+  }else if(kind==='trip'){
+    for(let i=0;i<5;i++)laughBurst(t+i*0.13,700-i*30);/* hí hí */
+    slide(t+0.75,900,300,0.35,'triangle',0.14);
+  }else{
+    [[392,0.34],[370,0.34],[349,0.34],[330,1.05]].forEach(([f,d],i)=>trombone(t+i*0.38,f,d,i===3));
+    for(let i=0;i<7;i++)laughBurst(t+1.7+i*0.15,540-i*22);
+    bark(t+2.85,1.3);
+  }}catch(e){}
+}
 function bang(big){
   if(muted)return;try{unlockAudio();if(!AC)return;const n=Math.floor(AC.sampleRate*(big?0.9:0.25));const buf=AC.createBuffer(1,n,AC.sampleRate);const ch=buf.getChannelData(0);
     for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/n,big?2.2:4);
@@ -813,7 +983,7 @@ function bang(big){
     const g=AC.createGain();g.gain.value=big?1.2:.5;src.connect(lp);lp.connect(g);g.connect(AC.destination);src.start();}catch(e){}
 }
 function boom(x,y,s){
-  s=s||1;bang(true);
+  s=s||1;bang(true);dogReact('laugh');
   const g=el('g',{transform:`translate(${x},${y})`},fxg);
   el('circle',{r:40*s,fill:'#fffbe0'},g).animate([{transform:'scale(.1)',opacity:1},{transform:'scale(2.2)',opacity:0}],{duration:420,easing:'ease-out',fill:'forwards'});
   el('circle',{r:28*s,fill:'#f97316'},g).animate([{transform:'scale(.2)',opacity:.95,fill:'#fde047'},{transform:'scale(1.4)',opacity:.9,fill:'#f97316',offset:.35},{transform:'scale(1.8)',opacity:0,fill:'#7f1d1d'}],{duration:900,easing:'ease-out',fill:'forwards'});
@@ -2019,7 +2189,7 @@ window.addEventListener('keydown',e=>{
   else if(k==='9'){e.preventDefault();fitAll();}
 });
 
-load();buildItems();sizeBoard();applyView();snap();render();
+load();buildItems();sizeBoard();applyView();snap();render();dogApply();
 if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
 })();
 </script>
