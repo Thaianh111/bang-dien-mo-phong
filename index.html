@@ -80,6 +80,14 @@ h1{font-size:16px;margin:0}
 #sheetCalc th{background:#17212c}
 #sheetCalc ul{padding-left:18px;font-size:13px;line-height:1.5}
 #sheetCalc small,.mut{color:var(--mut);font-size:12px}
+.wg{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:hidden}
+.wgH{background:#17212c;padding:8px 10px;font-size:14px}.wgH b{color:#facc15}
+.wgT{padding:6px 10px;border-top:1px solid var(--line)}
+.wgP{font-size:13.5px;margin-bottom:3px}.wgN{background:#7c2d12;color:#fed7aa;border-radius:6px;padding:0 5px;font-size:11px;margin-left:4px}
+.wgL{display:flex;gap:8px;align-items:flex-start;padding:4px 0 4px 6px;font-size:13px;line-height:1.45;cursor:pointer}
+.wgL input{margin-top:3px;width:17px;height:17px;flex:0 0 auto}.wgL input:checked+span{opacity:.45;text-decoration:line-through}
+.wgNo{white-space:nowrap}.wsw{display:inline-block;width:18px;height:6px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.wgF{padding:5px 10px 7px;font-size:12px;color:var(--mut);border-top:1px dashed var(--line)}
 .form{display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:10px;max-height:44vh;overflow:auto}
 .form label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
 .calcbox{text-align:left;font-size:13px;background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:12px;line-height:1.5;color:#cbd5e1}
@@ -1513,6 +1521,12 @@ async function buildPages(){
   table(['STT','Từ chân','Đến chân','Dây / pha'],[90,500,500,TW-1090],rowsW,T2,true);
   section('Kết quả kiểm tra mạch',T2);
   (result&&result.msgs?result.msgs:[]).forEach(m=>{x.font='500 22px '+FONT;wrap(m[0]+'  '+m[1],TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T2+' (tiếp)');x.fillStyle='#1e293b';x.font='500 22px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  // ---- hướng dẫn đấu dây theo từng thiết bị
+  if(S.wires.length){const T3='HƯỚNG DẪN ĐẤU DÂY THEO TỪNG THIẾT BỊ';newPage(T3);
+    x.font='italic 500 22px '+FONT;x.fillStyle='#475569';x.fillText('Cùng một số dây xuất hiện ở cả hai đầu – đấu xong đánh dấu ☐ để khỏi đấu trùng.',M,y+6);y+=34;
+    wiringGuide().forEach(g=>{if(!g.used.length)return;section(g.tag+' – '+g.name,T3);
+      const rows=[];g.used.forEach(u=>u.to.forEach((o,i)=>rows.push([i?'':u.term+(u.role?'\n'+u.role:''),'☐ '+o.tag+' : '+o.term+(o.role?'\n'+o.role:''),'#'+o.no,colTxt(o.col),o.col])));
+      table(['Chân','Nối tới','Dây số','Loại dây'],[420,900,170,TW-1490],rows,T3,true);});}
   // ---- sơ đồ bố trí thực tế
   const dg=await diagramImage();
   newPage('SƠ ĐỒ ĐẤU NỐI THỰC TẾ (bố trí trên bảng)');
@@ -1536,7 +1550,7 @@ async function exportPDF(){
     }else if(!window.claude){
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     }else{fail('Chế độ xem này không hỗ trợ tải file. Mở trang trên claude.ai (web hoặc app) để xuất PDF nhé.');return;}
-    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p>'+name+'<br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, sơ đồ bố trí.</p><div class="row"><button class="btn run" id="mOk">Xong</button></div>');
+    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p>'+name+'<br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, hướng dẫn đấu từng thiết bị, sơ đồ bố trí.</p><div class="row"><button class="btn run" id="mOk">Xong</button></div>');
     m.querySelector('#mOk').onclick=thanks;
   }catch(e){fail((e&&e.message)||'Lỗi không rõ khi tạo PDF.');}
 }
@@ -2003,6 +2017,56 @@ function openParams(d){
   m.querySelector('#pCancel').onclick=()=>{d.p=JSON.parse(old);closeModal();};
   m.querySelector('#pOk').onclick=()=>{upd();closeModal();save();render();hint('Đã lưu thông số '+nameOf(d)+'.');};
 }
+/* ================= HƯỚNG DẪN ĐẤU DÂY THEO TỪNG THIẾT BỊ (cho người mới) ================= */
+const CAT_ORD={src:0,prot:1,ctrl:2,t1:3,t3:4};
+function termLbl(T,tid){const t=T.terms.find(x=>x.id===tid);const p=t&&t.p;return p&&p!==tid&&!/^(NO|NC)$/.test(p.replace(tid,''))?tid+' ('+p+')':tid;}
+function termRole(d,tid){
+  const T=TYPES[d.t],c=T.ctl;
+  if(tid==='PE')return'tiếp địa';
+  if(T.cat==='src')return tid==='N'?'dây trung tính':'dây pha '+pn(tid);
+  if(T.coil&&T.coil.includes(tid))return d.t==='relay'?(tid==='13'?'cuộn hút (+)':'cuộn hút (−)'):'đầu cuộn hút';
+  if(isV(d)){const lb=({L1:'nguồn vào',L2:'nguồn vào',L3:'nguồn vào',U:'ra động cơ',V:'ra động cơ',W:'ra động cơ',
+      '2':'ngõ vào analog (tốc độ)','3':'mass analog','4':'nguồn +10V cho chiết áp','10':'nguồn +24V','11':'mass 24V','12':'chung các ngõ DI',
+      '13':'DI1 – lệnh chạy','14':'DI2 – đảo chiều','15':'DI3','16':'DI4'})[tid];
+    if(lb)return lb;const n=+tid;
+    if(n>=19&&n<=27){const k=(n-19)%3;return'rơ-le '+(Math.floor((n-19)/3)+1)+(k===0?' – chân chung':k===1?' – thường đóng':' – thường mở');}
+    if(n>=34)return'STO (an toàn – để nguyên cầu nối)';return'';}
+  if(T.co){const g=T.co.find(x=>x.includes(tid));if(g)return tid===g[0]?'chân chung (COM)':tid===g[1]?'tiếp điểm thường đóng (NC)':'tiếp điểm thường mở (NO)';}
+  if(T.contacts){const ct=T.contacts.find(x=>x[0]===tid||x[1]===tid);
+    if(ct){const inn=ct[0]===tid;
+      if(c==='cb'||ct[2]==='M'||(c==='k'&&+ct[0]<=5))return(inn?'đầu vào':'đầu ra')+(c==='cb'?'':' tiếp điểm chính');
+      if(c==='pb'||c==='estop'||c==='sw')return ct[2]==='NC'?'tiếp điểm thường đóng':'tiếp điểm thường mở';
+      return(ct[2]==='NC'?'tiếp điểm phụ thường đóng (NC)':'tiếp điểm phụ thường mở (NO)');}}
+  if(T.cat==='t3')return'đầu dây động cơ';
+  if(d.t==='socket')return tid==='L'?'dây pha':'dây trung tính';
+  if(d.t==='pot')return tid==='2'?'chân giữa (con chạy)':'chân đầu';
+  if(T.load)return'đầu dây';
+  return'';
+}
+function wiringGuide(){
+  const cols=wireColors();const idx={};S.wires.forEach((w,i)=>idx[w.id]=i+1);
+  const devs=S.devs.slice().sort((a,b)=>(CAT_ORD[TYPES[a.t].cat]??9)-(CAT_ORD[TYPES[b.t].cat]??9));
+  return devs.map(d=>{const T=TYPES[d.t];const used=[],free=[];
+    T.terms.forEach(t=>{
+      const to=[];S.wires.forEach(w=>{let o=null;if(w.a.d===d.id&&w.a.t===t.id)o=w.b;else if(w.b.d===d.id&&w.b.t===t.id)o=w.a;
+        if(!o)return;const od=dev(o.d);if(!od)return;
+        to.push({no:idx[w.id],tag:tagOf(od),name:typeName(od).replace(/ \(.*\)/,''),term:termLbl(TYPES[od.t],o.t),role:termRole(od,o.t),col:cols[w.id]});});
+      if(to.length)used.push({term:termLbl(T,t.id),role:termRole(d,t.id),to});else free.push(t.id);});
+    return{tag:tagOf(d),name:typeName(d),used,free};});
+}
+function colSw(c){if(c==='PE')return'<i class="wsw" style="background:repeating-linear-gradient(90deg,#16a34a 0 5px,#facc15 5px 10px)"></i>';
+  return'<i class="wsw" style="background:'+(PCOL[c]||'#94a3b8')+(c==='N'?';outline:1px solid #64748b':'')+'"></i>';}
+const colTxt=c=>c?'dây '+wireName(c):'dây điều khiển';
+function guideHTML(){
+  if(!S.wires.length)return'<h3>🔌 Hướng dẫn đấu dây</h3><p class="mut">Chưa có dây nào trên bảng. Nối dây (hoặc dùng 🧩 Lập mạch → Đấu tự động) rồi mở lại Bản vẽ.</p>';
+  const G=wiringGuide();
+  return'<h3>🔌 Hướng dẫn đấu dây từng thiết bị</h3><p class="mut">Mỗi chân ghi rõ phải nối tới đâu. Cùng một <b>số dây</b> sẽ xuất hiện ở cả hai đầu – đấu xong đầu bên này thì tick, qua thiết bị kia thấy số đó là dây đã đi rồi.</p>'+
+    G.map(g=>'<div class="wg"><div class="wgH"><b>'+esc(g.tag)+'</b> – '+esc(g.name)+'</div>'+
+      (g.used.length?g.used.map(u=>'<div class="wgT"><div class="wgP">Chân <b>'+esc(u.term)+'</b>'+(u.role?' <small>· '+esc(u.role)+'</small>':'')+(u.to.length>1?' <span class="wgN">'+u.to.length+' dây</span>':'')+'</div>'+
+        u.to.map(o=>'<label class="wgL"><input type="checkbox"><span>'+colSw(o.col)+'→ <b>'+esc(o.tag)+'</b> chân <b>'+esc(o.term)+'</b>'+(o.role?' <small>('+esc(o.role)+')</small>':'')+' <small class="wgNo">dây #'+o.no+' · '+esc(colTxt(o.col))+'</small></span></label>').join('')+'</div>').join('')
+        :'<div class="wgT mut">Chưa đấu chân nào.</div>')+
+      (g.free.length&&g.used.length?'<div class="wgF">Để trống: '+g.free.map(esc).join(', ')+'</div>':'')+'</div>').join('');
+}
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
@@ -2016,7 +2080,7 @@ function refreshSheet(){
   sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
   const C=r.C;
   const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(typeName(d))}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
-  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>';
+  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+guideHTML();
 }
 
 document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d)openParams(d);};
