@@ -80,6 +80,23 @@ h1{font-size:16px;margin:0}
 #sheetCalc td,#sheetCalc th{border:1px solid var(--line);padding:6px;vertical-align:top;text-align:left;line-height:1.4}
 #sheetCalc th{background:#17212c}
 #sheetCalc ul{padding-left:18px;font-size:13px;line-height:1.5}
+#mcForm{display:flex;flex-direction:column;gap:10px;padding:8px 12px 4px}
+#mcForm label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mut);flex:1;min-width:0}
+#mcForm input,#mcForm select{background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px;font-size:15px;width:100%}
+.mcG{display:flex;gap:8px}
+.mcSeg{display:flex;background:#0b121a;border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+.mcSeg{flex-wrap:wrap}.mcSeg button{flex:1 1 auto;border:0;background:transparent;color:var(--mut);font-weight:700;font-size:13px;padding:8px 2px;border-radius:7px;cursor:pointer}
+.mcSeg button.on{background:#facc15;color:#1a1300}
+.mcAdv summary{font-size:12.5px;color:#93c5fd;cursor:pointer;padding:2px 0 6px}
+#mcOut{padding:6px 12px;display:grid;gap:10px}
+.mcC{background:linear-gradient(180deg,#17212c,#121b25);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mcT{font-size:12.5px;font-weight:800;color:#facc15;letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px}
+.mcBig{font-size:32px;font-weight:800;color:#fff;line-height:1.15}.mcBig small{font-size:14px;color:var(--mut);font-weight:600}
+.mcBig.ok{color:#4ade80}.mcBig.warn{color:#fbbf24}.mcBig.bad{color:#f87171}
+.mcS{font-size:12.5px;color:#cbd5e1;margin-bottom:6px;line-height:1.45}
+.mcR{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;border-top:1px dashed #2a3846}
+.mcR span{color:var(--mut)}.mcR b{text-align:right;font-weight:600;color:#e6edf3}
+.mcW{font-size:12px;margin-top:6px;padding:6px 8px;border-radius:8px;background:#450a0a;color:#fecaca}
 #sheetCalc small,.mut{color:var(--mut);font-size:12px}
 .wg{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:hidden}
 .wgH{background:#17212c;padding:8px 10px;font-size:14px}.wgH b{color:#facc15}
@@ -194,6 +211,11 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div id="sheetSvg"></div>
   <div id="sheetCalc"></div>
 </div>
+<div id="mcSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="mcClose">✕</button><b style="font-size:15px">🧮 Tính thông số motor</b><span style="flex:1"></span></div>
+  <div id="mcForm"></div>
+  <div id="mcOut"></div>
+</div>
 <div id="builder" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="bdClose">✕</button><b style="font-size:15px">🧩 Lập mạch</b><span style="flex:1"></span><button class="btn" id="bdReset">Xóa chọn</button></div>
   <p class="mut" style="padding:4px 12px 0;margin:0">Chọn thiết bị có trong mạch và số lượng:</p>
@@ -285,7 +307,7 @@ Object.keys(VFD_MODELS).forEach(id=>{
 });
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
-const CATS=[['lap','🧩 Lập mạch'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
+const CATS=[['lap','🧩 Lập mạch'],['tinh','🧮 Tính motor'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
 let pending=null,selected=null,running=false,result=null,curCat='src',lastFault='';
@@ -387,7 +409,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='lap'){openBuilder();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -1571,8 +1593,14 @@ async function exportPDF(){
     }else if(!window.claude){
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     }else{fail('Chế độ xem này không hỗ trợ tải file. Mở trang trên claude.ai (web hoặc app) để xuất PDF nhé.');return;}
-    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p>'+name+'<br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, hướng dẫn đấu từng thiết bị, sơ đồ bố trí.</p><div class="row"><button class="btn run" id="mOk">Xong</button></div>');
-    m.querySelector('#mOk').onclick=thanks;
+    const file=(()=>{try{return new File([blob],name,{type:'application/pdf'});}catch(e){return null;}})();
+    const canShare=!dl&&file&&navigator.canShare&&navigator.canShare({files:[file]});
+    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p><b>'+name+'</b><br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, hướng dẫn đấu từng thiết bị, sơ đồ bố trí.</p>'+
+      (dl?'':'<p class="mut">File nằm trong thư mục <b>Tải xuống (Download)</b> của máy. Không thấy file thì bấm '+(canShare?'<b>Chia sẻ / Lưu</b>':'<b>Mở PDF</b>')+' bên dưới.</p>')+
+      '<div class="row">'+(dl?'':(canShare?'<button class="btn" id="mShare">📤 Chia sẻ / Lưu</button>':'<button class="btn" id="mOpen">📂 Mở PDF</button>'))+'<button class="btn run" id="mOk">Xong</button></div>');
+    m.querySelector('#mOk').onclick=closeModal;
+    const bs=m.querySelector('#mShare');if(bs)bs.onclick=()=>{navigator.share({files:[file],title:name}).catch(()=>{});};
+    const bo=m.querySelector('#mOpen');if(bo)bo.onclick=()=>{const u=URL.createObjectURL(blob);const w=window.open(u,'_blank');if(!w)location.href=u;setTimeout(()=>URL.revokeObjectURL(u),60000);};
   }catch(e){fail((e&&e.message)||'Lỗi không rõ khi tạo PDF.');}
 }
 document.getElementById('modal').addEventListener('pointerdown',e=>{if(e.target.id==='modal'&&!document.querySelector('#modal .ic')?.textContent.includes('⏳'))closeModal();});
@@ -2093,6 +2121,103 @@ function guideHTML(){
         :'<div class="wgT mut">Chưa đấu chân nào.</div>')+
       (g.free.length&&g.used.length?'<div class="wgF">Để trống: '+g.free.map(esc).join(', ')+'</div>':'')+'</div>').join('');
 }
+/* ================= TAB: TÍNH THÔNG SỐ MOTOR ================= */
+const MC={ph:3,u:380,unit:'kw',p:5.5,rpm:1500,rpmC:'',hz:50,st:'dol',len:30,cos:'',eff:'',h:8};
+try{Object.assign(MC,JSON.parse(localStorage.getItem('md_mc')||'{}'));}catch(e){}
+function mcPick(kw,ph){let r=MOTOR_KW[0];MOTOR_KW.forEach(x=>{if(Math.abs(x[0]-kw)<Math.abs(r[0]-kw))r=x;});
+  return ph===3?{eff:r[1],cos:r[2]}:{eff:Math.max(55,r[1]-10),cos:Math.min(0.95,r[2]+0.1)};}
+function mcCalc(){
+  const ph=MC.ph,U=+MC.u||(ph===3?380:220),hz=+MC.hz||50;
+  const kw=MC.unit==='hp'?(+MC.p||0)*0.746:(+MC.p||0);
+  const auto=mcPick(kw,ph);const cos=+MC.cos||auto.cos,eff=(+MC.eff||auto.eff)/100;
+  const rc=MC.rpm==='c'?+MC.rpmC:0;
+  const pole=rc>0?Math.max(2,Math.round(120*hz/rc/2)*2):Math.max(2,Math.round(120*50/(+MC.rpm||1500)/2)*2);const ns=120*hz/pole;
+  const nr=rc>0?rc:ns*(1-(kw<5?0.05:kw<30?0.035:0.02));
+  const Pin=kw/eff,S=Pin/cos,Q=Math.sqrt(Math.max(0,S*S-Pin*Pin));
+  const In=ph===3?kw*1000/(Math.sqrt(3)*U*cos*eff):kw*1000/(U*cos*eff);
+  const st=ph===1?'dol':MC.st;
+  const kSt={dol:6.5,yd:2.2,soft:3.5,vfd:1.5}[st];const Ist=In*kSt;
+  const Tn=nr>0?9550*kw/nr:0;
+  const fac={dol:1.6,yd:1.3,soft:1.4,vfd:1.25}[st];
+  const cb=upStd(CB_STD,Math.max(1.25*In,fac*In));
+  const yd=st==='yd';const Iph=yd?In/Math.sqrt(3):In;
+  const cab=pickCable(Iph,Iph*1.25,+MC.len||0,ph===3,cos,U,ph===3?2.5:1.5),pe=peSize(cab.s);
+  const len=+MC.len||0,R=0.0225*len/cab.s;
+  const loss=(ph===3?3*Iph*Iph*R*(yd?2:1):2*In*In*R);/* W */
+  const dU=cab.vd*U/100;const dUst=cab.vd*(yd?Ist/In*1:kSt)*(st==='vfd'?0:1);
+  const kAC=yd?{main:upStd(K_AC3,In/Math.sqrt(3)),star:upStd(K_AC3,In/3)}:{main:upStd(K_AC3,In)};
+  const olI=yd?In/Math.sqrt(3):In,ol=olRange(olI);const mp=olRange(In);
+  const vfdKw=MOTOR_KW.find(r=>r[0]>=kw-1e-9)||MOTOR_KW[MOTOR_KW.length-1];
+  return{ph,U,hz,kw,cos,eff,pole,ns,nr,Pin,S,Q,In,Ist,kSt,st,Tn,cb,cab,pe,yd,Iph,loss,dU,dUst,kAC,olI,ol,mp,vfdKw,len,auto};
+}
+const STN={dol:'trực tiếp DOL',yd:'sao – tam giác',soft:'khởi động mềm',vfd:'biến tần'};
+const f1=(v,d)=>(+v).toLocaleString('vi-VN',{minimumFractionDigits:d??1,maximumFractionDigits:d??1});
+function mcRender(){
+  const r=mcCalc(),box=document.getElementById('mcOut');try{localStorage.setItem('md_mc',JSON.stringify(MC));}catch(e){}
+  if(!(r.kw>0)){box.innerHTML='<p class="mut" style="padding:10px">Nhập công suất motor để tính.</p>';return;}
+  const vdC=r.cab.vd<=3?'ok':r.cab.vd<=5?'warn':'bad';
+  const hrs=+MC.h||0,kwhM=r.loss/1000*hrs*26;
+  const card=(ic,t,body)=>'<div class="mcC"><div class="mcT">'+ic+' '+t+'</div>'+body+'</div>';
+  const big=(v,u,s)=>'<div class="mcBig">'+v+'<small>'+u+'</small></div>'+(s?'<div class="mcS">'+s+'</div>':'');
+  const row=(a,b)=>'<div class="mcR"><span>'+a+'</span><b>'+b+'</b></div>';
+  const cabTxt=(r.yd?'2 sợi ':'')+'CVV '+(r.ph===3?'3':'2')+'×'+fS(r.cab.s)+' + E'+fS(r.pe)+' mm²';
+  box.innerHTML=
+   card('⚡','Dòng điện chạy',big(f1(r.In),' A','Dòng định mức khi chạy đủ tải')+
+     row('Dòng khởi động ('+STN[r.st]+')','≈ '+f1(r.Ist,0)+' A ('+r.kSt+'×In)')+
+     row('Công suất điện tiêu thụ',f1(r.Pin,2)+' kW · '+f1(r.S,2)+' kVA')+
+     row('Tốc độ thực / đồng bộ',(MC.rpm==='c'&&+MC.rpmC>0?'':'≈ ')+Math.round(r.nr)+' / '+Math.round(r.ns)+' v/ph ('+r.pole+' cực'+(MC.rpm==='c'&&+MC.rpmC>0?', trượt '+f1(Math.max(0,(r.ns-r.nr)/r.ns*100),1)+' %':'')+')')+
+     row('Mômen định mức','≈ '+f1(r.Tn)+' N·m')+
+     row('cosφ · hiệu suất η',f1(r.cos,2)+' · '+f1(r.eff*100,1)+' %'))+
+   card('🛡️','Aptomat (CB)',big(r.cb,' A',(r.ph===3?'<b>3 pha – 3 cực (3P)</b>':'<b>1 pha – 2 cực (1P+N)</b>')+' · '+(r.cb<=63?'MCB đặc tính <b>D</b> hoặc MCCB':'MCCB')+(r.st==='dol'?' (chịu dòng khởi động)':''))+
+     (r.ph===3&&r.st!=='vfd'?row('Hoặc CB bảo vệ động cơ (MPCB)','dải chỉnh '+r.mp[0]+'–'+r.mp[1]+' A, đặt '+f1(r.In)+' A'):'')+
+     row('Dòng cắt ngắn mạch','≥ 6 kA (dân dụng) · ≥ 10 kA (xưởng)'))+
+   card('🔌','Dây dẫn',big(fS(r.cab.s),' mm²','Dây <b>'+fS(r.cab.s)+' chấm</b> · '+cabTxt)+
+     row('Dòng chịu tải của dây','≈ '+r.cab.iz+' A (≥ 1,25 × '+f1(r.Iph)+' A)')+
+     (r.yd?row('Ghi chú sao – tam giác','motor 6 đầu đi 2 sợi cáp, mỗi sợi chịu In/√3'):'')+
+     row('Dây tiếp địa PE',fS(r.pe)+' mm² (sọc xanh – vàng)')+(r.cab.over?'<div class="mcW bad">Dây dài quá – sụt áp vẫn cao dù đã chọn dây lớn nhất, nên đặt tủ gần motor hơn.</div>':''))+
+   card('📉','Hao hụt trên dây ('+r.len+' m)',
+     '<div class="mcBig '+vdC+'">'+f1(r.cab.vd,2)+'<small> % sụt áp</small></div><div class="mcS">≈ '+f1(r.dU)+' V · cho phép ≤ 3–5 % · '+(vdC==='ok'?'✅ Đạt':vdC==='warn'?'⚠️ Hơi cao':'❌ Quá cao')+'</div>'+
+     row('Công suất tỏa nhiệt trên dây','≈ '+f1(r.loss,0)+' W ('+f1(r.loss/10/r.Pin,2)+' %)')+
+     row('Điện mất theo tháng ('+hrs+' h/ngày × 26 ngày)','≈ '+f1(kwhM,1)+' kWh')+
+     (r.st!=='vfd'?row('Sụt áp lúc khởi động','≈ '+f1(r.dUst,1)+' %'+(r.dUst>15?' ⚠️ cao, motor khó lên tốc':'')):''))+
+   card('🧰','Thiết bị đi kèm',
+     (r.st==='vfd'?row('Biến tần','≥ '+r.vfdKw[0]+' kW, dòng ra ≥ '+f1(r.In)+' A'+(r.ph===3?'':' (loại vào 1 pha ra 3 pha nếu motor 3 pha)')):
+      row('Contactor (AC-3)',r.yd?'K chính + K tam giác: '+r.kAC.main+' A · K sao: '+r.kAC.star+' A':r.kAC.main+' A'+(r.st==='soft'?' (bypass)':''))+
+      row('Rơ-le nhiệt','dải '+r.ol[0]+'–'+r.ol[1]+' A, chỉnh ở '+f1(r.olI)+' A'+(r.yd?' (đặt sau K chính, dòng pha In/√3)':'')))+
+     (r.ph===1?row('Tụ điện','dùng đúng tụ đề và tụ ngậm ghi trên nhãn motor'):''))+
+   '<p class="mut" style="padding:2px 4px 30px">cosφ, η lấy theo motor điển hình (4 cực IE2'+(r.ph===1?', 1 pha thấp hơn':'')+') nếu để trống. Dây đồng CVV đi trong ống, 30 °C. Đây là số tham khảo – luôn đối chiếu nhãn motor và điều kiện lắp đặt thực tế.</p>';
+}
+function openMotorCalc(){
+  const sh=document.getElementById('mcSheet');sh.hidden=false;const F=document.getElementById('mcForm');
+  const pw=MC.unit==='hp'?[0.5,1,1.5,2,3,4,5,5.5,7.5,10,15,20,25,30,40,50,60,75,100]:MOTOR_KW.map(r=>r[0]);
+  const uL=MC.ph===3?[220,380,400,415,440,660]:[110,220,230,240];
+  const seg=(k,opts)=>'<div class="mcSeg" data-k="'+k+'">'+opts.map(o=>'<button data-v="'+o[0]+'" class="'+(String(MC[k])===String(o[0])?'on':'')+'">'+o[1]+'</button>').join('')+'</div>';
+  const a=mcPick(MC.unit==='hp'?MC.p*0.746:+MC.p,MC.ph);
+  F.innerHTML=
+    '<label>Nguồn điện'+seg('ph',[[3,'3 pha'],[1,'1 pha']])+'</label>'+
+    '<div class="mcG"><label>Điện áp (V)<select data-k="u">'+uL.map(v=>'<option '+(v==MC.u?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+
+    '<label>Tần số<select data-k="hz">'+[50,60].map(v=>'<option '+(v==MC.hz?'selected':'')+'>'+v+'</option>').join('')+'</select></label></div>'+
+    '<div class="mcG"><label>Công suất<input data-k="p" type="number" inputmode="decimal" step="any" list="mcPw" value="'+MC.p+'"><datalist id="mcPw">'+pw.map(v=>'<option value="'+v+'">').join('')+'</datalist></label>'+
+    '<label>Đơn vị'+seg('unit',[['kw','kW'],['hp','HP (ngựa)']])+'</label></div>'+
+    '<label>Số vòng (theo nhãn motor)'+seg('rpm',[[3000,'~2900'],[1500,'~1450'],[1000,'~960'],[750,'~720'],['c','✏️ Tự nhập']])+'</label>'+
+    (MC.rpm==='c'?'<label>Số vòng ghi trên nhãn (v/ph)<input data-k="rpmC" type="number" inputmode="numeric" placeholder="VD: 2850, 1420, 580…" value="'+MC.rpmC+'"></label>':'')+
+    (MC.ph===3?'<label>Cách khởi động'+seg('st',[['dol','Trực tiếp'],['yd','Sao–tam giác'],['soft','KĐ mềm'],['vfd','Biến tần']])+'</label>':'')+
+    '<div class="mcG"><label>Chiều dài dây tủ → motor (m)<input data-k="len" type="number" inputmode="decimal" value="'+MC.len+'"></label>'+
+    '<label>Giờ chạy / ngày<input data-k="h" type="number" inputmode="decimal" value="'+MC.h+'"></label></div>'+
+    '<details class="mcAdv"><summary>Nâng cao: cosφ, hiệu suất (để trống = tự lấy)</summary><div class="mcG">'+
+    '<label>cosφ<input data-k="cos" type="number" step="0.01" inputmode="decimal" placeholder="'+a.cos.toFixed(2)+'" value="'+MC.cos+'"></label>'+
+    '<label>Hiệu suất η (%)<input data-k="eff" type="number" step="0.1" inputmode="decimal" placeholder="'+a.eff.toFixed(1)+'" value="'+MC.eff+'"></label></div></details>';
+  F.querySelectorAll('.mcSeg button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k;let v=b.dataset.v;v=isNaN(+v)?v:+v;
+    if(MC[k]===v)return;
+    if(k==='ph'){MC.u=v===3?380:220;}
+    if(k==='unit'){MC.p=+(v==='hp'?MC.p/0.746:MC.p*0.746).toFixed(2);}
+    MC[k]=v;openMotorCalc();});
+  F.querySelectorAll('input[data-k],select[data-k]').forEach(i=>i.addEventListener('input',()=>{MC[i.dataset.k]=i.value;
+    if(i.dataset.k==='p'){const a=mcPick(MC.unit==='hp'?MC.p*0.746:+MC.p,MC.ph);const c=F.querySelector('[data-k="cos"]'),e=F.querySelector('[data-k="eff"]');c.placeholder=a.cos.toFixed(2);e.placeholder=a.eff.toFixed(1);}
+    mcRender();}));
+  mcRender();
+}
+document.getElementById('mcClose').onclick=()=>{document.getElementById('mcSheet').hidden=true;};
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
