@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="author" content="Võ Thái Anh (CK)">
+<meta name="author" content="Võ Thái Anh">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Mô phỏng bảng điện</title>
 <style>
@@ -152,7 +152,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 </head>
 <body>
 <header>
-  <h1>⚡ Bảng điện mô phỏng<small style="display:block;font-size:10.5px;font-weight:600;color:#facc15;opacity:.85;margin-top:1px">© Võ Thái Anh (CK)</small></h1>
+  <h1>⚡ Bảng điện mô phỏng<small style="display:block;font-size:10.5px;font-weight:600;color:#facc15;opacity:.85;margin-top:1px">© Võ Thái Anh</small></h1>
   <span style="display:flex;gap:6px"><button id="dogBtn" class="btn" style="padding:8px 10px" title="Bật/tắt chú chó">🐶</button><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -212,7 +212,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 <script>
 (function(){
 const NS='http://www.w3.org/2000/svg';
-const AUTHOR='Võ Thái Anh (CK)';
+const AUTHOR='Võ Thái Anh';
 const WW=1400,WH=2000,GRID=10;
 const PCOL={L1:'#dc2626',L2:'#eab308',L3:'#2563eb',N:'#111827'};
 const P_=(id,x,y,p,src)=>({id,x,y,p:p===undefined?id:p,src});
@@ -1470,6 +1470,24 @@ async function diagramImage(){
   return{img,w:W,h:H};
 }
 async function svgImg(str){const img=new Image();await new Promise((r,j)=>{img.onload=r;img.onerror=()=>j(new Error('Không vẽ được sơ đồ'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);});return img;}
+function pdfBadge(x,PW,PH,M){
+  const bw=640,bh=122,bx=PW-M-bw-24,by=PH-M-bh-18,r=18;
+  const rr=(X,Y,W,H,R)=>{x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath();};
+  x.save();x.shadowColor='rgba(15,23,42,.35)';x.shadowBlur=18;x.shadowOffsetY=6;
+  const g=x.createLinearGradient(bx,by,bx+bw,by+bh);g.addColorStop(0,'#0b1220');g.addColorStop(1,'#1e3a5f');x.fillStyle=g;rr(bx,by,bw,bh,r);x.fill();x.restore();
+  const gold=x.createLinearGradient(bx,0,bx+bw,0);gold.addColorStop(0,'#fde68a');gold.addColorStop(.45,'#f59e0b');gold.addColorStop(.7,'#fcd34d');gold.addColorStop(1,'#b45309');
+  x.strokeStyle=gold;x.lineWidth=4;rr(bx,by,bw,bh,r);x.stroke();x.lineWidth=1.2;rr(bx+8,by+8,bw-16,bh-16,r-6);x.stroke();
+  const cx=bx+64,cy=by+bh/2,R0=38;
+  x.beginPath();x.arc(cx,cy,R0,0,Math.PI*2);x.strokeStyle=gold;x.lineWidth=3.5;x.stroke();
+  x.beginPath();x.arc(cx,cy,R0-7,0,Math.PI*2);x.lineWidth=1;x.stroke();
+  x.fillStyle=gold;x.font='900 32px '+FONT;x.textAlign='center';x.fillText('TA',cx,cy+11);
+  x.font='800 13px '+FONT;x.fillText('⚡',cx,cy-R0+18);
+  x.textAlign='left';const tx=bx+124;
+  x.fillStyle='#cbd5e1';x.font='700 17px '+FONT;if('letterSpacing' in x)x.letterSpacing='4px';x.fillText('THIẾT KẾ & BẢN QUYỀN',tx,by+36);if('letterSpacing' in x)x.letterSpacing='1px';
+  x.fillStyle=gold;x.font='900 40px '+FONT;x.fillText(AUTHOR.toUpperCase(),tx,by+80);if('letterSpacing' in x)x.letterSpacing='0px';
+  x.fillStyle='#94a3b8';x.font='600 16px '+FONT;x.fillText('© '+new Date().getFullYear()+' · Bảng điện mô phỏng · Bảo lưu mọi quyền',tx,by+104);
+  x.textAlign='left';
+}
 async function buildPages(){
   const PW=2339,PH=1654,M=90,pages=[];
   // ---- trang 1: sơ đồ nguyên lý
@@ -1484,12 +1502,12 @@ async function buildPages(){
     x.fillStyle='#fff';x.fillRect(0,0,PW,PH);x.strokeStyle='#0f172a';x.lineWidth=4;x.strokeRect(M/2,M/2,PW-M,PH-M);
     x.fillStyle='#0f172a';x.font='800 46px '+FONT;x.textAlign='left';x.fillText(title,M,M+66);
     x.font='500 24px '+FONT;x.fillStyle='#475569';x.textAlign='right';x.fillText((S.meta&&S.meta.prj?S.meta.prj+'   ·   ':'')+'Ngày xuất: '+date+'   ·   Trang '+(pages.length+1),PW-M,M+62);x.textAlign='left';
-    x.font='600 20px '+FONT;x.fillStyle='#94a3b8';x.fillText('Bảng điện mô phỏng  ·  © '+AUTHOR,M,PH-M/2-14);
+    pdfBadge(x,PW,PH,M);
     x.strokeStyle='#cbd5e1';x.lineWidth=2;x.beginPath();x.moveTo(M,M+92);x.lineTo(PW-M,M+92);x.stroke();
     pages.push(c);y=M+130;};
   const TW=PW-2*M,LH=28;
   const wrap=(t,w)=>{const out=[];String(t).split('\n').forEach(par=>{let line='';par.split(' ').forEach(wd=>{const tt=line?line+' '+wd:wd;if(x.measureText(tt).width>w&&line){out.push(line);line=wd;}else line=tt;});out.push(line);});return out;};
-  function section(t,title){if(y+140>PH-M-30)newPage(title);x.font='800 30px '+FONT;x.fillStyle='#0f172a';x.fillText(t,M,y+26);y+=46;}
+  function section(t,title){if(y+140>PH-M-150)newPage(title);x.font='800 30px '+FONT;x.fillStyle='#0f172a';x.fillText(t,M,y+26);y+=46;}
   function table(head,widths,rows,title,swatch){
     const drawHead=()=>{x.fillStyle='#e2e8f0';x.fillRect(M,y,TW,40);x.font='800 22px '+FONT;x.fillStyle='#0f172a';let cx=M+12;head.forEach((h,i)=>{x.fillText(h,cx,y+27);cx+=widths[i];});y+=40;};
     drawHead();
@@ -1497,7 +1515,7 @@ async function buildPages(){
       x.font='500 22px '+FONT;
       const cells=r.slice(0,head.length).map((c,i)=>wrap(c,widths[i]-24));
       const rh=Math.max(...cells.map(l=>l.length))*LH+14;
-      if(y+rh>PH-M-30){newPage(title+' (tiếp)');drawHead();x.font='500 22px '+FONT;}
+      if(y+rh>PH-M-150){newPage(title+' (tiếp)');drawHead();x.font='500 22px '+FONT;}
       if(ri%2){x.fillStyle='#f8fafc';x.fillRect(M,y,TW,rh);}
       let cx=M+12;
       cells.forEach((lines,i)=>{
@@ -1516,14 +1534,14 @@ async function buildPages(){
     S.devs.map((d,i)=>[String(i+1),tagOf(d),typeName(d)+(PDEF[d.t]&&d.t!=='timer'?'\n'+paramText(d):''),(C.rec[d.id]||[]).join('\n')]),T1);
   section('2. Dây dẫn & ghi chú',T1);
   x.font='500 23px '+FONT;
-  C.notes.forEach(t=>{wrap('• '+t,TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T1+' (tiếp)');x.fillStyle='#1e293b';x.font='500 23px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  C.notes.forEach(t=>{wrap('• '+t,TW-30).forEach(l=>{if(y+34>PH-M-150)newPage(T1+' (tiếp)');x.fillStyle='#1e293b';x.font='500 23px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
   x.font='italic 500 20px '+FONT;x.fillStyle='#64748b';x.fillText('Kết quả mang tính tham khảo – kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).',M+12,y+26);y+=50;
   // ---- bảng đấu dây
   const T2='BẢNG ĐẤU DÂY';newPage(T2);
   const rowsW=S.wires.map((w,i)=>{const a=dev(w.a.d),b=dev(w.b.d);return[String(i+1),tagOf(a)+' : '+w.a.t,tagOf(b)+' : '+w.b.t,wireName(cols[w.id]),cols[w.id]];});
   table(['STT','Từ chân','Đến chân','Dây / pha'],[90,500,500,TW-1090],rowsW,T2,true);
   section('Kết quả kiểm tra mạch',T2);
-  (result&&result.msgs?result.msgs:[]).forEach(m=>{x.font='500 22px '+FONT;wrap(m[0]+'  '+m[1],TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T2+' (tiếp)');x.fillStyle='#1e293b';x.font='500 22px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  (result&&result.msgs?result.msgs:[]).forEach(m=>{x.font='500 22px '+FONT;wrap(m[0]+'  '+m[1],TW-30).forEach(l=>{if(y+34>PH-M-150)newPage(T2+' (tiếp)');x.fillStyle='#1e293b';x.font='500 22px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
   // ---- hướng dẫn đấu dây theo từng thiết bị
   if(S.wires.length){const T3='HƯỚNG DẪN ĐẤU DÂY THEO TỪNG THIẾT BỊ';newPage(T3);
     x.font='italic 500 22px '+FONT;x.fillStyle='#475569';x.fillText('Cùng một số dây xuất hiện ở cả hai đầu – đấu xong đánh dấu ☐ để khỏi đấu trùng.',M,y+6);y+=34;
@@ -1985,14 +2003,18 @@ function buildSchematic(){
   s+=T_(M+16,ny+14,'GHI CHÚ – TÍNH CHỌN DÂY DẪN',{fs:12,b:1});
   notes.forEach((t,i)=>s+=T_(M+16,ny+34+i*16,t,{fs:10.5}));
   // khung tên
-  const th=Math.min(band-16,150),tx=W-M-tw,ty=H-M-th;
+  const th=Math.min(band-16,150),tx=W-M-tw;let ty=H-M-th;
   s+=`<rect x="${tx}" y="${ty}" width="${tw}" height="${th}" fill="#fff" stroke="#111" stroke-width="1.8"/>`;
   const rows=[['CÔNG TRÌNH',meta.prj||'—'],['TÊN BẢN VẼ','SƠ ĐỒ NGUYÊN LÝ MẠCH ĐIỆN'],['NGƯỜI VẼ',meta.by||'—'],['NGÀY',new Date().toLocaleDateString('vi-VN')]];
-  const rh=th/(rows.length+1);
+  const rh=th/(rows.length+2),ty0=ty;
+  s+=`<defs><linearGradient id="cpG" x1="0" x2="1"><stop offset="0" stop-color="#0f172a"/><stop offset="1" stop-color="#1e3a5f"/></linearGradient><linearGradient id="cpT" x1="0" x2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs>`;
+  s+=`<rect x="${tx}" y="${ty0}" width="${tw}" height="${rh}" fill="url(#cpG)"/><rect x="${tx+3}" y="${ty0+3}" width="${tw-6}" height="${rh-6}" fill="none" stroke="#d4a017" stroke-width="0.8"/>`;
+  s+=`<circle cx="${tx+rh/2+4}" cy="${ty0+rh/2}" r="${rh/2-5}" fill="none" stroke="#f59e0b" stroke-width="1.2"/><text x="${tx+rh/2+4}" y="${ty0+rh/2+3.5}" text-anchor="middle" font-size="${Math.round(rh*0.36)}" font-weight="800" fill="#f59e0b">TA</text>`;
+  s+=`<text x="${tx+rh+10}" y="${ty0+rh/2+4}" font-size="9" font-weight="700" letter-spacing="1.5" fill="#cbd5e1">THIẾT KẾ &amp; BẢN QUYỀN</text><text x="${tx+tw-12}" y="${ty0+rh/2+5}" text-anchor="end" font-size="${Math.min(15,rh*0.55).toFixed(1)}" font-weight="800" letter-spacing="1" fill="url(#cpT)">© ${new Date().getFullYear()} ${AUTHOR.toUpperCase()}</text>`;
+  ty+=rh;
   rows.forEach((r,i)=>{const yy=ty+i*rh;if(i)s+=Ln(tx,yy,tx+tw,yy,{w:1});s+=T_(tx+10,yy+rh/2+4,r[0],{fs:10,b:1,c:'#444'})+T_(tx+120,yy+rh/2+5,r[1],{fs:12,b:i===1});});
-  const yy=ty+rows.length*rh;s+=Ln(tx,yy,tx+tw,yy,{w:1})+Ln(tx+110,ty,tx+110,yy,{w:1})+Ln(tx+tw/2,yy,tx+tw/2,ty+th,{w:1});
+  const yy=ty+rows.length*rh;s+=Ln(tx,yy,tx+tw,yy,{w:1})+Ln(tx,ty,tx+tw,ty,{w:1.2})+Ln(tx+110,ty,tx+110,yy,{w:1})+Ln(tx+tw/2,yy,tx+tw/2,ty0+th,{w:1});
   s+=T_(tx+10,yy+rh/2+4,'TỶ LỆ: KHÔNG TỶ LỆ',{fs:10,b:1})+T_(tx+tw/2+10,yy+rh/2+4,'SỐ BV: ĐL-01',{fs:10,b:1});
-  s+=`<text x="${W-M}" y="${H-8}" text-anchor="end" font-size="10" font-weight="600" fill="#64748b">Bảng điện mô phỏng · © ${AUTHOR}</text>`;
   const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif'>${s}</svg>`;
   return{svg:svgStr,W,H,C};
 }
