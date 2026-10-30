@@ -723,7 +723,7 @@ function evaluate(){
         errors++;
         const ol=protectingOL(f,d);
         msgs.push(['💨',nm+(m.st==='hum'?': MẤT PHA / đấu sai cuộn dây – động cơ kêu ù, không quay, nóng bốc khói!':': đấu dây N vào động cơ 3 pha – sai! Đang bốc khói.')+(ol?' Rơ-le nhiệt '+tagOf(ol)+' sắp tác động…':' Không có rơ-le nhiệt – sẽ CHÁY!')]);
-        if(ol){clearT('m'+d.id);if(!timers['o'+ol.id])timers['o'+ol.id]=setTimeout(()=>{delete timers['o'+ol.id];if(running&&!ol.trip){ol.trip=true;sfxQ.add('alarm');spark(ol.x+TYPES.ol.w/2,ol.y+40);evaluate();save();render();}},2200);}
+        if(ol){clearT('m'+d.id);if(!timers['o'+ol.id])timers['o'+ol.id]=setTimeout(()=>{delete timers['o'+ol.id];if(running&&!ol.trip){ol.trip=true;sfxQ.add('alarm');dogReact('ol');spark(ol.x+TYPES.ol.w/2,ol.y+40);evaluate();save();render();}},2200);}
         else if(!timers['m'+d.id])timers['m'+d.id]=setTimeout(()=>{delete timers['m'+d.id];if(running&&!d.burned){d.burned=true;boom(d.x+T.w/2,d.y+T.h/2,1.2);evaluate();save();render();}},4000);
       }else{clearT('m'+d.id);
         const mt=(d.t==='motor'?['U','V','W']:['U1','V1','W1']).map(t=>[...RK(d,t)].filter(p=>p[0]==='L'));
@@ -847,7 +847,8 @@ let dogX=-200,dogY=-200,dogRaf=0,dogTO=null,dogKind='',dogT=0;
 const DOG_LINES={
   ok:['Chuẩn không cần chỉnh! 👍','Gâu! Thợ xịn đây rồi 😎','Đấu ngon lành cành đào! 🌸','Đỉnh của chóp luôn sếp ơi! 🏆','Ok luôn! Thưởng cục xương 🦴'],
   laugh:['Há há há! Nổ banh xác rồi 🤣','Thợ điện hay thợ pháo hoa vậy? 🎆','Gâu gâu… khét lẹt rồi đại ca ơi! 🔥','Tết chưa tới mà đốt pháo rồi 🧨','Ôi bụng tui… cười đau cả bụng 😂','Đấu kiểu này chắc mất điện cả xóm 🏘️'],
-  trip:['Hên mà có CB đỡ đó nha 😏','Aptomat cứu bồ một bàn thua trông thấy 🤭','Xém nữa là nổ rồi đó hí hí 😆']
+  trip:['Hên mà có CB đỡ đó nha 😏','Aptomat cứu bồ một bàn thua trông thấy 🤭','Xém nữa là nổ rồi đó hí hí 😆'],
+  ol:['Rơ-le nhiệt nhảy rồi kìa, motor sắp thành nồi lẩu 🍲','Thiếu pha mà cũng đòi chạy hả đại ca 🤣','Motor kêu ù ù, thợ kêu hu hu 😂','Nóng quá nóng! Rơ-le nhiệt chịu hết nổi 🥵']
 };
 function dogApply(){
   document.documentElement.classList.toggle('dogcur',dogOn&&FINE);
@@ -901,7 +902,7 @@ function dogReact(kind){
     if(dogKind!==kind||dogT!==t0)return;
     if(!ms){dogSound(kind);return;}/* không có mp3: dùng tiếng cười tổng hợp */
     laughEnd=Date.now()+ms;clearTimeout(dogTO);dogTO=setTimeout(dogEnd,ms+150);
-    dogLineTI=setInterval(()=>dogLine(kind==='trip'&&Math.random()<.5?'trip':'laugh'),4500);
+    dogLineTI=setInterval(()=>dogLine(Math.random()<.5?kind:'laugh'),4500);
   });
 }
 /* ---- âm thanh dí dỏm ---- */
