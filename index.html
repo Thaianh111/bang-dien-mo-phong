@@ -33,6 +33,12 @@ h1{font-size:16px;margin:0}
 #board{display:block;width:100%;height:60vh;min-height:340px;touch-action:none;user-select:none;-webkit-user-select:none}
 .zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
 .zoom button{width:38px;height:38px;border-radius:10px;border:1px solid #94a3b8;background:#ffffffe6;color:#0f172a;font-size:20px;font-weight:700;cursor:pointer;padding:0}
+.zoom button[title]:hover{background:#fff}
+.pc{display:none}
+@media (pointer:fine){.pc{display:inline}.touch{display:none}}
+@media (min-width:900px){#board{min-height:420px}.items{min-height:76px}}
+.tools .btn{white-space:nowrap}
+@media (max-width:480px){.tools{gap:4px;padding:6px 8px}.tools .btn{padding:8px 7px;font-size:13px}}
 #zl{position:absolute;left:8px;bottom:6px;font-size:11px;color:#334155;background:#ffffffb0;padding:1px 6px;border-radius:6px}
 #result{margin:8px 8px 20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:none}
 #result h3{margin:0 0 6px;font-size:15px}
@@ -115,7 +121,9 @@ h1{font-size:16px;margin:0}
   <button id="sheetBtn" class="btn">📐 Bản vẽ</button>
   <button id="parBtn" class="btn" disabled>⚙ Thông số</button>
   <span style="flex:1"></span>
-  <button id="delBtn" class="btn del" disabled>🗑</button>
+  <button id="undoBtn" class="btn" title="Hoàn tác (Ctrl+Z)" disabled>↶</button>
+  <button id="redoBtn" class="btn" title="Làm lại (Ctrl+Y)" disabled>↷</button>
+  <button id="delBtn" class="btn del" title="Xóa (Delete)" disabled>🗑</button>
   <button id="clearBtn" class="btn">Làm mới</button>
 </div>
 <div class="legendC" style="padding:0 12px 6px">
@@ -134,10 +142,10 @@ h1{font-size:16px;margin:0}
     <g id="content"></g>
     <g id="fxg" pointer-events="none"></g>
   </svg>
-  <div class="zoom"><button id="zin">+</button><button id="zout">−</button><button id="zfit" style="font-size:15px">⤢</button></div>
+  <div class="zoom"><button id="zin" title="Phóng to (+)">+</button><button id="zout" title="Thu nhỏ (−)">−</button><button id="zfit" style="font-size:15px" title="Vừa mạch (0)">⤢</button><button id="zall" style="font-size:13px" title="Xem toàn bảng (9)">▣</button></div>
   <div id="zl">100%</div>
 </div>
-<div class="legend">Chạm thiết bị nhiều chân để <b>hiện chân</b>, chạm ra nền để ẩn · Chạm 1 chân ● rồi chạm chân khác để nối dây · Kéo thiết bị để dời · 2 ngón để thu phóng, kéo nền để di chuyển · Khi chạy: chạm CB/công tắc/dừng khẩn để bật tắt, <b>nhấn giữ</b> nút ON/OFF, chạm rơ-le nhiệt để RESET, chạm timer (đang chọn) để đổi thời gian.</div>
+<div class="legend">Chạm thiết bị nhiều chân để <b>hiện chân</b>, chạm ra nền để ẩn · Chạm 1 chân ● rồi chạm chân khác để nối dây · Kéo thiết bị để dời · <span class="touch">2 ngón để thu phóng, kéo nền để di chuyển</span><span class="pc">Lăn chuột để thu phóng, kéo nền (hoặc giữ chuột giữa) để di chuyển · Phím tắt: <b>+ / −</b> thu phóng, <b>0</b> vừa mạch, <b>9</b> toàn bảng, <b>Delete</b> xóa, <b>Esc</b> hủy, <b>Ctrl+Z / Ctrl+Y</b> hoàn tác / làm lại</span> · Khi chạy: chạm CB/công tắc/dừng khẩn để bật tắt, <b>nhấn giữ</b> nút ON/OFF, chạm rơ-le nhiệt để RESET, chạm timer (đang chọn) để đổi thời gian.</div>
 <div id="result"></div>
 <div id="sheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="shClose">✕</button><b style="font-size:15px">📐 Bản vẽ</b><span style="flex:1"></span><button class="btn" id="shZoom">🔍</button><button class="btn run" id="shPdf">Xuất PDF</button></div>
@@ -237,31 +245,48 @@ function hint(t){document.getElementById('hint').textContent=t;}
 
 /* ================= view / zoom ================= */
 function asp(){const r=svg.getBoundingClientRect();return r.width?r.height/r.width:1.4;}
+/* thu xa tối đa: đủ thấy toàn bảng theo cả 2 chiều + lề */
+function maxW(){return Math.max(WW+400,(WH+400)/asp());}
+function clampW(w){return Math.max(140,Math.min(maxW(),w));}
+function clampV(v,lo,hi){return lo>hi?(lo+hi)/2:Math.max(lo,Math.min(hi,v));}
+function sizeBoard(){
+  if(!matchMedia('(min-width:900px)').matches){svg.style.height='';return;}
+  const top=document.getElementById('boardWrap').getBoundingClientRect().top+window.scrollY;
+  svg.style.height=Math.max(420,window.innerHeight-top-14)+'px';
+}
 function applyView(){
-  view.w=Math.max(140,Math.min(1200,view.w));
+  view.w=clampW(view.w);
   const vh=view.w*asp();
-  view.x=Math.max(-200,Math.min(WW-view.w+200,view.x));view.y=Math.max(-200,Math.min(WH-vh+200,view.y));
+  view.x=clampV(view.x,-200,WW-view.w+200);view.y=clampV(view.y,-200,WH-vh+200);
   svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${vh}`);
   document.getElementById('zl').textContent=Math.round(420/view.w*100)+'%';
 }
 function zoomAt(cx,cy,f){const r=svg.getBoundingClientRect();const wx=view.x+(cx-r.left)/r.width*view.w,wy=view.y+(cy-r.top)/r.height*view.w*asp();
-  view.w=Math.max(140,Math.min(1200,view.w*f));view.x=wx-(cx-r.left)/r.width*view.w;view.y=wy-(cy-r.top)/r.height*view.w*asp();applyView();save();}
+  view.w=clampW(view.w*f);view.x=wx-(cx-r.left)/r.width*view.w;view.y=wy-(cy-r.top)/r.height*view.w*asp();applyView();save();}
 function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,f);}
 document.getElementById('zin').onclick=()=>zoomCenter(1/1.3);
 document.getElementById('zout').onclick=()=>zoomCenter(1.3);
 document.getElementById('zfit').onclick=fit;
+document.getElementById('zall').onclick=fitAll;
+function fitAll(){const a=asp();view.w=Math.max(WW+40,(WH+40)/a);view.x=WW/2-view.w/2;view.y=WH/2-view.w*a/2;applyView();save();}
 function fit(){
   if(!S.devs.length){view={x:0,y:0,w:420};applyView();return;}
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;S.devs.forEach(d=>{const T=TYPES[d.t];x0=Math.min(x0,d.x);y0=Math.min(y0,d.y-20);x1=Math.max(x1,d.x+T.w+30);y1=Math.max(y1,d.y+T.h+30);});
   const a=asp();view.w=Math.max(x1-x0+40,(y1-y0+40)/a,300);view.x=(x0+x1)/2-view.w/2;view.y=(y0+y1)/2-view.w*a/2;applyView();save();
 }
-svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.12:1/1.12);},{passive:false});
-window.addEventListener('resize',applyView);
+/* lăn chuột: theo độ lớn deltaY; touchpad pinch (ctrlKey) mịn hơn */
+svg.addEventListener('wheel',e=>{e.preventDefault();
+  const dy=e.deltaY*(e.deltaMode===1?33:e.deltaMode===2?400:1);
+  const f=Math.exp(Math.max(-0.5,Math.min(0.5,dy*(e.ctrlKey?0.01:0.0015))));
+  zoomAt(e.clientX,e.clientY,f);},{passive:false});
+window.addEventListener('resize',()=>{sizeBoard();applyView();});
 function pt(e){const m=svg.getScreenCTM().inverse();const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(m);}
 
 /* ======== pointer manager: pinch / pan / drag ======== */
 const ptrs=new Map();let pinch=null,pan=null,drag=null,lastPinch=0;
 svg.addEventListener('pointerdown',e=>{
+  /* chuột giữa: luôn kéo nền, kể cả khi trỏ vào thiết bị */
+  if(e.pointerType==='mouse'&&e.button===1){e.preventDefault();e.stopPropagation();pan={id:e.pointerId,x0:e.clientX,y0:e.clientY,vx:view.x,vy:view.y,moved:true};return;}
   ptrs.set(e.pointerId,[e.clientX,e.clientY]);
   if(ptrs.size===2){
     pan=null;if(drag){drag.cancel&&drag.cancel();drag=null;}
@@ -275,7 +300,7 @@ window.addEventListener('pointermove',e=>{
   if(pinch&&ptrs.size>=2){
     const [a,b]=[...ptrs.values()];const r=svg.getBoundingClientRect();
     const d=Math.hypot(a[0]-b[0],a[1]-b[1])||1;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
-    view.w=Math.max(140,Math.min(1200,pinch.w0*pinch.d0/d));
+    view.w=clampW(pinch.w0*pinch.d0/d);
     view.x=pinch.wx-(mx-r.left)/r.width*view.w;view.y=pinch.wy-(my-r.top)/r.height*view.w*asp();applyView();lastPinch=Date.now();return;
   }
   if(pan&&pan.id===e.pointerId){
@@ -348,9 +373,26 @@ function stop(){
   S.wires.forEach(w=>{if(w.burned)fixed=true;w.burned=false;});
   document.getElementById('result').style.display='none';
   if(fixed)hint('Đã thay thiết bị/dây bị cháy. Sửa lại đấu dây rồi chạy thử nhé.');
-  save();render();
+  save();snap();render();
 }
-function changed(){if(running)evaluate();save();render();}
+function changed(){if(running)evaluate();save();snap();render();}
+
+/* ================= hoàn tác / làm lại ================= */
+/* bỏ trạng thái tạm thời của lúc chạy thử khỏi lịch sử */
+const RUNTIME_KEYS=new Set(['en','t0','pressed','fo','ro','vs','burnWhy','burned','trip']);
+const hist={u:[],r:[],last:null};
+function snapJson(){return JSON.stringify(S,(k,v)=>RUNTIME_KEYS.has(k)?undefined:v);}
+function snap(){
+  if(running)return;const j=snapJson();if(j===hist.last)return;
+  if(hist.last!==null){hist.u.push(hist.last);if(hist.u.length>100)hist.u.shift();hist.r.length=0;}
+  hist.last=j;updUndo();
+}
+function restore(j){S=JSON.parse(j);hist.last=j;selected=null;pending=null;updSel();save();render();buildItems();updUndo();}
+function undo(){if(running){hint('Dừng chạy thử trước khi hoàn tác.');return;}if(!hist.u.length)return;hist.r.push(hist.last);restore(hist.u.pop());hint('Đã hoàn tác.');}
+function redo(){if(running){hint('Dừng chạy thử trước khi làm lại.');return;}if(!hist.r.length)return;hist.u.push(hist.last);restore(hist.r.pop());hint('Đã làm lại.');}
+function updUndo(){document.getElementById('undoBtn').disabled=!hist.u.length;document.getElementById('redoBtn').disabled=!hist.r.length;}
+document.getElementById('undoBtn').onclick=undo;
+document.getElementById('redoBtn').onclick=redo;
 function updSel(){document.getElementById('delBtn').disabled=!selected;const d=selected&&selected.kind==='dev'&&dev(selected.id);document.getElementById('parBtn').disabled=!(d&&PDEF[d.t]);}
 
 /* ================= samples ================= */
@@ -827,12 +869,15 @@ function buildPaths(){
 }
 
 /* ================= render ================= */
-let wireLayer=null,devLayer=null;
-function render(){setTimeout(syncSound,0);
+let wireLayer=null,devLayer=null,renderRq=0;
+/* gom nhiều lần vẽ lại trong cùng một khung hình thành một lần */
+function render(){if(!renderRq)renderRq=requestAnimationFrame(renderNow);}
+function renderNow(){if(renderRq){cancelAnimationFrame(renderRq);renderRq=0;}setTimeout(syncSound,0);
   content.innerHTML='';
-  if(exportMode)el('rect',{x:-400,y:-400,width:WW+800,height:WH+800,fill:'#ffffff'},content);
+  const BG=Math.max(WW,WH)*3;
+  if(exportMode)el('rect',{x:-BG,y:-BG,width:WW+2*BG,height:WH+2*BG,fill:'#ffffff'},content);
   else{
-  el('rect',{x:-400,y:-400,width:WW+800,height:WH+800,fill:'#c7ced6'},content);
+  el('rect',{x:-BG,y:-BG,width:WW+2*BG,height:WH+2*BG,fill:'#c7ced6'},content);
   el('rect',{x:0,y:0,width:WW,height:WH,fill:'#dfe4e9',stroke:'#9aa5b1','stroke-width':2},content);
   el('rect',{x:0,y:0,width:WW,height:WH,fill:'url(#grid)'},content);}
   wireLayer=el('g',{},content);devLayer=el('g',{},content);
@@ -1126,13 +1171,13 @@ async function makePDF(canvases){
 function stamp(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes());}
 function wireName(c){if(c==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return c||'—';}
 async function diagramImage(){
-  const sSel=selected,sPend=pending;selected=null;pending=null;exportMode=true;render();
+  const sSel=selected,sPend=pending;selected=null;pending=null;exportMode=true;renderNow();
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   S.devs.forEach(d=>{const T=TYPES[d.t];x0=Math.min(x0,d.x-30);y0=Math.min(y0,d.y-40);x1=Math.max(x1,d.x+T.w+50);y1=Math.max(y1,d.y+T.h+40);});
   S.wires.forEach(w=>{const p=wirePts(w);if(p)p.forEach(q=>{x0=Math.min(x0,q[0]-20);x1=Math.max(x1,q[0]+20);y0=Math.min(y0,q[1]-20);y1=Math.max(y1,q[1]+20);});});
   const bw=x1-x0,bh=y1-y0,sc=Math.min(4,2800/bw,2000/bh),W=Math.round(bw*sc),H=Math.round(bh*sc);
   const clone=svg.cloneNode(true);
-  exportMode=false;selected=sSel;pending=sPend;render();
+  exportMode=false;selected=sSel;pending=sPend;renderNow();
   clone.querySelector('#fxg').innerHTML='';
   clone.setAttribute('xmlns',NS);clone.setAttribute('viewBox',`${x0} ${y0} ${bw} ${bh}`);clone.setAttribute('width',W);clone.setAttribute('height',H);clone.removeAttribute('style');clone.removeAttribute('class');
   const st=document.createElementNS(NS,'style');
@@ -1951,7 +1996,30 @@ document.getElementById('bdManual').onclick=manualPlace;
 document.getElementById('bdAuto').onclick=autoPlace;
 
 content.addEventListener('pointerdown',bgDown);
-load();buildItems();applyView();render();
+/* chặn tự cuộn trang khi nhấn chuột giữa trên bảng */
+svg.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault();});
+
+/* ================= phím tắt máy tính ================= */
+window.addEventListener('keydown',e=>{
+  const tg=e.target;if(tg&&(tg.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)))return;
+  if(!document.getElementById('sheet').hidden||!document.getElementById('builder').hidden||!document.getElementById('modal').hidden)return;
+  const k=e.key,mod=e.ctrlKey||e.metaKey;
+  if(mod&&!e.altKey){
+    const kl=k.toLowerCase();
+    if(kl==='z'&&!e.shiftKey){e.preventDefault();undo();}
+    else if(kl==='y'||(kl==='z'&&e.shiftKey)){e.preventDefault();redo();}
+    return;
+  }
+  if(e.altKey)return;
+  if(k==='Delete'||k==='Backspace'){if(selected){e.preventDefault();document.getElementById('delBtn').click();}}
+  else if(k==='Escape'){if(pending||selected){selected=null;if(pending){pending=null;hint('Đã hủy nối dây.');}updSel();render();}}
+  else if(k==='+'||k==='='){e.preventDefault();zoomCenter(1/1.25);}
+  else if(k==='-'||k==='_'){e.preventDefault();zoomCenter(1.25);}
+  else if(k==='0'){e.preventDefault();fit();}
+  else if(k==='9'){e.preventDefault();fitAll();}
+});
+
+load();buildItems();sizeBoard();applyView();snap();render();
 if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
 })();
 </script>
