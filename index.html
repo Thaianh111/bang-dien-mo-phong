@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Mô phỏng bảng điện</title>
+<style>
+:root{--bg:#0f1720;--panel:#17212c;--line:#2a3846;--txt:#e6edf3;--mut:#8aa0b3;--ok:#22c55e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;overscroll-behavior:none}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 4px;gap:8px}
+h1{font-size:16px;margin:0}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:600;cursor:pointer}
+.btn.run{background:var(--ok);border-color:var(--ok);color:#06210f}
+.btn.stop{background:#f97316;border-color:#f97316;color:#2a1000}
+.btn.del{background:#7f1d1d;border-color:#b91c1c}
+.btn:disabled{opacity:.4}
+.tabs{display:flex;gap:2px;padding:0 6px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;white-space:nowrap;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 9px;font-size:13px;font-weight:700;cursor:pointer}
+.tab.on{color:#fff;border-bottom-color:#facc15}
+.items{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;background:#121b25;border-top:1px solid var(--line);border-bottom:1px solid var(--line);min-height:88px}
+.item{flex:0 0 auto;width:84px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;color:var(--txt);font-size:11px;line-height:1.2;cursor:pointer}
+.item svg{width:62px;height:42px;display:block;margin:0 auto 3px}
+.item:disabled{opacity:.35}
+.item.wide{width:156px;text-align:left;padding:8px}
+.item.wide b{display:block;font-size:12px;margin-bottom:3px;color:#facc15}
+.tools{display:flex;gap:6px;padding:6px 10px;align-items:center}
+.legendC{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--mut);align-items:center;flex:1}
+.legendC i{display:inline-block;width:16px;height:5px;border-radius:3px;margin-right:3px;vertical-align:middle}
+#hint{padding:0 12px 6px;color:var(--mut);min-height:20px;font-size:13px}
+#boardWrap{margin:0 8px;border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;background:#d5dbe1}
+#board{display:block;width:100%;height:60vh;min-height:340px;touch-action:none;user-select:none;-webkit-user-select:none}
+.zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:38px;height:38px;border-radius:10px;border:1px solid #94a3b8;background:#ffffffe6;color:#0f172a;font-size:20px;font-weight:700;cursor:pointer;padding:0}
+#zl{position:absolute;left:8px;bottom:6px;font-size:11px;color:#334155;background:#ffffffb0;padding:1px 6px;border-radius:6px}
+#result{margin:8px 8px 20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:none}
+#result h3{margin:0 0 6px;font-size:15px}
+#result ul{margin:0;padding-left:0;list-style:none}
+#result li{padding:5px 0;border-top:1px dashed var(--line);line-height:1.4}
+#result li:first-child{border-top:0}
+.spin{animation:spin .45s linear infinite;transform-box:fill-box;transform-origin:center}
+.spin.slow{animation-duration:1.4s}
+.spin.rev{animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.flow{stroke-dasharray:5 7;animation:flow .6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-12}}
+.flick{transform-box:fill-box;transform-origin:50% 100%;animation:flick .18s ease-in-out infinite alternate}
+@keyframes flick{from{transform:scale(1,1)}to{transform:scale(.85,1.25)}}
+.smk{animation:smk 2s ease-out infinite;opacity:0}
+@keyframes smk{0%{transform:translate(0,0) scale(.6);opacity:.7}100%{transform:translate(6px,-46px) scale(2.2);opacity:0}}
+.blink{animation:blink .5s steps(2) infinite}
+.vib{animation:vib .07s linear infinite}
+.vibx{animation:vibx .05s linear infinite}
+@keyframes vib{0%{transform:translate(0,0)}33%{transform:translate(.45px,-.35px)}66%{transform:translate(-.45px,.35px)}100%{transform:translate(0,0)}}
+@keyframes vibx{0%{transform:translate(0,0)}25%{transform:translate(1.6px,-1px)}50%{transform:translate(-1.4px,1px)}75%{transform:translate(1px,1.2px)}100%{transform:translate(0,0)}}
+@keyframes blink{50%{opacity:.25}}
+.lbl{font-size:8px;fill:#1e293b;font-weight:800;pointer-events:none}
+.pr{font-size:6.6px;fill:#334155;font-weight:700;pointer-events:none}
+.prw{font-size:6.6px;fill:#cbd5e1;font-weight:700;pointer-events:none}
+.tag{font-size:10px;fill:#0f172a;font-weight:900;pointer-events:none}
+.sel{stroke:#0ea5e9;stroke-width:2;stroke-dasharray:5 3;fill:none}
+.legend{color:var(--mut);font-size:12px;padding:6px 12px 0;line-height:1.45}
+.sheet{position:fixed;inset:0;background:#0f1720;z-index:40;overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.shHead{position:sticky;top:0;display:flex;gap:6px;align-items:center;padding:8px 10px;background:#0f1720;border-bottom:1px solid var(--line);z-index:2}
+.shMeta{display:flex;gap:8px;padding:8px 10px}
+.shMeta input,.form input,.form select{flex:1;min-width:0;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px;font-size:15px}
+#sheetSvg{margin:0 8px;background:#fff;border-radius:8px;overflow:auto}
+#sheetCalc{padding:6px 12px 40px}
+#sheetCalc h3{font-size:15px;margin:10px 0 8px}
+#sheetCalc table{width:100%;border-collapse:collapse;font-size:12.5px}
+#sheetCalc td,#sheetCalc th{border:1px solid var(--line);padding:6px;vertical-align:top;text-align:left;line-height:1.4}
+#sheetCalc th{background:#17212c}
+#sheetCalc ul{padding-left:18px;font-size:13px;line-height:1.5}
+#sheetCalc small,.mut{color:var(--mut);font-size:12px}
+.form{display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:10px;max-height:44vh;overflow:auto}
+.form label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+.calcbox{text-align:left;font-size:13px;background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:12px;line-height:1.5;color:#cbd5e1}
+.bdCat{padding:12px 12px 4px;font-weight:800;color:#facc15;font-size:13px}
+.bdRow{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid #1d2935}
+.bdRow.on{background:#14251c}
+.bdRow svg{width:52px;height:36px;flex:0 0 auto}
+.bdName{flex:1;font-size:14px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:#fff;font-size:20px;font-weight:700;cursor:pointer}
+.step b{min-width:22px;text-align:center;font-size:16px}
+.bdNote{padding:12px}
+.bdNote label{display:block;font-weight:700;margin-bottom:6px}
+.bdNote textarea{width:100%;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font-size:15px;font-family:inherit;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chips button{border:1px solid #334155;background:#1e293b;color:#cbd5e1;border-radius:16px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+.bdAct{position:sticky;bottom:0;display:flex;gap:8px;padding:10px;background:#0f1720;border-top:1px solid var(--line)}
+.btn.big{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 8px;font-size:15px}
+.btn.big small{font-weight:500;font-size:11px;opacity:.85;margin-top:3px}
+.modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal[hidden]{display:none}
+.card{background:#17212c;border:1px solid #2a3846;border-radius:18px;padding:20px 18px 16px;max-width:330px;width:100%;text-align:center;box-shadow:0 12px 40px #000c;animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.card .ic{font-size:42px;line-height:1}
+.card h2{margin:8px 0 6px;font-size:19px}
+.card p{color:#cbd5e1;margin:0 0 16px;line-height:1.45;font-size:14px}
+.card .row{display:flex;gap:10px}
+.card .row .btn{flex:1;padding:12px;font-size:15px}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ Bảng điện mô phỏng</h1>
+  <span style="display:flex;gap:6px"><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
+</header>
+<div class="tabs" id="tabs"></div>
+<div class="items" id="items"></div>
+<div class="tools">
+  <button id="sheetBtn" class="btn">📐 Bản vẽ</button>
+  <button id="parBtn" class="btn" disabled>⚙ Thông số</button>
+  <span style="flex:1"></span>
+  <button id="delBtn" class="btn del" disabled>🗑</button>
+  <button id="clearBtn" class="btn">Làm mới</button>
+</div>
+<div class="legendC" style="padding:0 12px 6px">
+    <span><i style="background:#dc2626"></i>L1</span><span><i style="background:#eab308"></i>L2</span><span><i style="background:#2563eb"></i>L3</span>
+    <span><i style="background:#111827;outline:1px solid #64748b"></i>N</span><span><i style="background:repeating-linear-gradient(90deg,#16a34a 0 4px,#facc15 4px 8px)"></i>PE</span><span><i style="background:#94a3b8"></i>chưa có điện</span>
+  </div>
+<div id="hint">Chọn thiết bị ở trên để gắn vào bảng.</div>
+<div id="boardWrap">
+  <svg id="board" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.1" fill="#aab4bf"/></pattern>
+      <filter id="glow" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="mgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d9cbb"/><stop offset=".45" stop-color="#4a6a8b"/><stop offset="1" stop-color="#253c55"/></linearGradient>
+      <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#dc2626"/><stop offset=".5" stop-color="#f97316"/><stop offset="1" stop-color="#fde047"/></linearGradient>
+    </defs>
+    <g id="content"></g>
+    <g id="fxg" pointer-events="none"></g>
+  </svg>
+  <div class="zoom"><button id="zin">+</button><button id="zout">−</button><button id="zfit" style="font-size:15px">⤢</button></div>
+  <div id="zl">100%</div>
+</div>
+<div class="legend">Chạm thiết bị nhiều chân để <b>hiện chân</b>, chạm ra nền để ẩn · Chạm 1 chân ● rồi chạm chân khác để nối dây · Kéo thiết bị để dời · 2 ngón để thu phóng, kéo nền để di chuyển · Khi chạy: chạm CB/công tắc/dừng khẩn để bật tắt, <b>nhấn giữ</b> nút ON/OFF, chạm rơ-le nhiệt để RESET, chạm timer (đang chọn) để đổi thời gian.</div>
+<div id="result"></div>
+<div id="sheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="shClose">✕</button><b style="font-size:15px">📐 Bản vẽ</b><span style="flex:1"></span><button class="btn" id="shZoom">🔍</button><button class="btn run" id="shPdf">Xuất PDF</button></div>
+  <div class="shMeta"><input id="mPrj" placeholder="Tên công trình"><input id="mBy" placeholder="Người vẽ"></div>
+  <div id="sheetSvg"></div>
+  <div id="sheetCalc"></div>
+</div>
+<div id="builder" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="bdClose">✕</button><b style="font-size:15px">🧩 Lập mạch</b><span style="flex:1"></span><button class="btn" id="bdReset">Xóa chọn</button></div>
+  <p class="mut" style="padding:4px 12px 0;margin:0">Chọn thiết bị có trong mạch và số lượng:</p>
+  <div id="bdList"></div>
+  <div class="bdNote">
+    <label>📝 Ghi chú yêu cầu (dùng cho đấu tự động)</label>
+    <textarea id="bdNote" rows="3" placeholder="VD: đảo chiều, dừng khẩn, tự tắt sau 30 giây, đóng 10s ngắt 5s, sao tam giác 8s, đèn báo…"></textarea>
+    <div class="chips" id="bdChips"><button>đảo chiều</button><button>sao tam giác 8s</button><button>tự tắt sau 30s</button><button>trễ 10s mới chạy</button><button>đóng 10s ngắt 5s</button><button>dừng khẩn</button><button>đèn báo</button><button>đèn cầu thang 60s</button><button>biến tần</button></div>
+    <div id="bdParse" class="calcbox"></div>
+  </div>
+  <div class="bdAct"><button class="btn big" id="bdManual">✋ Tự đấu mạch<small>Đặt thiết bị lên bảng, mình tự nối dây</small></button><button class="btn run big" id="bdAuto">⚡ Đấu tự động<small>Hệ thống tự đấu hoàn chỉnh</small></button></div>
+</div>
+<div id="modal" class="modal" hidden></div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const WW=1400,WH=2000,GRID=10;
+const PCOL={L1:'#dc2626',L2:'#eab308',L3:'#2563eb',N:'#111827'};
+const P_=(id,x,y,p,src)=>({id,x,y,p:p===undefined?id:p,src});
+const TYPES={
+  src1:{cat:'src',name:'Nguồn 1 pha',tag:'NGUỒN',w:110,h:50,max:1,
+    terms:[P_('L',20,50,'L','L1'),P_('N',50,50,'N','N'),P_('PE',80,50,'PE','PE')]},
+  src3:{cat:'src',name:'Nguồn 3 pha',tag:'NGUỒN 3P',w:170,h:50,max:1,
+    terms:[P_('L1',20,50,'L1','L1'),P_('L2',50,50,'L2','L2'),P_('L3',80,50,'L3','L3'),P_('N',115,50,'N','N'),P_('PE',145,50,'PE','PE')]},
+  cb2:{cat:'prot',name:'Aptomat 2P',tag:'CB',w:56,h:72,ctl:'cb',
+    terms:[P_('1',16,0,'1/L'),P_('3',40,0,'3/N'),P_('2',16,72,'2'),P_('4',40,72,'4')],contacts:[['1','2','NO'],['3','4','NO']]},
+  cb3:{cat:'prot',name:'Aptomat 3P',tag:'CB',w:84,h:72,ctl:'cb',
+    terms:[P_('1',18,0,'1/L1'),P_('3',42,0,'3/L2'),P_('5',66,0,'5/L3'),P_('2',18,72,'2/T1'),P_('4',42,72,'4/T2'),P_('6',66,72,'6/T3')],
+    contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO']]},
+  switch:{cat:'prot',name:'Công tắc',tag:'S',w:50,h:64,ctl:'sw',terms:[P_('1',25,0,'1'),P_('2',25,64,'2')],contacts:[['1','2','NO']]},
+  pbno:{cat:'ctrl',name:'Nút ON (NO 3-4)',tag:'ON',w:50,h:64,ctl:'pb',terms:[P_('3',25,0),P_('4',25,64)],contacts:[['3','4','NO']]},
+  pbnc:{cat:'ctrl',name:'Nút OFF (NC 1-2)',tag:'OFF',w:50,h:64,ctl:'pb',terms:[P_('1',25,0),P_('2',25,64)],contacts:[['1','2','NC']]},
+  estop:{cat:'ctrl',name:'Dừng khẩn (NC)',tag:'EM',w:56,h:64,ctl:'estop',terms:[P_('1',28,0),P_('2',28,64)],contacts:[['1','2','NC']]},
+  contactor:{cat:'ctrl',name:'Contactor 3P (1NO+1NC)',tag:'K',w:170,h:96,ctl:'k',coil:['A1','A2'],
+    terms:[P_('A1',14,0),P_('1',46,0,'1/L1'),P_('3',72,0,'3/L2'),P_('5',98,0,'5/L3'),P_('13',128,0,'13NO'),P_('21',154,0,'21NC'),
+           P_('A2',14,96),P_('2',46,96,'2/T1'),P_('4',72,96,'4/T2'),P_('6',98,96,'6/T3'),P_('14',128,96,'14NO'),P_('22',154,96,'22NC')],
+    contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO'],['13','14','NO'],['21','22','NC']]},
+  ol:{cat:'ctrl',name:'Rơ-le nhiệt (OL)',tag:'OL',w:150,h:80,ctl:'ol',
+    terms:[P_('1',20,0,'1/L1'),P_('3',46,0,'3/L2'),P_('5',72,0,'5/L3'),P_('95',106,0,'95'),P_('97',132,0,'97'),
+           P_('2',20,80,'2/T1'),P_('4',46,80,'4/T2'),P_('6',72,80,'6/T3'),P_('96',106,80,'96'),P_('98',132,80,'98')],
+    contacts:[['1','2','M'],['3','4','M'],['5','6','M'],['95','96','NC'],['97','98','NO']]},
+  relay:{cat:'ctrl',name:'Rơ-le trung gian MY2',tag:'R',w:150,h:80,ctl:'k',coil:['13','14'],
+    terms:[P_('9',30,0,'9 COM'),P_('12',80,0,'12 COM'),P_('13',126,0,'13(+)'),
+           P_('1',18,80,'1 NC'),P_('5',42,80,'5 NO'),P_('4',68,80,'4 NC'),P_('8',92,80,'8 NO'),P_('14',126,80,'14(−)')],
+    contacts:[['9','1','NC'],['9','5','NO'],['12','4','NC'],['12','8','NO']],co:[['9','1','5'],['12','4','8']]},
+  timer:{cat:'ctrl',name:'Timer 8 chân (On-delay)',tag:'T',w:150,h:80,ctl:'tm',coil:['2','7'],
+    terms:[P_('1',30,0,'1 COM'),P_('8',80,0,'8 COM'),P_('2',126,0,'2'),
+           P_('4',18,80,'4 NC'),P_('3',42,80,'3 NO'),P_('5',68,80,'5 NC'),P_('6',92,80,'6 NO'),P_('7',126,80,'7')],
+    contacts:[['1','4','NC'],['1','3','NO'],['8','5','NC'],['8','6','NO']],co:[['1','4','3'],['8','5','6']]},
+  pilotG:{cat:'ctrl',name:'Đèn báo xanh',tag:'H',w:44,h:54,load:1,lp:['X1','X2'],col:'#22c55e',terms:[P_('X1',22,0),P_('X2',22,54)]},
+  pilotR:{cat:'ctrl',name:'Đèn báo đỏ',tag:'H',w:44,h:54,load:1,lp:['X1','X2'],col:'#ef4444',terms:[P_('X1',22,0),P_('X2',22,54)]},
+  pilotY:{cat:'ctrl',name:'Đèn báo vàng',tag:'H',w:44,h:54,load:1,lp:['X1','X2'],col:'#facc15',terms:[P_('X1',22,0),P_('X2',22,54)]},
+  lamp:{cat:'t1',name:'Đèn 220V',tag:'Đ',w:60,h:66,load:1,lp:['a','b'],terms:[P_('a',15,0,''),P_('b',45,0,'')]},
+  fan:{cat:'t1',name:'Quạt 220V',tag:'Q',w:66,h:72,load:1,lp:['a','b'],terms:[P_('a',18,0,''),P_('b',48,0,'')]},
+  socket:{cat:'t1',name:'Ổ cắm 220V',tag:'OC',w:72,h:52,terms:[P_('L',16,52),P_('PE',36,52),P_('N',56,52)]},
+  motor:{cat:'t3',name:'Động cơ 3 pha (3 đầu)',tag:'M',w:116,h:90,terms:[P_('U',22,0),P_('V',48,0),P_('W',74,0),P_('PE',100,0)]},
+  vfd:{cat:'t3',name:'Biến tần ABB ACS580',tag:'VFD',w:390,h:140,ctl:'vfd',
+    terms:[P_('L1',20,0,'L1'),P_('L2',44,0,'L2'),P_('L3',68,0,'L3'),P_('PE',92,0,'PE'),
+      P_('2',130,0,'AI1'),P_('3',156,0,'AGND'),P_('4',182,0,'+10V'),P_('10',208,0,'+24V'),P_('11',234,0,'DGND'),P_('12',260,0,'DCOM'),
+      P_('13',286,0,'DI1'),P_('14',312,0,'DI2'),P_('15',338,0,'DI3'),P_('16',364,0,'DI4'),
+      P_('U',20,140,'U'),P_('V',44,140,'V'),P_('W',68,140,'W'),
+      P_('19',110,140,'R1C'),P_('20',130,140,'R1A'),P_('21',150,140,'R1B'),P_('22',170,140,'R2C'),P_('23',190,140,'R2A'),P_('24',210,140,'R2B'),
+      P_('25',230,140,'R3C'),P_('26',250,140,'R3A'),P_('27',270,140,'R3B'),
+      P_('34',298,140,'OUT1'),P_('35',318,140,'OUT2'),P_('36',338,140,'SGND'),P_('37',358,140,'IN1'),P_('38',378,140,'IN2')],
+    contacts:[['19','20','NC',0],['19','21','NO',0],['22','23','NC',1],['22','24','NO',1],['25','26','NC',2],['25','27','NO',2]]},
+  pot:{cat:'ctrl',name:'Chiết áp 10kΩ',tag:'RV',w:56,h:56,terms:[P_('1',12,0,'1'),P_('2',28,0,'2'),P_('3',44,0,'3')]},
+  motor6:{cat:'t3',name:'Động cơ 6 đầu (Y/Δ)',tag:'M',w:132,h:100,
+    terms:[P_('U1',24,0),P_('V1',60,0),P_('W1',96,0),P_('W2',24,100),P_('U2',60,100),P_('V2',96,100),P_('PE',122,100)]}
+};
+Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
+const CATS=[['lap','🧩 Lập mạch'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
+
+let S={devs:[],wires:[],nid:1};
+let pending=null,selected=null,running=false,result=null,curCat='src',lastFault='';
+let view={x:0,y:0,w:420};
+let exportMode=false,askedRun=false;
+const timers={};let tmTO=null;const tmEls={};const devEls={};
+const svg=document.getElementById('board'),content=document.getElementById('content'),fxg=document.getElementById('fxg');
+
+function save(){try{localStorage.setItem('machdien_v3',JSON.stringify(S));localStorage.setItem('machdien_v3_view',JSON.stringify(view));}catch(e){}}
+function load(){try{const t=localStorage.getItem('machdien_v3');if(t){const o=JSON.parse(t);if(o&&o.devs)S=o;}const v=localStorage.getItem('machdien_v3_view');if(v)view=JSON.parse(v);}catch(e){}}
+const dev=id=>S.devs.find(d=>d.id===id);
+const key=(d,t)=>d+':'+t;
+function tagOf(d){const T=TYPES[d.t];if(T.max)return T.tag;const same=S.devs.filter(x=>TYPES[x.t].tag===T.tag);return T.tag+(same.indexOf(d)+1);}
+function nameOf(d){return TYPES[d.t].name.replace(/ \(.*\)/,'')+' '+tagOf(d);}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(g,x,y,s,attrs){const t=el('text',Object.assign({x,y,'text-anchor':'middle'},attrs||{}),g);t.textContent=s;return t;}
+function hint(t){document.getElementById('hint').textContent=t;}
+
+/* ================= view / zoom ================= */
+function asp(){const r=svg.getBoundingClientRect();return r.width?r.height/r.width:1.4;}
+function applyView(){
+  view.w=Math.max(140,Math.min(1200,view.w));
+  const vh=view.w*asp();
+  view.x=Math.max(-200,Math.min(WW-view.w+200,view.x));view.y=Math.max(-200,Math.min(WH-vh+200,view.y));
+  svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${vh}`);
+  document.getElementById('zl').textContent=Math.round(420/view.w*100)+'%';
+}
+function zoomAt(cx,cy,f){const r=svg.getBoundingClientRect();const wx=view.x+(cx-r.left)/r.width*view.w,wy=view.y+(cy-r.top)/r.height*view.w*asp();
+  view.w=Math.max(140,Math.min(1200,view.w*f));view.x=wx-(cx-r.left)/r.width*view.w;view.y=wy-(cy-r.top)/r.height*view.w*asp();applyView();save();}
+function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,f);}
+document.getElementById('zin').onclick=()=>zoomCenter(1/1.3);
+document.getElementById('zout').onclick=()=>zoomCenter(1.3);
+document.getElementById('zfit').onclick=fit;
+function fit(){
+  if(!S.devs.length){view={x:0,y:0,w:420};applyView();return;}
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;S.devs.forEach(d=>{const T=TYPES[d.t];x0=Math.min(x0,d.x);y0=Math.min(y0,d.y-20);x1=Math.max(x1,d.x+T.w+30);y1=Math.max(y1,d.y+T.h+30);});
+  const a=asp();view.w=Math.max(x1-x0+40,(y1-y0+40)/a,300);view.x=(x0+x1)/2-view.w/2;view.y=(y0+y1)/2-view.w*a/2;applyView();save();
+}
+svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.12:1/1.12);},{passive:false});
+window.addEventListener('resize',applyView);
+function pt(e){const m=svg.getScreenCTM().inverse();const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(m);}
+
+/* ======== pointer manager: pinch / pan / drag ======== */
+const ptrs=new Map();let pinch=null,pan=null,drag=null,lastPinch=0;
+svg.addEventListener('pointerdown',e=>{
+  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  if(ptrs.size===2){
+    pan=null;if(drag){drag.cancel&&drag.cancel();drag=null;}
+    const [a,b]=[...ptrs.values()];const r=svg.getBoundingClientRect();
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    pinch={d0:Math.hypot(a[0]-b[0],a[1]-b[1])||1,w0:view.w,wx:view.x+(mx-r.left)/r.width*view.w,wy:view.y+(my-r.top)/r.height*view.w*asp()};
+  }
+},true);
+window.addEventListener('pointermove',e=>{
+  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinch&&ptrs.size>=2){
+    const [a,b]=[...ptrs.values()];const r=svg.getBoundingClientRect();
+    const d=Math.hypot(a[0]-b[0],a[1]-b[1])||1;const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    view.w=Math.max(140,Math.min(1200,pinch.w0*pinch.d0/d));
+    view.x=pinch.wx-(mx-r.left)/r.width*view.w;view.y=pinch.wy-(my-r.top)/r.height*view.w*asp();applyView();lastPinch=Date.now();return;
+  }
+  if(pan&&pan.id===e.pointerId){
+    const dx=e.clientX-pan.x0,dy=e.clientY-pan.y0;if(Math.abs(dx)+Math.abs(dy)>5)pan.moved=true;
+    if(pan.moved){const r=svg.getBoundingClientRect();const k=view.w/r.width;view.x=pan.vx-dx*k;view.y=pan.vy-dy*k;applyView();}
+    return;
+  }
+  if(drag&&drag.id===e.pointerId&&drag.move)drag.move(e);
+});
+function ptrEnd(e){
+  ptrs.delete(e.pointerId);
+  if(pinch){if(ptrs.size<2){pinch=null;save();}if(drag&&drag.id===e.pointerId){drag.up&&drag.up(e,true);drag=null;}return;}
+  if(pan&&pan.id===e.pointerId){if(!pan.moved)bgTap();else save();pan=null;}
+  if(drag&&drag.id===e.pointerId){drag.up&&drag.up(e);drag=null;}
+}
+window.addEventListener('pointerup',ptrEnd);window.addEventListener('pointercancel',ptrEnd);
+function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;selected=null;if(pending){pending=null;hint('Đã hủy nối dây.');}updSel();if(had)render();}
+
+/* ================= picker ================= */
+const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
+CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
+  b.onclick=()=>{if(c==='lap'){openBuilder();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+function iconSvg(t){
+  const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
+  const g=el('g',{},s);drawBody(g,{id:'x',t,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
+  T.terms.forEach(tt=>el('circle',{cx:tt.x,cy:tt.y,r:4,fill:pinFill(tt),stroke:'#334155'},g));return s;
+}
+function buildItems(){
+  itemsEl.innerHTML='';
+  if(curCat==='mau'){SAMPLES.forEach(sm=>{const b=document.createElement('button');b.className='item wide';b.innerHTML='<b>'+sm.title+'</b>'+sm.desc;b.onclick=()=>loadSample(sm);itemsEl.appendChild(b);});return;}
+  Object.keys(TYPES).filter(k=>TYPES[k].cat===curCat).forEach(k=>{
+    const T=TYPES[k];const b=document.createElement('button');b.className='item';
+    b.appendChild(iconSvg(k));b.appendChild(document.createTextNode(T.name));
+    b.disabled=!!T.max&&S.devs.filter(d=>d.t===k).length>=T.max;b.onclick=()=>addDev(k);itemsEl.appendChild(b);});
+}
+function addDev(t){
+  const T=TYPES[t];const vh=view.w*asp();
+  const bx=Math.max(0,view.x+16),by=Math.max(20,view.y+30),ex=Math.min(WW,view.x+view.w-50),ey=Math.min(WH,view.y+vh-20);
+  let x=bx,y=by,found=false;
+  for(let yy=by;yy<ey-T.h&&!found;yy+=20)for(let xx=bx;xx<ex-T.w&&!found;xx+=20){
+    if(!S.devs.some(d=>xx<d.x+TYPES[d.t].w+24&&d.x<xx+T.w+24&&yy<d.y+TYPES[d.t].h+40&&d.y<yy+T.h+40)){x=xx;y=yy;found=true;}}
+  x=Math.round(x/GRID)*GRID;y=Math.round(y/GRID)*GRID;
+  const d={id:'d'+(S.nid++),t,x,y};if(t==='timer')d.sec=5;
+  S.devs.push(d);selected=T.multi?{kind:'dev',id:d.id}:null;updSel();
+  hint(T.name+' đã gắn lên bảng.'+(T.multi?' Đang hiện chân – chạm chân để nối dây.':' Kéo để dời, chạm chân ● để nối dây.'));
+  changed();buildItems();
+}
+
+/* ================= tools ================= */
+document.getElementById('delBtn').onclick=()=>{
+  if(!selected)return;
+  if(selected.kind==='wire')S.wires=S.wires.filter(w=>w.id!==selected.id);
+  else{S.devs=S.devs.filter(d=>d.id!==selected.id);S.wires=S.wires.filter(w=>w.a.d!==selected.id&&w.b.d!==selected.id);}
+  selected=null;pending=null;updSel();changed();buildItems();
+};
+document.getElementById('clearBtn').onclick=()=>{
+  const b=document.getElementById('clearBtn');
+  if(b.dataset.arm){stop();S={devs:[],wires:[],nid:1};selected=null;pending=null;changed();buildItems();b.textContent='Làm mới';delete b.dataset.arm;return;}
+  b.dataset.arm=1;b.textContent='Chắc chưa?';setTimeout(()=>{b.textContent='Làm mới';delete b.dataset.arm},2500);
+};
+const runBtn=document.getElementById('runBtn');
+runBtn.onclick=()=>{unlockAudio();running?stop():start();};
+function start(){running=true;lastFault='';askedRun=false;runBtn.textContent='■ Dừng';runBtn.className='btn stop';evaluate();render();}
+function stop(){
+  Object.keys(loops).forEach(k=>setLoop(k,null));
+  running=false;askedRun=false;result=null;lastFault='';runBtn.textContent='▶ Chạy thử';runBtn.className='btn run';
+  Object.keys(timers).forEach(k=>{clearTimeout(timers[k]);delete timers[k];});clearTimeout(tmTO);
+  let fixed=false;
+  S.devs.forEach(d=>{if(d.burned)fixed=true;d.burned=false;d.en=false;d.t0=null;d.pressed=false;d.fo=0;d.ro=null;d.vs=null;d.burnWhy=null;if(d.trip){d.trip=false;}});
+  S.wires.forEach(w=>{if(w.burned)fixed=true;w.burned=false;});
+  document.getElementById('result').style.display='none';
+  if(fixed)hint('Đã thay thiết bị/dây bị cháy. Sửa lại đấu dây rồi chạy thử nhé.');
+  save();render();
+}
+function changed(){if(running)evaluate();save();render();}
+function updSel(){document.getElementById('delBtn').disabled=!selected;const d=selected&&selected.kind==='dev'&&dev(selected.id);document.getElementById('parBtn').disabled=!(d&&PDEF[d.t]);}
+
+/* ================= samples ================= */
+const W_=(a,ta,b,tb)=>({a:{d:a,t:ta},b:{d:b,t:tb}});
+const SAMPLES=[
+ {title:'Đèn – quạt – ổ cắm',desc:'1 pha qua aptomat 2P, 2 công tắc, ổ cắm có PE',
+  devs:[{id:'d1',t:'src1',x:20,y:20},{id:'d2',t:'cb2',x:40,y:120,on:true},{id:'d3',t:'switch',x:170,y:230,on:true},{id:'d4',t:'switch',x:270,y:230,on:true},
+        {id:'d5',t:'lamp',x:165,y:370},{id:'d6',t:'fan',x:265,y:370},{id:'d7',t:'socket',x:30,y:380}],
+  wires:[W_('d1','L','d2','1'),W_('d1','N','d2','3'),W_('d2','2','d3','1'),W_('d2','2','d4','1'),W_('d3','2','d5','a'),W_('d5','b','d2','4'),
+         W_('d4','2','d6','a'),W_('d6','b','d2','4'),W_('d2','2','d7','L'),W_('d2','4','d7','N'),W_('d1','PE','d7','PE')]},
+ {title:'Khởi động từ + rơ-le nhiệt',desc:'Start/Stop tự giữ, OL bảo vệ, đèn báo chạy/quá tải',
+  devs:[{id:'d1',t:'src3',x:20,y:20},{id:'d2',t:'cb3',x:40,y:120,on:true},{id:'d3',t:'contactor',x:30,y:260},{id:'d4',t:'ol',x:40,y:420},{id:'d5',t:'motor',x:50,y:580},
+        {id:'d6',t:'pbnc',x:280,y:130},{id:'d7',t:'pbno',x:280,y:250},{id:'d8',t:'pilotG',x:370,y:420},{id:'d9',t:'pilotR',x:440,y:420}],
+  wires:[W_('d1','L1','d2','1'),W_('d1','L2','d2','3'),W_('d1','L3','d2','5'),
+         W_('d2','2','d3','1'),W_('d2','4','d3','3'),W_('d2','6','d3','5'),
+         W_('d3','2','d4','1'),W_('d3','4','d4','3'),W_('d3','6','d4','5'),
+         W_('d4','2','d5','U'),W_('d4','4','d5','V'),W_('d4','6','d5','W'),W_('d1','PE','d5','PE'),
+         W_('d2','2','d4','95'),W_('d4','96','d6','1'),W_('d6','2','d7','3'),W_('d7','4','d3','A1'),
+         W_('d3','13','d7','3'),W_('d3','14','d7','4'),W_('d3','A2','d1','N'),
+         W_('d3','A1','d8','X1'),W_('d8','X2','d3','A2'),W_('d2','2','d4','97'),W_('d4','98','d9','X1'),W_('d9','X2','d8','X2')],
+  hint:'Bấm ▶ Chạy thử, nhấn giữ ON để chạy (tự giữ qua 13-14), nhấn OFF để dừng. Thử gỡ 1 dây pha xem rơ-le nhiệt nhảy.'},
+ {title:'Sao – tam giác (Y/Δ)',desc:'Timer chuyển Y→Δ sau 5s, khóa chéo bằng tiếp điểm NC 21-22',
+  devs:[{id:'d1',t:'src3',x:20,y:20},{id:'d2',t:'cb3',x:40,y:120,on:true},{id:'d3',t:'contactor',x:30,y:260},{id:'d4',t:'ol',x:40,y:420},
+        {id:'d5',t:'motor6',x:40,y:600},{id:'d6',t:'contactor',x:250,y:560},{id:'d7',t:'contactor',x:250,y:780},
+        {id:'d8',t:'pbnc',x:480,y:130},{id:'d9',t:'pbno',x:480,y:250},{id:'d10',t:'timer',x:450,y:380,sec:5}],
+  wires:[W_('d1','L1','d2','1'),W_('d1','L2','d2','3'),W_('d1','L3','d2','5'),
+         W_('d2','2','d3','1'),W_('d2','4','d3','3'),W_('d2','6','d3','5'),
+         W_('d3','2','d4','1'),W_('d3','4','d4','3'),W_('d3','6','d4','5'),
+         W_('d4','2','d5','U1'),W_('d4','4','d5','V1'),W_('d4','6','d5','W1'),W_('d1','PE','d5','PE'),
+         W_('d4','2','d6','1'),W_('d4','4','d6','3'),W_('d4','6','d6','5'),
+         W_('d6','2','d5','W2'),W_('d6','4','d5','U2'),W_('d6','6','d5','V2'),
+         W_('d7','1','d5','U2'),W_('d7','3','d5','V2'),W_('d7','5','d5','W2'),W_('d7','2','d7','4'),W_('d7','4','d7','6'),
+         W_('d2','2','d4','95'),W_('d4','96','d8','1'),W_('d8','2','d9','3'),W_('d9','4','d3','A1'),W_('d3','13','d9','3'),W_('d3','14','d3','A1'),
+         W_('d3','A1','d10','2'),W_('d3','A1','d10','1'),W_('d10','1','d10','8'),
+         W_('d10','4','d6','21'),W_('d6','22','d7','A1'),W_('d10','6','d7','21'),W_('d7','22','d6','A1'),
+         W_('d3','A2','d1','N'),W_('d10','7','d3','A2'),W_('d6','A2','d10','7'),W_('d7','A2','d6','A2')],
+  hint:'K1 = chính, K2 = tam giác (Δ), K3 = sao (Y). Nhấn giữ ON: chạy sao, sau 5s timer chuyển sang tam giác.'},
+ {title:'Biến tần ABB ACS580',desc:'Chiết áp chỉnh tốc độ, S1 chạy (DI1), S2 đảo chiều (DI2), đèn báo chạy / lỗi',
+  devs:[{id:'d1',t:'src3',x:20,y:20},{id:'d2',t:'cb3',x:40,y:120,on:true},{id:'d3',t:'vfd',x:20,y:280},{id:'d4',t:'motor',x:20,y:540},
+        {id:'d5',t:'pot',x:150,y:170,p:{pos:60}},{id:'d6',t:'switch',x:280,y:150},{id:'d7',t:'switch',x:340,y:150},{id:'d8',t:'pilotG',x:240,y:490},{id:'d9',t:'pilotR',x:300,y:490}],
+  wires:[W_('d1','L1','d2','1'),W_('d1','L2','d2','3'),W_('d1','L3','d2','5'),W_('d2','2','d3','L1'),W_('d2','4','d3','L2'),W_('d2','6','d3','L3'),
+         W_('d3','U','d4','U'),W_('d3','V','d4','V'),W_('d3','W','d4','W'),W_('d1','PE','d3','PE'),W_('d1','PE','d4','PE'),
+         W_('d3','4','d5','1'),W_('d5','2','d3','2'),W_('d5','3','d3','3'),
+         W_('d3','10','d6','1'),W_('d6','2','d3','13'),W_('d3','10','d7','1'),W_('d7','2','d3','14'),
+         W_('d3','34','d3','37'),W_('d3','34','d3','38'),
+         W_('d2','2','d3','22'),W_('d3','24','d8','X1'),W_('d8','X2','d1','N'),W_('d2','2','d3','25'),W_('d3','26','d9','X1'),W_('d9','X2','d1','N')],
+  hint:'Bấm ▶ Chạy thử → bật S1 (DI1) để chạy, chạm chiết áp RV1 để tăng tốc độ, bật S2 (DI2) để đảo chiều.'}
+];
+function loadSample(sm){
+  stop();
+  S={nid:80,devs:JSON.parse(JSON.stringify(sm.devs)),wires:sm.wires.map((w,i)=>Object.assign({id:'w'+(i+1)},JSON.parse(JSON.stringify(w))))};
+  selected=null;pending=null;updSel();render();fit();changed();buildItems();hint(sm.hint||'Đã nạp mạch mẫu. Bấm ▶ Chạy thử nhé.');
+}
+
+/* ================= simulation ================= */
+function tsec(d){return d.sec||5;}
+function act(d){
+  switch(TYPES[d.t].ctl){
+    case'cb':case'sw':return!!d.on;case'pb':return!!d.pressed;case'estop':return!!d.latched;
+    case'k':return!!d.en&&!d.burned;case'ol':return!!d.trip;
+    case'tm':return!!d.en&&!d.burned&&d.t0!=null&&Date.now()-d.t0>=tsec(d)*1000;}
+  return false;
+}
+function conducts(d,c,mode){
+  if(c[2]==='M')return true;if(mode==='closed')return true;
+  if(mode==='open'&&TYPES[d.t].ctl==='sw')return false;
+  const a=TYPES[d.t].ctl==='vfd'?!!(d.ro&&d.ro[c[3]]&&!d.burned):act(d);return c[2]==='NO'?a:!a;
+}
+/* ---- biến tần ABB ACS580 ---- */
+const VFD_CTL=['2','3','4','10','11','12','13','14','15','16','34','35','36','37','38'];
+function vfdState(f,P,d){
+  const st={pw:0,sto:false,run:false,hz:0,fwd:true,ready:false,fault:!!d.burned};
+  const k=t=>f(key(d.id,t));
+  for(const t of VFD_CTL){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'){st.burnCtl=t;return st;}}
+  for(const t of['U','V','W']){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'){st.burnOut=true;return st;}}
+  const ph=new Set(['L1','L2','L3'].map(t=>pot1(f,P,key(d.id,t))).filter(p=>p&&p[0]==='L'));st.pw=ph.size;
+  const v24=[k('10'),k('34'),k('35')];
+  st.sto=v24.includes(k('37'))&&v24.includes(k('38'));
+  const di=n=>v24.includes(k(String(n)));
+  st.di=[di(13),di(14),di(15),di(16)];
+  const fmax=PV(d,'fmax')||50;
+  if(st.di[2]||st.di[3])st.hz=st.di[2]&&st.di[3]?PV(d,'f3'):st.di[2]?PV(d,'f1'):PV(d,'f2');
+  else{
+    const pt=S.devs.find(x=>x.t==='pot'&&f(key(x.id,'2'))===k('2')&&f(key(x.id,'1'))===k('4')&&[k('3'),k('11')].includes(f(key(x.id,'3'))));
+    const ptr=S.devs.find(x=>x.t==='pot'&&f(key(x.id,'2'))===k('2')&&f(key(x.id,'3'))===k('4')&&[k('3'),k('11')].includes(f(key(x.id,'1'))));
+    if(pt)st.hz=fmax*PV(pt,'pos')/100;else if(ptr)st.hz=fmax*(100-PV(ptr,'pos'))/100;
+    else if(k('2')===k('4'))st.hz=fmax;else st.noRef=true;
+    st.pot=pt||ptr;
+  }
+  st.hz=Math.max(0,Math.min(fmax,st.hz));
+  st.fwd=!st.di[1];
+  st.fault=!!d.burned||st.pw===2;
+  st.ready=st.pw===3&&st.sto&&!st.fault;
+  st.run=st.ready&&st.di[0];
+  return st;
+}
+function vfdMotor(f,d){const o=['U','V','W'].map(t=>f(key(d.id,t)));
+  return S.devs.filter(m=>m.t==='motor').map(m=>({m,mp:['U','V','W'].map(t=>o.indexOf(f(key(m.id,t))))})).filter(x=>x.mp.every(i=>i>=0)&&new Set(x.mp).size===3);}
+const vfdEls={},motRot={};
+function vfdLcd(d){const vs=d.vs;if(d.burned)return['FAULT','hỏng'];if(!vs||vs.pw<3)return[vs&&vs.pw===2?'F3130':'OFF',vs&&vs.pw===2?'mất pha vào':''];
+  if(!vs.sto)return['STO','chưa nối STO'];const fo=d.fo||0;
+  if(fo>0.05||vs.run)return[fo.toFixed(1)+' Hz',(vs.fwd?'↻ ':'↺ ')+Math.round(fo/(PV(d,'fmax')||50)*100)+'%'];return['READY',vs.hz.toFixed(1)+' Hz ref'];}
+function vfdUI(d){const e=vfdEls[d.id];if(e){const l=vfdLcd(d);e[0].textContent=l[0];e[1].textContent=l[1];}
+  (result&&result.vmot&&result.vmot[d.id]||[]).forEach(x=>{const r=motRot[x.id];if(!r)return;const fo=d.fo||0;
+    if(fo<0.3){r.style.animationPlayState='paused';}else{r.style.animationPlayState='running';r.style.animationDuration=(0.45*50/fo).toFixed(2)+'s';}});}
+setInterval(()=>{if(!running)return;let edge=false;
+  S.devs.forEach(v=>{if(v.t!=='vfd')return;const tgt=v.vs&&v.vs.run&&!v.burned?v.vs.hz:0,old=v.fo||0;
+    const fmax=PV(v,'fmax')||50,rate=fmax/Math.max(0.2,tgt>old?PV(v,'acc'):PV(v,'dec'))*0.1;
+    let n=old;if(n<tgt)n=Math.min(tgt,n+rate);else if(n>tgt)n=Math.max(tgt,n-rate);
+    if(n!==old){v.fo=n;vfdUI(v);if((old<0.3)!==(n<0.3))edge=true;}});
+  syncSound();
+  if(edge){evaluate();render();}},100);
+function nets(mode){
+  const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
+  const u=(a,b)=>{par[f(a)]=f(b);};
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
+  S.wires.forEach(w=>u(key(w.a.d,w.a.t),key(w.b.d,w.b.t)));
+  S.devs.forEach(d=>{const T=TYPES[d.t];if(T.contacts)T.contacts.forEach(c=>{if(conducts(d,c,mode))u(key(d.id,c[0]),key(d.id,c[1]));});});
+  return f;
+}
+function pots(f){const P={};S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(t.src){const r=f(key(d.id,t.id));(P[r]=P[r]||new Set()).add(t.src);}}));return P;}
+function isShort(s){return s.size>1&&!(s.size===2&&s.has('N')&&s.has('PE'));}
+function pot1(f,P,k){const s=P[f(k)];if(!s||!s.size)return null;if(isShort(s))return'X';return s.has('N')||s.has('PE')?'N':[...s][0];}
+function volt(p,q){if(p==='PE')p='N';if(q==='PE')q='N';if(!p||!q||p==='X'||q==='X'||p===q)return 0;return(p==='N'||q==='N')?220:380;}
+function pn(p){if(p==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return p;}
+function connected(d,tid){return S.wires.some(w=>(w.a.d===d.id&&w.a.t===tid)||(w.b.d===d.id&&w.b.t===tid));}
+function shortNets(f,P){return Object.keys(P).filter(r=>isShort(P[r]));}
+
+function settle(newBurn){
+  for(let i=0;i<16;i++){
+    const f=nets('cur'),P=pots(f);let ch=false;
+    S.devs.forEach(d=>{if(d.t!=='vfd')return;const vs=vfdState(f,P,d);d.vs=vs;
+      if((vs.burnOut||vs.burnCtl)&&!d.burned){d.burned=true;d.burnWhy=vs.burnOut?'out':'ctl:'+vs.burnCtl;newBurn.push(d);}
+      const ro=[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),!vs.fault&&vs.pw===3];
+      if(JSON.stringify(ro)!==JSON.stringify(d.ro||[])){d.ro=ro;ch=true;}});
+    S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil)return;
+      const v=volt(pot1(f,P,key(d.id,T.coil[0])),pot1(f,P,key(d.id,T.coil[1])));
+      if(v===380&&!d.burned){d.burned=true;newBurn.push(d);}
+      const en=!d.burned&&v===220;
+      if(en!==!!d.en){d.en=en;if(d.t==='timer')d.t0=en?Date.now():null;sfxQ.add(d.t==='timer'?'tick':'clack');ch=true;}});
+    if(!ch)break;
+  }
+}
+function loadV(f,P,d){
+  const lp=TYPES[d.t].lp;
+  const pa=pot1(f,P,key(d.id,lp[0])),pb=pot1(f,P,key(d.id,lp[1]));
+  const v=volt(pa,pb);if(v)return{v,pa,pb};if(pa&&pb)return{v:0,pa,pb};
+  const adj={};const add=(x,y)=>{(adj[x]=adj[x]||[]).push(y);(adj[y]=adj[y]||[]).push(x);};
+  S.devs.filter(x=>TYPES[x.t].load&&x.id!==d.id&&!x.burned).forEach(x=>{const l=TYPES[x.t].lp;add(f(key(x.id,l[0])),f(key(x.id,l[1])));});
+  const ra=f(key(d.id,lp[0])),rb=f(key(d.id,lp[1]));
+  const reach=(s,block)=>{const out=new Set();const seen=new Set([s]);const st=[s];
+    while(st.length){const n=st.pop();const p=P[n]&&P[n].size?pot1(f,P,n):null;if(p&&p!=='X')out.add(p);(adj[n]||[]).forEach(m=>{if(!seen.has(m)&&m!==block){seen.add(m);st.push(m);}});}return out;};
+  const A=reach(ra,rb),B=reach(rb,ra);
+  for(const p of A)for(const q of B)if(volt(p,q))return{v:0,dim:true,pa,pb};
+  return{v:0,pa,pb};
+}
+function motorSt(f,P,d){
+  const g=t=>pot1(f,P,key(d.id,t));
+  if(d.t==='motor'){
+    const ps=['U','V','W'].map(g);const ph=ps.filter(p=>p&&p[0]==='L');const u=new Set(ph);
+    if(u.size===3){const ix=ps.map(p=>+p[1]);return{st:'on',fwd:(ix[1]-ix[0]+3)%3===1};}
+    if(ps.includes('N')&&ph.length)return{st:'bad'};
+    if(u.size===2)return{st:'hum'};
+    return{st:'off',n:u.size};
+  }
+  const top=['U1','V1','W1'].map(g),bot=['U2','V2','W2'].map(g);
+  const fwd=()=>{const ix=top.map(p=>+p[1]);return(ix[1]-ix[0]+3)%3===1;};
+  const t3=new Set(top.filter(p=>p&&p[0]==='L')).size===3;
+  const r2=['U2','V2','W2'].map(t=>f(key(d.id,t)));
+  if(t3&&r2[0]===r2[1]&&r2[1]===r2[2]&&!bot[0])return{st:'on',mode:'Y',fwd:fwd()};
+  const vs=[0,1,2].map(i=>volt(top[i],bot[i]));
+  if(vs.every(v=>v===380)&&t3)return{st:'on',mode:'D',fwd:fwd()};
+  if(vs.every(v=>v===220)&&t3)return{st:'on',mode:'Y',fwd:fwd()};
+  const anyV=vs.some(v=>v)||new Set(top.filter(p=>p&&p[0]==='L')).size>=2;
+  if(anyV){if(top.includes('N')||bot.includes('N'))return{st:'bad'};return{st:'hum'};}
+  return{st:'off',n:new Set(top.filter(p=>p&&p[0]==='L')).size};
+}
+function protectingOL(f,d){
+  const mt=TYPES[d.t].terms.filter(t=>t.id!=='PE').map(t=>f(key(d.id,t.id)));
+  return S.devs.find(o=>o.t==='ol'&&['2','4','6'].some(ot=>mt.includes(f(key(o.id,ot)))));
+}
+function offReason(pa,pb){
+  if(pa&&pa===pb)return pa==='N'?'hai đầu cùng nối vào N, thiếu dây pha.':'hai đầu cùng nối vào pha '+pn(pa)+', thiếu dây N.';
+  const p=pa||pb;
+  if(p==='N')return'mới có dây N, đầu còn lại chưa có dây pha.';
+  if(p)return'có pha '+pn(p)+' nhưng đầu còn lại chưa về N (mạch hở).';
+  return'chưa nối về nguồn.';
+}
+function reachSets(){
+  const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
+  S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
+  const adj={};S.devs.forEach(d=>(TYPES[d.t].contacts||[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}}));
+  const lab={};
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(!t.src)return;const L=t.src==='PE'?'N':t.src;const st=[f(key(d.id,t.id))];const seen=new Set(st);
+    while(st.length){const n=st.pop();(lab[n]=lab[n]||new Set()).add(L);(adj[n]||[]).forEach(m=>{if(!seen.has(m)){seen.add(m);st.push(m);}});}}));
+  return k=>lab[f(k)]||new Set();
+}
+function feas(A,B,v){for(const p of A)for(const q of B)if(volt(p,q)===v)return true;return false;}
+function clearT(k){if(timers[k]){clearTimeout(timers[k]);delete timers[k];}}
+
+function evaluate(){
+  const msgs=[];let errors=0,warns=0;const newBurn=[];
+  const res={short:false,state:{},sock:{},motor:{},wpot:{},msgs};
+  const srcs=S.devs.filter(d=>TYPES[d.t].cat==='src');
+  if(!srcs.length){msgs.push(['❌','Chưa có nguồn điện trên bảng.']);errors++;return finish();}
+  settle(newBurn);
+  let f=nets('cur'),P=pots(f);let sh=shortNets(f,P);
+  if(sh.length){
+    const tripped=tryTrip();
+    if(tripped){
+      tripped.forEach(cb=>{const T=TYPES[cb.t];spark(cb.x+T.w/2,cb.y+T.h/2);msgs.push(['🔌','Aptomat '+tagOf(cb)+' NHẢY do chập mạch – nhờ có CB bảo vệ! Sửa lỗi rồi chạm vào CB để đóng lại.']);});
+      res.tripped=true;settle(newBurn);f=nets('cur');P=pots(f);sh=shortNets(f,P);
+    }
+  }
+  if(sh.length){
+    res.short=true;errors++;
+    const desc=sh.map(r=>[...P[r]].map(pn).join(' chạm ')).join(', ');
+    msgs.push(['💥','CHẬP MẠCH – CHÁY NỔ! '+desc+'. Không có aptomat bảo vệ nên dây bị cháy.']);
+    msgs.push(['🛠️','Bấm ■ Dừng để thay dây cháy, sửa đấu nối rồi chạy lại. Nên lắp aptomat sau nguồn.']);
+    S.wires.forEach(w=>{if(sh.includes(f(key(w.a.d,w.a.t))))w.burned=true;});
+    const sig=sh.join('|');
+    if(sig!==lastFault){lastFault=sig;
+      let k=null;
+      outer:for(const d of S.devs){for(const t of TYPES[d.t].terms){if(!t.src&&sh.includes(f(key(d.id,t.id)))){k={d,t};if(TYPES[d.t].ctl)break outer;}}}
+      if(!k){const s=srcs[0];k={d:s,t:TYPES[s.t].terms[0]};}
+      boom(k.d.x+k.t.x,k.d.y+k.t.y,1.3);const s=srcs[0];setTimeout(()=>boom(s.x+TYPES[s.t].w/2,s.y+20,.7),180);
+    }
+    S.devs.forEach(d=>{d.en=false;d.t0=null;});
+    return finish();
+  }
+  lastFault='';
+  const RS=reachSets(),fo=nets('open'),Po=pots(fo);const RK=(d,t)=>RS(key(d.id,t));
+  S.wires.forEach(w=>{const p=pot1(f,P,key(w.a.d,w.a.t));if(p&&p!=='X')res.wpot[w.id]=p;});
+  const anyTrip=S.devs.some(x=>x.trip&&TYPES[x.t].ctl==='cb');
+
+  S.devs.forEach(d=>{
+    const T=TYPES[d.t],nm=nameOf(d);
+    if(T.load){
+      const verb=d.t==='fan'?'chạy':'sáng';const lp=T.lp;
+      if(!connected(d,lp[0])&&!connected(d,lp[1])){errors++;msgs.push(['❌',nm+': chưa đấu dây.']);return;}
+      const r=loadV(f,P,d);
+      if(r.v===380&&!d.burned){d.burned=true;newBurn.push(d);}
+      if(d.burned){res.state[d.id]='burned';errors++;msgs.push(['🔥',nm+': CHÁY! Bị cấp 380V (2 dây pha) vào thiết bị 220V. Phải đấu giữa 1 pha và N.']);return;}
+      if(r.v===220){
+        res.state[d.id]='on';msgs.push(['✅',nm+': '+verb+'.']);
+        const ro=loadV(fo,Po,d);
+        if(d.t!=='pilotG'&&d.t!=='pilotR'&&d.t!=='pilotY'&&ro.v!==220&&((ro.pa&&ro.pa[0]==='L')||(ro.pb&&ro.pb[0]==='L')))
+          {warns++;msgs.push(['⚠️',nm+': công tắc đang cắt dây N chứ không cắt dây pha – tắt rồi vẫn còn điện, dễ bị giật khi sửa.']);}
+      }else if(r.dim){res.state[d.id]='dim';warns++;msgs.push(['⚠️',nm+': mắc NỐI TIẾP với tải khác → '+(d.t==='fan'?'quay chậm':'sáng yếu')+'. Tải 220V phải mắc SONG SONG giữa pha và N.']);}
+      else{
+        res.state[d.id]='off';const okF=feas(RK(d,lp[0]),RK(d,lp[1]),220);
+        if(anyTrip)msgs.push(['⏸️',nm+': mất điện vì aptomat đã nhảy.']);
+        else if(okF)msgs.push(['⏸️',nm+': đang tắt (thiết bị đóng cắt/tiếp điểm đang mở) – đấu đúng.']);
+        else{errors++;msgs.push(['❌',nm+': không '+verb+' – '+offReason(r.pa,r.pb)]);}
+      }
+    }else if(d.t==='socket'){
+      if(!connected(d,'L')&&!connected(d,'N')){errors++;msgs.push(['❌',nm+': chưa đấu dây.']);return;}
+      const pl=pot1(f,P,key(d.id,'L')),pN=pot1(f,P,key(d.id,'N')),v=volt(pl,pN);
+      if(v===220){res.sock[d.id]='on';if(pN==='N')msgs.push(['✅',nm+': có điện 220V, đúng cực.']);else{warns++;msgs.push(['⚠️',nm+': có điện nhưng ĐẢO CỰC (pha ↔ N).']);}}
+      else if(v===380){res.sock[d.id]='hot';warns++;msgs.push(['⚠️',nm+': đang có 380V (2 pha)! Cắm đồ 220V vào sẽ cháy ngay.']);}
+      else{const vc=feas(RK(d,'L'),RK(d,'N'),220);
+        if(vc||anyTrip)msgs.push(['⏸️',nm+': mất điện vì '+(anyTrip?'aptomat đã nhảy.':'thiết bị đóng cắt đang mở.')]);
+        else{errors++;msgs.push(['❌',nm+': không có điện – '+offReason(pl,pN)]);}}
+      const pe=pot1(f,P,key(d.id,'PE'));
+      if(pe&&pe[0]==='L'){warns++;msgs.push(['⚠️',nm+': chân PE đang có điện pha – RÒ ĐIỆN ra vỏ!']);}
+      else if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': chưa đấu dây tiếp địa PE (xanh-vàng).']);
+    }else if(d.t==='vfd'){
+      const vs=d.vs||{};
+      if(d.burned){errors++;msgs.push(['🔥',nm+': NỔ BIẾN TẦN! '+(d.burnWhy==='out'?'Cấp nguồn vào ngõ ra U V W – nguồn phải vào L1 L2 L3.':'Điện 220/380V lọt vào chân điều khiển '+(d.burnWhy||'').replace('ctl:','')+' (chỉ dùng +24V/+10V nội của biến tần).')]);return;}
+      if(!vs.pw){errors++;msgs.push(['❌',nm+': chưa cấp nguồn 3 pha vào L1 L2 L3.']);return;}
+      if(vs.pw===2){errors++;msgs.push(['❌',nm+': MẤT PHA nguồn vào – báo lỗi (F3130), không chạy.']);return;}
+      if(!vs.sto){warns++;msgs.push(['⚠️',nm+': STO chưa nối – phải nối OUT1 (34) sang IN1 (37) và IN2 (38) thì mới chạy được.']);}
+      else if(!vs.run)msgs.push(['⏸️',nm+': sẵn sàng (READY) – đóng DI1 (13) với +24V (10) để chạy.']);
+      else{msgs.push(['✅',nm+': chạy '+(vs.fwd?'THUẬN':'NGHỊCH (DI2)')+' – đặt '+vs.hz.toFixed(1)+' Hz'+(vs.di[2]||vs.di[3]?' (tốc độ cài DI3/DI4)':vs.pot?' (chiết áp '+tagOf(vs.pot)+' '+PV(vs.pot,'pos')+'%)':'')+', tăng tốc '+PV(d,'acc')+' s.']);
+        if(vs.noRef){warns++;msgs.push(['⚠️',nm+': AI1 chưa có tín hiệu tốc độ → 0 Hz. Gắn chiết áp: 4 (+10V) – 2 (AI1) – 3 (AGND).']);}}
+      const ms=vfdMotor(f,d);res.vmot=res.vmot||{};res.vmot[d.id]=ms.map(x=>x.m);
+      if(!ms.length){const fc=nets('closed');if(vfdMotor(fc,d).length){warns++;msgs.push(['⚠️',nm+': có contactor/thiết bị đóng cắt giữa biến tần và động cơ – không được đóng ngắt khi biến tần đang chạy.']);}
+        else{warns++;msgs.push(['⚠️',nm+': ngõ ra U V W chưa nối động cơ.']);}}
+      if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối tiếp địa PE cho biến tần.']);
+    }else if(d.t==='motor'&&S.devs.some(v=>v.t==='vfd'&&!v.burned&&vfdMotor(f,v).some(x=>x.m===d))){
+      const v=S.devs.find(v=>v.t==='vfd'&&vfdMotor(f,v).some(x=>x.m===d)),mp=vfdMotor(f,v).find(x=>x.m===d).mp;
+      const par=(mp[1]-mp[0]+3)%3===1,vs=v.vs||{},fo=v.fo||0;
+      if(vs.run||fo>0.3){const fwd=par===!!vs.fwd;res.motor[d.id]={st:'on',fwd,vfd:v.id};
+        const hz=vs.run?vs.hz:0;msgs.push(['✅',nm+': chạy bằng biến tần '+tagOf(v)+' – '+hz.toFixed(1)+' Hz ≈ '+Math.round(120*hz/(PV(d,'pole')||4)*0.97)+' v/ph, '+(fwd?'THUẬN ↻':'NGƯỢC ↺')+'.']);}
+      else{res.motor[d.id]={st:'off',vfd:v.id};msgs.push(['⏸️',nm+': dừng – biến tần '+tagOf(v)+' chưa chạy.']);}
+      if(S.devs.some(o=>o.t==='ol'&&['2','4','6'].some(t=>['U','V','W'].some(u=>f(key(o.id,t))===f(key(d.id,u))))))msgs.push(['ℹ️',nm+': biến tần đã có bảo vệ quá tải điện tử – không cần rơ-le nhiệt.']);
+      if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối dây tiếp địa PE vào vỏ động cơ.']);
+    }else if(d.t==='motor'||d.t==='motor6'){
+      if(T.terms.every(t=>!connected(d,t.id))){errors++;msgs.push(['❌',nm+': chưa đấu dây.']);return;}
+      if(d.burned){res.motor[d.id]={st:'burned'};errors++;msgs.push(['🔥',nm+': CHÁY cuộn dây do chạy mất pha / đấu sai quá lâu mà không có rơ-le nhiệt bảo vệ.']);clearT('m'+d.id);return;}
+      const m=motorSt(f,P,d);res.motor[d.id]=m;
+      if(m.st==='on'){clearT('m'+d.id);
+        msgs.push(['✅',nm+': chạy '+(m.mode==='Y'?'SAO (Y) – khởi động dòng thấp, ':m.mode==='D'?'TAM GIÁC (Δ) – đủ công suất, ':'')+(m.fwd?'THUẬN ↻':'NGƯỢC ↺ (đảo 2 pha để đổi chiều)')+'.']);}
+      else if(m.st==='hum'||m.st==='bad'){
+        errors++;
+        const ol=protectingOL(f,d);
+        msgs.push(['💨',nm+(m.st==='hum'?': MẤT PHA / đấu sai cuộn dây – động cơ kêu ù, không quay, nóng bốc khói!':': đấu dây N vào động cơ 3 pha – sai! Đang bốc khói.')+(ol?' Rơ-le nhiệt '+tagOf(ol)+' sắp tác động…':' Không có rơ-le nhiệt – sẽ CHÁY!')]);
+        if(ol){clearT('m'+d.id);if(!timers['o'+ol.id])timers['o'+ol.id]=setTimeout(()=>{delete timers['o'+ol.id];if(running&&!ol.trip){ol.trip=true;sfxQ.add('alarm');spark(ol.x+TYPES.ol.w/2,ol.y+40);evaluate();save();render();}},2200);}
+        else if(!timers['m'+d.id])timers['m'+d.id]=setTimeout(()=>{delete timers['m'+d.id];if(running&&!d.burned){d.burned=true;boom(d.x+T.w/2,d.y+T.h/2,1.2);evaluate();save();render();}},4000);
+      }else{clearT('m'+d.id);
+        const mt=(d.t==='motor'?['U','V','W']:['U1','V1','W1']).map(t=>[...RK(d,t)].filter(p=>p[0]==='L'));
+        const mok=mt.every(a=>a.length)&&new Set(mt.flat()).size===3;
+        if(mok||anyTrip)msgs.push(['⏸️',nm+': đang dừng – '+(anyTrip?'aptomat đã nhảy.':'mạch động lực chưa đóng.')]);
+        else{errors++;msgs.push(['❌',nm+': không chạy – '+(m.n?'mới có '+m.n+' pha tới cuộn dây.':'chưa có pha nào tới cuộn dây.')]);}
+      }
+      if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối dây tiếp địa PE (xanh-vàng) vào vỏ động cơ.']);
+    }else if(T.coil){
+      const c0=connected(d,T.coil[0]),c1=connected(d,T.coil[1]);const cn=T.coil.join('-');
+      if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY cuộn hút – bị cấp 380V vào cuộn 220V ('+cn+' phải là 1 pha + N).']);}
+      else if(!c0&&!c1){warns++;msgs.push(['⚠️',nm+': chưa đấu cuộn '+cn+' nên không bao giờ tác động.']);}
+      else if(d.en){
+        if(d.t==='timer')msgs.push(['⏱️',nm+': có điện ('+cn+'). '+(act(d)?'Đã hết '+tsec(d)+'s → tiếp điểm ĐÃ CHUYỂN (1-3, 8-6 đóng; 1-4, 8-5 mở).':'Đang đếm '+tsec(d)+'s…')]);
+        else msgs.push(['🧲',nm+': cuộn '+cn+' có điện 220V – tiếp điểm ĐÃ TÁC ĐỘNG.']);
+      }else{const vc=feas(RK(d,T.coil[0]),RK(d,T.coil[1]),220);
+        if(vc)msgs.push(['⏸️',nm+': cuộn chưa có điện – tiếp điểm ở trạng thái thường.']);
+        else{errors++;msgs.push(['❌',nm+': cuộn '+cn+' đấu sai, không thể có 220V (cần 1 pha + N).']);}}
+    }else if(d.t==='ol'){
+      if(d.trip){warns++;msgs.push(['🛑',nm+': ĐÃ TÁC ĐỘNG – 95-96 mở, 97-98 đóng. Chạm vào rơ-le nhiệt để RESET.']);}
+      else if(S.devs.some(x=>x.t.startsWith('motor'))&&!connected(d,'95')&&(connected(d,'2')||connected(d,'1')))msgs.push(['ℹ️',nm+': chưa đấu 95-96 nối tiếp mạch điều khiển – nhảy rồi contactor vẫn không nhả.']);
+    }else if(d.t==='estop'&&d.latched){warns++;msgs.push(['🛑',nm+': đang bị NHẤN KHẨN – chạm lại để nhả.']);}
+    else if(T.ctl&&T.cat!=='src'){if(!T.terms.some(t=>connected(d,t.id))){warns++;msgs.push(['⚠️',nm+': đang để thừa, chưa đấu.']);}}
+  });
+  // schedule timers
+  clearTimeout(tmTO);let rem=Infinity;
+  S.devs.forEach(d=>{if(d.t==='timer'&&d.en&&!d.burned&&!act(d))rem=Math.min(rem,d.t0+tsec(d)*1000-Date.now());});
+  if(rem<Infinity)tmTO=setTimeout(()=>{if(running){evaluate();save();render();}},Math.max(20,rem+25));
+  return finish();
+
+  function finish(){
+    newBurn.forEach(d=>{const T=TYPES[d.t];setTimeout(()=>boom(d.x+T.w/2,d.y+T.h/2,1),60);});
+    if(newBurn.length||res.tripped)sfxQ.add('alarm');setTimeout(flushSfx,0);
+    res.errors=errors;res.warns=warns;result=res;
+    const box=document.getElementById('result');box.style.display='block';
+    const title=res.short?'💥 Chập mạch – cháy nổ!':res.tripped?'🔌 Aptomat nhảy – có chập mạch!':errors?'❌ Có '+errors+' lỗi':warns?'⚠️ Chạy được nhưng cần lưu ý':'✅ Đấu dây đúng!';
+    const col=res.short||errors||res.tripped?'#f87171':warns?'#fbbf24':'#4ade80';
+    box.innerHTML='<h3 style="color:'+col+'">'+title+'</h3><ul>'+msgs.map(m=>'<li>'+m[0]+' '+m[1]+'</li>').join('')+'</ul>';
+    const okC=!res.short&&!res.tripped&&errors===0&&S.wires.length>0&&S.devs.some(x=>{const t=TYPES[x.t];return t.load||t.cat==='t3'||x.t==='socket';});
+    if(running&&!askedRun&&okC){askedRun=true;setTimeout(()=>{if(running&&result&&result.errors===0&&!result.short)askExport();},900);}
+  }
+  function tryTrip(){
+    const cbs=S.devs.filter(d=>TYPES[d.t].ctl==='cb'&&d.on);if(!cbs.length)return null;
+    const ok=()=>{const g=nets('cur');return!shortNets(g,pots(g)).length;};
+    for(const cb of cbs){cb.on=false;if(ok()){cb.trip=true;return[cb];}cb.on=true;}
+    cbs.forEach(c=>c.on=false);if(ok()){cbs.forEach(c=>c.trip=true);return cbs;}
+    cbs.forEach(c=>c.on=true);return null;
+  }
+}
+
+/* ======== wire colours (nearest source through contacts) ======== */
+function wireColors(){
+  const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
+  S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
+  const adj={};S.devs.forEach(d=>{const T=TYPES[d.t];(T.contacts||[]).concat(d.t==='vfd'?[['L1','U'],['L2','V'],['L3','W']]:[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}});});
+  const best={};let q=[];
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(t.src){const r=f(key(d.id,t.id));best[r]=best[r]||{d:0,l:new Set()};best[r].l.add(t.src);q.push(r);}}));
+  let dist=0;q=[...new Set(q)];
+  while(q.length){dist++;const nq=new Set();
+    q.forEach(r=>(adj[r]||[]).forEach(m=>{const b=best[m];if(!b){best[m]={d:dist,l:new Set(best[r].l)};nq.add(m);}else if(b.d===dist)best[r].l.forEach(x=>b.l.add(x));}));
+    q=[...nq];}
+  const out={};
+  S.wires.forEach(w=>{const b=best[f(key(w.a.d,w.a.t))];if(!b)return;let l=[...b.l];if(l.length===2&&l.includes('N')&&l.includes('PE'))l=['N'];out[w.id]=l.length===1?l[0]:null;});
+  return out;
+}
+
+/* ================= effects ================= */
+let AC=null;
+function unlockAudio(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();if(!MG){MG=AC.createGain();MG.gain.value=.7;MG.connect(AC.destination);}}catch(e){}}
+let MG=null,muted=false,NB=null;try{muted=localStorage.getItem('md_mute')==='1';}catch(e){}
+const loops={};const sfxQ=new Set();
+function noiseBuf(){if(NB)return NB;const n=AC.sampleRate;NB=AC.createBuffer(1,n,AC.sampleRate);const c=NB.getChannelData(0);for(let i=0;i<n;i++)c[i]=Math.random()*2-1;return NB;}
+function env(g,t,a,peak,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec);}
+function sfx(type){
+  if(muted)return;try{unlockAudio();if(!AC||!MG)return;const t=AC.currentTime+0.01;
+  if(type==='click'){const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.setValueAtTime(2200,t);o.frequency.exponentialRampToValueAtTime(900,t+0.03);env(g,t,0.002,0.12,0.04);o.connect(g);g.connect(MG);o.start(t);o.stop(t+0.06);}
+  if(type==='clack'){const src=AC.createBufferSource();src.buffer=noiseBuf();const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1600;bp.Q.value=.8;const g=AC.createGain();env(g,t,0.002,0.5,0.07);src.connect(bp);bp.connect(g);g.connect(MG);src.start(t);src.stop(t+0.12);
+    const o=AC.createOscillator(),g2=AC.createGain();o.type='sine';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(60,t+0.08);env(g2,t,0.003,0.45,0.09);o.connect(g2);g2.connect(MG);o.start(t);o.stop(t+0.14);}
+  if(type==='tick'){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=3200;env(g,t,0.001,0.06,0.02);o.connect(g);g.connect(MG);o.start(t);o.stop(t+0.04);}
+  if(type==='alarm'){[0,0.18,0.36].forEach((dt,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=i%2?660:990;env(g,t+dt,0.005,0.13,0.14);o.connect(g);g.connect(MG);o.start(t+dt);o.stop(t+dt+0.17);});}
+  }catch(e){}
+}
+function setLoop(id,sp){
+  const L=loops[id];
+  if(!sp||muted||!AC||!MG){if(L){try{const n=AC.currentTime;L.g.gain.setTargetAtTime(0,n,0.08);setTimeout(()=>{try{L.os.forEach(o=>o.stop());}catch(e){}},500);}catch(e){}delete loops[id];}return;}
+  const n=AC.currentTime;
+  if(!L){const g=AC.createGain();g.gain.value=0;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=sp.lp||900;lp.connect(g);g.connect(MG);const os=[];
+    const o1=AC.createOscillator();o1.type=sp.kind==='whine'?'sine':'sawtooth';o1.frequency.value=sp.f;o1.connect(lp);o1.start();os.push(o1);
+    const o2=AC.createOscillator();o2.type='sine';o2.frequency.value=sp.f*2;const g2=AC.createGain();g2.gain.value=.5;o2.connect(g2);g2.connect(lp);o2.start();os.push(o2);
+    let trem=null;if(sp.kind==='hum'){const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=7;lg.gain.value=.5;lfo.connect(lg);lg.connect(g.gain);lfo.start();os.push(lfo);}
+    if(sp.kind==='fan'||sp.kind==='motor'){const ns=AC.createBufferSource();ns.buffer=noiseBuf();ns.loop=true;const nb=AC.createBiquadFilter();nb.type='bandpass';nb.frequency.value=sp.kind==='fan'?500:300;nb.Q.value=.6;const ng=AC.createGain();ng.gain.value=sp.kind==='fan'?.9:.35;ns.connect(nb);nb.connect(ng);ng.connect(g);ns.start();os.push(ns);L2=nb;}
+    loops[id]={g,lp,os,o1,o2};}
+  const l=loops[id];l.o1.frequency.setTargetAtTime(sp.f,n,0.15);l.o2.frequency.setTargetAtTime(sp.f*2,n,0.15);l.lp.frequency.setTargetAtTime(sp.lp||900,n,0.15);l.g.gain.setTargetAtTime(sp.g,n,0.12);
+}
+let L2=null;
+function syncSound(){
+  if(!AC)return;const want={};
+  if(running&&result&&!result.short&&!muted){
+    let nm=0;
+    S.devs.forEach(d=>{const m=result.motor&&result.motor[d.id];if(!m)return;
+      if(m.st==='on'){nm++;if(m.vfd){const v=dev(m.vfd),fo=v?v.fo||0:0;if(fo>0.3)want['m'+d.id]={kind:'motor',f:2*fo,g:0.03+0.05*fo/50,lp:300+fo*25};}
+        else want['m'+d.id]={kind:'motor',f:m.mode==='Y'?100:100,g:m.mode==='Y'?0.05:0.07,lp:m.mode==='Y'?500:800};}
+      else if(m.st==='hum'||m.st==='bad')want['m'+d.id]={kind:'hum',f:100,g:0.16,lp:1400};});
+    S.devs.forEach(d=>{if(d.t==='vfd'&&(d.fo||0)>0.3)want['v'+d.id]={kind:'whine',f:2600+d.fo*12,g:0.012,lp:6000};
+      if(d.t==='fan'&&result.state[d.id]==='on')want['f'+d.id]={kind:'fan',f:45,g:0.05,lp:700};});
+    const sc=1/Math.max(1,Math.sqrt(Object.keys(want).length));Object.values(want).forEach(w=>w.g*=sc);
+  }
+  Object.keys(loops).forEach(k=>{if(!want[k])setLoop(k,null);});
+  Object.keys(want).forEach(k=>setLoop(k,want[k]));
+}
+function flushSfx(){if(sfxQ.has('alarm'))sfx('alarm');if(sfxQ.has('clack'))sfx('clack');else if(sfxQ.has('tick'))sfx('tick');sfxQ.clear();}
+document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';
+document.getElementById('muteBtn').onclick=()=>{muted=!muted;try{localStorage.setItem('md_mute',muted?'1':'0');}catch(e){}document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';if(!muted){unlockAudio();sfx('click');}syncSound();};
+function bang(big){
+  if(muted)return;try{unlockAudio();if(!AC)return;const n=Math.floor(AC.sampleRate*(big?0.9:0.25));const buf=AC.createBuffer(1,n,AC.sampleRate);const ch=buf.getChannelData(0);
+    for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/n,big?2.2:4);
+    const src=AC.createBufferSource();src.buffer=buf;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=big?700:3000;
+    const g=AC.createGain();g.gain.value=big?1.2:.5;src.connect(lp);lp.connect(g);g.connect(AC.destination);src.start();}catch(e){}
+}
+function boom(x,y,s){
+  s=s||1;bang(true);
+  const g=el('g',{transform:`translate(${x},${y})`},fxg);
+  el('circle',{r:40*s,fill:'#fffbe0'},g).animate([{transform:'scale(.1)',opacity:1},{transform:'scale(2.2)',opacity:0}],{duration:420,easing:'ease-out',fill:'forwards'});
+  el('circle',{r:28*s,fill:'#f97316'},g).animate([{transform:'scale(.2)',opacity:.95,fill:'#fde047'},{transform:'scale(1.4)',opacity:.9,fill:'#f97316',offset:.35},{transform:'scale(1.8)',opacity:0,fill:'#7f1d1d'}],{duration:900,easing:'ease-out',fill:'forwards'});
+  for(let i=0;i<18;i++){const r=el('g',{transform:`rotate(${i*20+Math.random()*12})`},g);
+    const ln=el('line',{x1:0,y1:0,x2:8,y2:0,stroke:i%3?'#fde047':'#fb923c','stroke-width':2.4,'stroke-linecap':'round'},r);const dist=(35+Math.random()*55)*s;
+    ln.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${dist}px,${Math.random()*20}px)`,opacity:0}],{duration:500+Math.random()*400,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'});}
+  for(let i=0;i<7;i++){const c=el('circle',{cx:(Math.random()-.5)*30*s,cy:(Math.random()-.5)*16,r:9*s,fill:i%2?'#4b5563':'#374151',opacity:0},g);
+    c.animate([{transform:'translate(0,0) scale(.5)',opacity:0},{opacity:.75,offset:.2},{transform:`translate(${(Math.random()-.5)*40}px,${-70-Math.random()*40}px) scale(3)`,opacity:0}],{duration:1800+Math.random()*600,delay:150,easing:'ease-out',fill:'forwards'});}
+  document.getElementById('boardWrap').animate([{transform:'translate(0,0)'},{transform:'translate(-7px,4px)'},{transform:'translate(6px,-5px)'},{transform:'translate(-4px,-3px)'},{transform:'translate(3px,3px)'},{transform:'translate(0,0)'}],{duration:420});
+  try{navigator.vibrate&&navigator.vibrate([80,40,120]);}catch(e){}
+  setTimeout(()=>g.remove(),2800);
+}
+function spark(x,y){
+  bang(false);const g=el('g',{transform:`translate(${x},${y})`},fxg);
+  for(let i=0;i<10;i++){const r=el('g',{transform:`rotate(${i*36+Math.random()*20})`},g);
+    el('line',{x1:0,y1:0,x2:5,y2:0,stroke:'#facc15','stroke-width':2,'stroke-linecap':'round'},r).animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${20+Math.random()*25}px,0)`,opacity:0}],{duration:400,easing:'ease-out',fill:'forwards'});}
+  el('circle',{r:12,fill:'#bfdbfe'},g).animate([{transform:'scale(.2)',opacity:1},{transform:'scale(1.6)',opacity:0}],{duration:300,fill:'forwards'});
+  setTimeout(()=>g.remove(),900);
+}
+
+/* ================= wires geometry ================= */
+function tdef(d,tid){return TYPES[d.t].terms.find(t=>t.id===tid);}
+function tpos(r){const d=dev(r.d);if(!d)return null;const t=tdef(d,r.t);return t?{x:d.x+t.x,y:d.y+t.y,top:t.y===0}:null;}
+function wirePts(w){
+  const p=tpos(w.a),q=tpos(w.b);if(!p||!q)return null;
+  const o=14,p1y=p.y+(p.top?-o:o),q1y=q.y+(q.top?-o:o);
+  let ym=(p1y+q1y)/2;if(p.top&&q.top)ym=Math.min(p1y,q1y);else if(!p.top&&!q.top)ym=Math.max(p1y,q1y);
+  const pts=[[p.x,p.y],[p.x,ym],[q.x,ym],[q.x,q.y]];
+  // dedupe
+  return pts.filter((pt,i)=>i===0||pt[0]!==pts[i-1][0]||pt[1]!==pts[i-1][1]);
+}
+function buildPaths(){
+  const all={};S.wires.forEach(w=>{const p=wirePts(w);if(p)all[w.id]=p;});
+  const vsegs=[];
+  Object.keys(all).forEach(id=>{const p=all[id];for(let i=0;i<p.length-1;i++){const a=p[i],b=p[i+1];if(a[0]===b[0]&&a[1]!==b[1])vsegs.push({id,x:a[0],y0:Math.min(a[1],b[1]),y1:Math.max(a[1],b[1])});}});
+  const R=5,out={};
+  Object.keys(all).forEach(id=>{
+    const p=all[id];let d=`M${p[0][0]} ${p[0][1]}`;
+    for(let i=0;i<p.length-1;i++){
+      const a=p[i],b=p[i+1];
+      if(a[1]===b[1]&&a[0]!==b[0]){
+        const y=a[1],lo=Math.min(a[0],b[0]),hi=Math.max(a[0],b[0]),dir=b[0]>a[0]?1:-1;
+        let xs=vsegs.filter(s=>s.id!==id&&s.x>lo+R+1&&s.x<hi-R-1&&y>s.y0+1&&y<s.y1-1).map(s=>s.x);
+        xs=[...new Set(xs)].sort((m,n)=>(m-n)*dir);
+        let last=-1e9;
+        xs.forEach(x=>{if(Math.abs(x-last)<2*R+2)return;last=x;d+=`L${x-dir*R} ${y}A${R} ${R} 0 0 ${dir>0?1:0} ${x+dir*R} ${y}`;});
+        d+=`L${b[0]} ${b[1]}`;
+      }else d+=`L${b[0]} ${b[1]}`;
+    }
+    out[id]=d;
+  });
+  return out;
+}
+
+/* ================= render ================= */
+let wireLayer=null,devLayer=null;
+function render(){setTimeout(syncSound,0);
+  content.innerHTML='';
+  if(exportMode)el('rect',{x:-400,y:-400,width:WW+800,height:WH+800,fill:'#ffffff'},content);
+  else{
+  el('rect',{x:-400,y:-400,width:WW+800,height:WH+800,fill:'#c7ced6'},content);
+  el('rect',{x:0,y:0,width:WW,height:WH,fill:'#dfe4e9',stroke:'#9aa5b1','stroke-width':2},content);
+  el('rect',{x:0,y:0,width:WW,height:WH,fill:'url(#grid)'},content);}
+  wireLayer=el('g',{},content);devLayer=el('g',{},content);
+  renderWires();
+  Object.keys(tmEls).forEach(k=>delete tmEls[k]);
+  S.devs.forEach(drawDev);
+}
+function bgDown(e){if(e.target.closest&&e.target.closest('[data-dev],[data-wire]'))return;if(ptrs.size>1)return;pan={id:e.pointerId,x0:e.clientX,y0:e.clientY,vx:view.x,vy:view.y,moved:false};}
+function renderWires(){
+  wireLayer.innerHTML='';
+  const paths=buildPaths(),cols=wireColors();
+  const live=running&&result&&!result.short&&!exportMode;
+  S.wires.forEach(w=>{
+    const d=paths[w.id];if(!d)return;const c=cols[w.id];
+    const g=el('g',{'data-wire':w.id},wireLayer);
+    const hit=el('path',{d,stroke:'transparent','stroke-width':14,fill:'none'},g);
+    if(w.burned){
+      el('path',{d,stroke:'#1c1917','stroke-width':4.5,fill:'none','stroke-linejoin':'round','pointer-events':'none'},g);
+      el('path',{d,stroke:'#ea580c','stroke-width':1.6,fill:'none','stroke-dasharray':'2 9',class:'flow','pointer-events':'none'},g);
+    }else{
+      el('path',{d,stroke:'#0003','stroke-width':5,fill:'none','stroke-linejoin':'round','pointer-events':'none'},g);
+      if(c==='PE'){el('path',{d,stroke:'#16a34a','stroke-width':3.4,fill:'none','stroke-linejoin':'round','pointer-events':'none'},g);
+        el('path',{d,stroke:'#facc15','stroke-width':3.4,fill:'none','stroke-dasharray':'6 6','pointer-events':'none'},g);}
+      else el('path',{d,stroke:PCOL[c]||'#94a3b8','stroke-width':3.4,fill:'none','stroke-linejoin':'round','pointer-events':'none'},g);
+      if(live&&result.wpot[w.id])el('path',{d,stroke:'#fff','stroke-width':1.3,fill:'none',opacity:.8,class:'flow','pointer-events':'none'},g);
+    }
+    if(selected&&selected.kind==='wire'&&selected.id===w.id)el('path',{d,class:'sel','pointer-events':'none'},g);
+    hit.addEventListener('pointerdown',e=>{if(ptrs.size>1)return;e.stopPropagation();
+      drag={id:e.pointerId,up:(ev,cancel)=>{if(cancel||Date.now()-lastPinch<300)return;selected={kind:'wire',id:w.id};pending=null;updSel();render();hint('Đã chọn dây. Bấm 🗑 để xóa.');}};});
+  });
+}
+function pinFill(t){if(t.src==='PE'||t.id==='PE')return'#16a34a';if(t.src)return PCOL[t.src]||'#fff';return'#ffffff';}
+function drawContact(g,x,y1,y2,closed,nc){
+  const m1=y1+(y2-y1)*.36,m2=y1+(y2-y1)*.64;
+  el('path',{d:`M${x} ${y1}V${m1}M${x} ${m2}V${y2}`,stroke:'#334155','stroke-width':1.8},g);
+  if(closed)el('line',{x1:x,y1:m2,x2:x,y2:m1,stroke:'#16a34a','stroke-width':2.6,'stroke-linecap':'round'},g);
+  else el('line',{x1:x,y1:m2,x2:x-9,y2:m1+1,stroke:'#334155','stroke-width':2.2,'stroke-linecap':'round'},g);
+  if(nc)el('line',{x1:x-10,y1:m1,x2:x,y2:m1,stroke:'#334155','stroke-width':1.4},g);
+}
+function prints(g,d,cls){const T=TYPES[d.t];T.terms.forEach(t=>{if(!t.p)return;const top=t.y===0;txt(g,t.x,top?t.y+13:t.y-6,t.p,{class:cls||'pr'});});}
+function drawBody(g,d,R){
+  const T=TYPES[d.t];const st=R.state&&R.state[d.id];const A=act(d);
+  switch(d.t){
+  case'src1':case'src3':
+    el('rect',{x:0,y:0,width:T.w,height:42,rx:8,fill:'#334155',stroke:'#1e293b'},g);
+    txt(g,T.w/2,17,d.t==='src1'?'⚡ NGUỒN 1 PHA':'⚡ NGUỒN 3 PHA',{fill:'#facc15','font-size':11,'font-weight':800});
+    txt(g,T.w/2,32,d.t==='src1'?'220V ~':'380V / 220V ~',{fill:'#cbd5e1','font-size':10});break;
+  case'cb2':case'cb3':{
+    el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:6,fill:'#f8fafc',stroke:'#64748b'},g);
+    const lx=T.w/2-9;el('rect',{x:lx,y:22,width:18,height:28,rx:3,fill:'#94a3b8'},g);
+    const c=d.trip?'#f97316':d.on?'#16a34a':'#475569';
+    el('rect',{x:lx+2,y:d.trip?29:d.on?24:35,width:14,height:13,rx:2,fill:c},g);
+    txt(g,T.w/2,59,d.trip?'TRIP':d.on?'ON':'OFF',{fill:c,'font-size':8,'font-weight':800});prints(g,d);break;}
+  case'switch':
+    el('rect',{x:0,y:6,width:50,height:52,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
+    el('rect',{x:12,y:14,width:26,height:36,rx:4,fill:'#cbd5e1'},g);
+    el('rect',{x:14,y:d.on?16:32,width:22,height:16,rx:3,fill:d.on?'#16a34a':'#64748b'},g);
+    txt(g,25,d.on?28:44,d.on?'BẬT':'TẮT',{fill:'#fff','font-size':8,'font-weight':800});break;
+  case'pbno':case'pbnc':{
+    const no=d.t==='pbno';const c=no?'#16a34a':'#dc2626';
+    el('rect',{x:0,y:6,width:50,height:52,rx:7,fill:'#1f2937',stroke:'#0f172a'},g);
+    el('circle',{cx:25,cy:30,r:15,fill:'#111827'},g);
+    el('circle',{cx:25,cy:30,r:d.pressed?10:13,fill:d.pressed?(no?'#14532d':'#7f1d1d'):c,stroke:'#0008','stroke-width':2},g);
+    txt(g,25,33,no?'ON':'OFF',{fill:'#fff','font-size':8,'font-weight':800});
+    txt(g,25,53,no?'NO 3-4':'NC 1-2',{fill:'#9ca3af','font-size':6.5,'font-weight':700});break;}
+  case'estop':
+    el('rect',{x:0,y:6,width:56,height:52,rx:7,fill:'#facc15',stroke:'#a16207'},g);
+    el('circle',{cx:28,cy:30,r:d.latched?13:17,fill:'#dc2626',stroke:'#7f1d1d','stroke-width':2},g);
+    txt(g,28,33,'STOP',{fill:'#fff','font-size':7.5,'font-weight':900});
+    txt(g,28,54,d.latched?'ĐANG NHẤN':'NC 1-2',{fill:'#713f12','font-size':6.5,'font-weight':800});break;
+  case'contactor':{
+    el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
+    el('rect',{x:4,y:32,width:20,height:32,rx:2,fill:d.burned?'#1c1917':d.en?'#22c55e':'#e2e8f0',stroke:'#334155'},g);
+    el('path',{d:'M7 38h14M7 44h14M7 50h14M7 56h14',stroke:'#334155','stroke-width':1.1},g);
+    el('path',{d:'M14 16v16M14 64v16',stroke:'#334155','stroke-width':1.6},g);
+    T.contacts.forEach(c=>{const t=tdef(d,c[0]);drawContact(g,t.x,16,80,conducts(d,c,'cur'),c[2]==='NC');});
+    el('line',{x1:26,y1:48,x2:T.w-6,y2:48,stroke:'#94a3b8','stroke-dasharray':'3 3'},g);
+    prints(g,d);break;}
+  case'ol':{
+    el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:'#f1f5f9',stroke:'#64748b'},g);
+    [20,46,72].forEach(x=>el('path',{d:`M${x} 15V28l-4 3 8 4-8 4 8 4-4 3V66`,stroke:d.trip?'#dc2626':'#334155','stroke-width':1.6,fill:'none'},g));
+    T.contacts.slice(3).forEach(c=>{const t=tdef(d,c[0]);drawContact(g,t.x,15,66,conducts(d,c,'cur'),c[2]==='NC');});
+    el('rect',{x:84,y:30,width:12,height:12,rx:6,fill:d.trip?'#f97316':'#3b82f6',class:d.trip?'blink':''},g);
+    txt(g,90,52,d.trip?'TRIP':'RESET',{fill:d.trip?'#ea580c':'#1d4ed8','font-size':6,'font-weight':900});
+    prints(g,d);break;}
+  case'relay':case'timer':{
+    el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:d.t==='timer'?'#e0f2fe':'#ecfdf5',stroke:'#64748b'},g);
+    T.co.forEach(([cm,nc,no])=>{const c=tdef(d,cm),a=tdef(d,nc),b=tdef(d,no);
+      el('path',{d:`M${c.x} 16V32M${a.x} 52V66M${b.x} 52V66`,stroke:'#334155','stroke-width':1.8,fill:'none'},g);
+      const tgt=A?b:a;el('line',{x1:c.x,y1:32,x2:tgt.x,y2:52,stroke:A?'#16a34a':'#334155','stroke-width':2.4,'stroke-linecap':'round'},g);});
+    const ci=tdef(d,T.coil[0]);
+    el('rect',{x:ci.x-10,y:28,width:20,height:24,rx:2,fill:d.burned?'#1c1917':d.en?'#22c55e':'#e2e8f0',stroke:'#334155'},g);
+    el('path',{d:`M${ci.x} 15V28M${ci.x} 52V66`,stroke:'#334155','stroke-width':1.6},g);
+    if(d.t==='timer'){const t=txt(g,103,44,timerText(d),{fill:'#0c4a6e','font-size':7.5,'font-weight':900});tmEls[d.id]=t;}
+    else txt(g,103,44,'MY2',{fill:'#065f46','font-size':7.5,'font-weight':900});
+    prints(g,d);break;}
+  case'pilotG':case'pilotR':case'pilotY':{
+    const on=st==='on'||st==='dim';
+    el('rect',{x:4,y:6,width:36,height:42,rx:6,fill:'#1f2937',stroke:'#0f172a'},g);
+    if(on)el('circle',{cx:22,cy:27,r:20,fill:T.col,opacity:.35},g);
+    el('circle',{cx:22,cy:27,r:12,fill:on?T.col:'#475569',stroke:'#0f172a','stroke-width':2,filter:on?'url(#glow)':''},g);
+    prints(g,d,'prw');break;}
+  case'lamp':{
+    const on=st==='on'||st==='dim';
+    el('rect',{x:20,y:4,width:20,height:14,rx:2,fill:'#94a3b8',stroke:'#475569'},g);
+    if(on)el('circle',{cx:30,cy:40,r:st==='on'?30:18,fill:'#fde047',opacity:st==='on'?.4:.2},g);
+    el('circle',{cx:30,cy:40,r:18,fill:on?(st==='on'?'#fde047':'#a3893a'):'#cbd5e1',stroke:'#64748b',filter:st==='on'?'url(#glow)':''},g);
+    el('path',{d:'M24 42 q3 -8 6 0 q3 -8 6 0',stroke:on?'#b45309':'#64748b',fill:'none','stroke-width':1.5},g);break;}
+  case'fan':{
+    el('circle',{cx:33,cy:42,r:27,fill:'#1e293b',stroke:'#475569','stroke-width':2},g);
+    const bl=el('g',{class:st==='on'?'spin':st==='dim'?'spin slow':''},g);
+    el('path',{d:'M33 42 C28 26 38 18 40 26 C42 34 36 38 33 42 M33 42 C49 38 54 50 46 52 C38 54 36 46 33 42 M33 42 C22 54 12 46 18 40 C24 34 30 40 33 42',fill:st==='on'||st==='dim'?'#60a5fa':'#64748b'},bl);
+    el('circle',{cx:33,cy:42,r:4,fill:'#cbd5e1'},g);break;}
+  case'socket':{
+    const s=R.sock&&R.sock[d.id];
+    el('rect',{x:0,y:0,width:72,height:44,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
+    el('rect',{x:20,y:12,width:5,height:15,rx:1,fill:'#334155'},g);el('rect',{x:47,y:12,width:5,height:15,rx:1,fill:'#334155'},g);
+    el('circle',{cx:36,cy:30,r:3,fill:'#334155'},g);
+    el('circle',{cx:62,cy:8,r:3,fill:s==='on'?'#22c55e':s==='hot'?'#ef4444':'#94a3b8'},g);break;}
+  case'vfd':{
+    el('rect',{x:0,y:6,width:T.w,height:T.h-12,rx:8,fill:'#e5e7eb',stroke:'#475569','stroke-width':1.5},g);
+    el('rect',{x:2,y:8,width:104,height:T.h-16,rx:7,fill:'#cfd4da'},g);
+    txt(g,54,32,'ABB',{fill:'#ff000f','font-size':15,'font-weight':900});
+    txt(g,54,44,'ACS580',{fill:'#111','font-size':8.5,'font-weight':800});
+    el('rect',{x:16,y:52,width:76,height:36,rx:3,fill:d.burned?'#111':'#0b3b2c',stroke:'#111'},g);
+    const l=vfdLcd(d);const a=txt(g,54,68,l[0],{fill:d.burned?'#ef4444':'#4ade80','font-size':10,'font-weight':800}),b=txt(g,54,81,l[1],{fill:'#86efac','font-size':7});
+    vfdEls[d.id]=[a,b];
+    [[30,100],[54,100],[78,100]].forEach(([x,y],i)=>el('circle',{cx:x,cy:y,r:5,fill:['#16a34a','#64748b','#dc2626'][i]},g));
+    el('line',{x1:108,y1:70,x2:T.w-6,y2:70,stroke:'#94a3b8','stroke-dasharray':'3 3'},g);
+    txt(g,250,48,'X1 · X2 · X3 – tín hiệu điều khiển',{fill:'#475569','font-size':7.5,'font-weight':700});
+    txt(g,250,92,'RO1 sẵn sàng · RO2 đang chạy · RO3 lỗi(-1) · STO',{fill:'#475569','font-size':7,'font-weight':700});
+    prints(g,d);break;}
+  case'pot':{
+    const pos=PV(d,'pos'),ang=(-135+pos*2.7)*Math.PI/180;
+    el('rect',{x:0,y:6,width:56,height:46,rx:7,fill:'#1f2937',stroke:'#0f172a'},g);
+    el('circle',{cx:28,cy:32,r:14,fill:'#374151',stroke:'#9ca3af','stroke-width':1.5},g);
+    el('line',{x1:28,y1:32,x2:28+11*Math.sin(ang),y2:32-11*Math.cos(ang),stroke:'#facc15','stroke-width':3,'stroke-linecap':'round'},g);
+    txt(g,28,58,pos+'%',{fill:'#0f172a','font-size':8,'font-weight':800});break;}
+  case'motor':case'motor6':{
+    const m=R.motor&&R.motor[d.id],W=T.w,run=m&&m.st==='on',hum=m&&(m.st==='hum'||m.st==='bad'),slow=run&&m.mode==='Y';
+    el('rect',{x:12,y:3,width:W-22,height:17,rx:3,fill:'#3d5a77',stroke:'#1e2f40'},g);
+    el('circle',{cx:W-16,cy:11,r:3,fill:run?'#22c55e':hum?'#f97316':'#64748b',class:hum?'blink':''},g);
+    const bd=el('g',{class:run?'vib':hum?'vibx':''},g);
+    el('rect',{x:2,y:26,width:13,height:44,rx:4,fill:'#2b4560',stroke:'#1a2b3c'},bd);
+    for(let i=0;i<4;i++)el('line',{x1:5+i*3,y1:30,x2:5+i*3,y2:66,stroke:'#14202d','stroke-width':1.2},bd);
+    el('rect',{x:13,y:22,width:W-36,height:52,rx:7,fill:'url(#mgrad)',stroke:'#1a2b3c','stroke-width':1.4},bd);
+    for(let y=28;y<=68;y+=6)el('line',{x1:17,y1:y,x2:W-27,y2:y,stroke:'#1f3346','stroke-width':1.3,opacity:.55},bd);
+    const nx=(W-36)/2+13-18;
+    el('rect',{x:nx,y:38,width:36,height:20,rx:2,fill:'#e5e7eb',stroke:'#94a3b8'},bd);
+    txt(bd,nx+18,47,'M 3~',{fill:'#0f172a','font-size':6.5,'font-weight':900});
+    txt(bd,nx+18,55,PV(d,'kw')+'kW '+(PV(d,'hz')||50)+'Hz',{fill:'#334155','font-size':5.5,'font-weight':700});
+    el('rect',{x:W-24,y:28,width:6,height:40,rx:2,fill:'#33506c',stroke:'#1a2b3c'},bd);
+    el('rect',{x:W-19,y:45,width:8,height:6,fill:'#cbd5e1',stroke:'#64748b','stroke-width':.8},bd);
+    el('circle',{cx:W-8,cy:48,r:9.5,fill:'#9ca3af',stroke:'#4b5563','stroke-width':1.2},bd);
+    const rot=el('g',{class:run?'spin'+(slow?' slow':'')+(m.fwd?'':' rev'):''},bd);
+    if(m&&m.vfd){motRot[d.id]=rot;const v=dev(m.vfd),fo=v?v.fo||0:0;if(run){if(fo<0.3)rot.style.animationPlayState='paused';else rot.style.animationDuration=(0.45*50/fo).toFixed(2)+'s';}}
+    for(let i=0;i<3;i++){const an=i*120*Math.PI/180;el('line',{x1:W-8,y1:48,x2:W-8+8*Math.cos(an),y2:48+8*Math.sin(an),stroke:run?'#2563eb':'#374151','stroke-width':2.6,'stroke-linecap':'round'},rot);}
+    el('circle',{cx:W-8+7,cy:48,r:1.6,fill:'#f59e0b'},rot);
+    el('circle',{cx:W-8,cy:48,r:2.4,fill:'#e5e7eb'},bd);
+    el('rect',{x:18,y:74,width:20,height:8,rx:1.5,fill:'#2b4560'},g);el('rect',{x:W-52,y:74,width:20,height:8,rx:1.5,fill:'#2b4560'},g);
+    el('rect',{x:8,y:82,width:W-20,height:3,rx:1,fill:'#475569'},g);
+    if(run)el('path',{d:`M${W-2} 36 a14 14 0 0 1 0 24`,stroke:'#60a5fa','stroke-width':1.5,fill:'none',class:'blink'},g);
+    const lab=run?((m.mode==='Y'?'Y ':m.mode==='D'?'Δ ':'')+(m.fwd?'↻ THUẬN':'↺ NGƯỢC')):hum?'⚠ KÊU Ù':'';
+    if(lab)txt(g,W/2-6,d.t==='motor'?T.h-1:T.h-9,lab,{fill:run?'#15803d':'#c2410c','font-size':8,'font-weight':900});
+    prints(g,d,'prw');break;}
+  }
+}
+function timerText(d){if(d.en&&!d.burned){const r=tsec(d)-(Date.now()-d.t0)/1000;return r>0?r.toFixed(1)+'s':'✓ '+tsec(d)+'s';}return'T='+tsec(d)+'s';}
+setInterval(()=>{if(!running)return;S.devs.forEach(d=>{if(d.t==='timer'&&tmEls[d.id])tmEls[d.id].textContent=timerText(d);});},150);
+
+function drawFire(g,T,smokeOnly){
+  for(let i=0;i<4;i++)el('circle',{cx:T.w/2+(i-1.5)*10,cy:6,r:7,fill:'#4b5563',class:'smk',style:`animation-delay:${i*.45}s`,'pointer-events':'none'},g);
+  if(smokeOnly)return;
+  el('rect',{x:-2,y:-2,width:T.w+4,height:T.h+4,rx:8,fill:'#000',opacity:.55,'pointer-events':'none'},g);
+  [[-14,.8],[0,1.15],[14,.9]].forEach(([dx,s],i)=>el('path',{d:`M${T.w/2+dx} ${T.h*.55} c${-10*s} ${-8*s} ${-8*s} ${-20*s} 0 ${-34*s} c${2*s} ${10*s} ${10*s} ${12*s} ${8*s} ${22*s} c${-1*s} ${8*s} ${-5*s} ${12*s} ${-8*s} ${12*s}z`,fill:'url(#flame)',class:'flick',style:`animation-delay:${i*.07}s`,'pointer-events':'none'},g));
+}
+function drawDev(d){
+  const T=TYPES[d.t];
+  const g=el('g',{transform:`translate(${d.x},${d.y})`,style:'cursor:grab','data-dev':d.id},devLayer);devEls[d.id]=g;
+  const R=running&&result&&!result.short&&!exportMode?result:{};
+  drawBody(g,d,R);
+  const m=R.motor&&R.motor[d.id];
+  if(d.burned)drawFire(g,T,false);else if(m&&(m.st==='hum'||m.st==='bad'))drawFire(g,T,true);
+  const hasTop=T.terms.some(t=>t.y===0);
+  if(hasTop)txt(g,T.w+(d.t.startsWith('motor')?8:4),T.h/2+4,tagOf(d),{class:'tag','text-anchor':'start'});else txt(g,T.w/2,-6,tagOf(d),{class:'tag'});
+  const isSel=selected&&selected.kind==='dev'&&selected.id===d.id;
+  if(isSel)el('rect',{x:-6,y:-8,width:T.w+12,height:T.h+16,rx:8,class:'sel'},g);
+  g.addEventListener('pointerdown',e=>devDown(e,d,g));
+  const showPins=exportMode||!T.multi||isSel||(pending&&pending.d===d.id);
+  T.terms.forEach(t=>{
+    const con=connected(d,t.id);
+    if(!showPins){if(con)el('circle',{cx:t.x,cy:t.y,r:2.6,fill:'#334155','pointer-events':'none'},g);return;}
+    const isP=pending&&pending.d===d.id&&pending.t===t.id;
+    if(isP)el('circle',{cx:t.x,cy:t.y,r:10,fill:'none',stroke:'#0ea5e9','stroke-width':2.4,class:'flow'},g);
+    el('circle',{cx:t.x,cy:t.y,r:T.multi?6:5.5,fill:pinFill(t),stroke:'#0f172a','stroke-width':1.6,'pointer-events':'none'},g);
+    if(T.multi&&(isSel||exportMode)){const top=t.y===0;const s=t.id;const w=s.length*5+6;
+      el('rect',{x:t.x-w/2,y:top?t.y-21:t.y+9,width:w,height:11,rx:3,fill:'#0f172a','pointer-events':'none'},g);
+      txt(g,t.x,top?t.y-12.5:t.y+17.5,s,{fill:'#fff','font-size':8,'font-weight':800,'pointer-events':'none'});}
+    else if(!T.multi&&t.src)txt(g,t.x,t.y+15,t.p,{class:'lbl'});
+    else if(!T.multi&&t.p&&TYPES[d.t].cat!=='t3'&&!['pilotG','pilotR','pilotY'].includes(d.t))txt(g,t.x+9,t.y===0?t.y-5:t.y+10,t.p,{class:'lbl','text-anchor':'start'});
+    const hit=el('circle',{cx:t.x,cy:t.y,r:11,fill:'transparent',style:'cursor:crosshair'},g);
+    hit.addEventListener('pointerdown',e=>{if(ptrs.size>1)return;e.stopPropagation();e.preventDefault();
+      drag={id:e.pointerId,up:(ev,cancel)=>{if(cancel||Date.now()-lastPinch<300)return;tapTerm(d.id,t.id);}};});
+  });
+}
+function devDown(e,d,g){
+  if(ptrs.size>1)return;e.stopPropagation();
+  const T=TYPES[d.t];
+  if(running&&(d.t==='pbno'||d.t==='pbnc')){unlockAudio();sfx('click');d.pressed=true;changed();
+    drag={id:e.pointerId,up:()=>{d.pressed=false;changed();},cancel:()=>{d.pressed=false;changed();}};return;}
+  const p0=pt(e);const ox=d.x,oy=d.y;let raf=0;
+  drag={id:e.pointerId,moved:false,
+    move(ev){const p=pt(ev);const dx=p.x-p0.x,dy=p.y-p0.y;if(!this.moved&&Math.abs(dx)+Math.abs(dy)>5)this.moved=true;
+      if(!this.moved)return;
+      d.x=Math.max(0,Math.min(WW-T.w,Math.round((ox+dx)/GRID)*GRID));d.y=Math.max(14,Math.min(WH-T.h-20,Math.round((oy+dy)/GRID)*GRID));
+      if(!raf)raf=requestAnimationFrame(()=>{raf=0;g.setAttribute('transform',`translate(${d.x},${d.y})`);renderWires();});},
+    up(ev,cancel){if(raf)cancelAnimationFrame(raf);if(cancel)return;if(this.moved){changed();return;}if(Date.now()-lastPinch<300)return;tapDev(d);},
+    cancel(){d.x=ox;d.y=oy;render();}};
+}
+function tapDev(d){
+  const T=TYPES[d.t],c=T.ctl;const isSel=selected&&selected.kind==='dev'&&selected.id===d.id;
+  if(d.t==='pot'&&(running||isSel)){sfx('tick');d.p=d.p||{};let v=PV(d,'pos')+10;if(v>100)v=0;d.p.pos=v;changed();hint('Chiết áp '+tagOf(d)+': '+v+'%');return;}
+  if(running){
+    if(c==='sw'||c==='cb'){unlockAudio();sfx('click');d.on=!d.on;d.trip=false;changed();hint(nameOf(d)+(d.on?' ĐÓNG':' MỞ'));return;}
+    if(c==='estop'){sfx('clack');d.latched=!d.latched;changed();hint(nameOf(d)+(d.latched?' đã NHẤN KHẨN':' đã nhả'));return;}
+    if(c==='ol'&&d.trip){d.trip=false;changed();hint('Đã RESET rơ-le nhiệt '+tagOf(d)+'.');return;}
+  }
+  if(isSel){
+    if(c==='sw'||c==='cb'){d.on=!d.on;d.trip=false;changed();return;}
+    if(c==='estop'){d.latched=!d.latched;changed();return;}
+    if(d.t==='timer'){const L=[2,3,5,10,15];d.sec=L[(L.indexOf(tsec(d))+1)%L.length];if(d.en)d.t0=Date.now();changed();hint('Timer '+tagOf(d)+' đặt '+d.sec+' giây.');return;}
+    if(c==='ol'&&!running){d.trip=!d.trip;changed();hint(d.trip?'Giả lập rơ-le nhiệt nhảy (TEST).':'Đã reset.');return;}
+  }
+  selected={kind:'dev',id:d.id};updSel();render();
+  if(pending)hint('Chạm vào chân cần nối trên '+nameOf(d)+'.');
+  else hint(nameOf(d)+(T.multi?': đang hiện chân – chạm chân để nối, chạm nền để ẩn.':' đã chọn. 🗑 để gỡ.')+(d.t==='timer'?' Chạm lần nữa để đổi thời gian.':(c==='sw'||c==='cb')?' Chạm lần nữa để bật/tắt.':'')+(PDEF[d.t]?' Bấm ⚙ để nhập thông số.':''));
+}
+function tapTerm(did,tid){
+  if(!pending){pending={d:did,t:tid};selected={kind:'dev',id:did};updSel();render();hint('Chạm chân thứ hai để nối dây (thiết bị nhiều chân: chạm vào nó để hiện chân). Chạm nền để hủy.');return;}
+  if(pending.d===did&&pending.t===tid){pending=null;render();hint('Đã hủy nối dây.');return;}
+  const a=pending,b={d:did,t:tid};
+  const dup=S.wires.some(w=>(w.a.d===a.d&&w.a.t===a.t&&w.b.d===b.d&&w.b.t===b.t)||(w.b.d===a.d&&w.b.t===a.t&&w.a.d===b.d&&w.a.t===b.t));
+  if(!dup)S.wires.push({id:'w'+(S.nid++),a,b});
+  pending=null;hint(dup?'Hai chân này đã có dây rồi.':'Đã nối '+tagOf(dev(a.d))+':'+a.t+' → '+tagOf(dev(b.d))+':'+b.t+'.');changed();
+}
+
+/* ================= export PDF ================= */
+const SPEC={src1:'1 pha 220V ~ (L, N, PE)',src3:'3 pha 4 dây 380V/220V + PE',cb2:'Aptomat 2 cực',cb3:'Aptomat 3 cực',switch:'Công tắc 1 chiều',
+  pbno:'Nút nhấn thường mở (NO 3-4)',pbnc:'Nút nhấn thường đóng (NC 1-2)',estop:'Nút dừng khẩn cấp, NC 1-2',
+  contactor:'Cuộn 220V AC (A1-A2), 3 tiếp điểm chính, 1NO 13-14, 1NC 21-22',ol:'Rơ-le nhiệt: 95-96 NC, 97-98 NO',
+  relay:'Rơ-le MY2, cuộn 220V (13-14), 2 tiếp điểm chuyển',timer:'Timer on-delay, cuộn 220V (2-7)',
+  pilotG:'Đèn báo xanh 220V',pilotR:'Đèn báo đỏ 220V',pilotY:'Đèn báo vàng 220V',lamp:'Đèn 220V',fan:'Quạt 220V',socket:'Ổ cắm 220V có tiếp địa',
+  motor:'Động cơ 3 pha 380V (U-V-W)',motor6:'Động cơ 3 pha 6 đầu dây, khởi động Y/Δ'};
+const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+function showModal(html){const m=document.getElementById('modal');m.innerHTML='<div class="card">'+html+'</div>';m.hidden=false;return m;}
+function closeModal(){document.getElementById('modal').hidden=true;}
+function askExport(){
+  const m=showModal('<div class="ic">✅</div><h2>Mạch đấu đúng!</h2><p>Có xuất file sơ đồ điện (PDF) không?</p><div class="row"><button class="btn" id="mNo">Không</button><button class="btn run" id="mYes">Có</button></div>');
+  m.querySelector('#mNo').onclick=thanks;
+  m.querySelector('#mYes').onclick=exportPDF;
+}
+function thanks(){
+  const m=showModal('<div class="ic">🙏</div><h2>Cảm ơn đã sử dụng!</h2><p>Hẹn gặp lại ⚡</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');
+  m.querySelector('#mOk').onclick=closeModal;
+}
+async function makePDF(canvases){
+  const enc=new TextEncoder();const parts=[];let len=0;const offs=[];
+  const push=b=>{if(typeof b==='string')b=enc.encode(b);parts.push(b);len+=b.length;};
+  const PWp=842,PHp=595,n=canvases.length;
+  push('%PDF-1.4\n%âãÏÓ\n');
+  const open=i=>{offs[i]=len;push(i+' 0 obj\n');};
+  open(1);push('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  open(2);push('<< /Type /Pages /Kids ['+canvases.map((c,i)=>(3+3*i)+' 0 R').join(' ')+'] /Count '+n+' >>\nendobj\n');
+  for(let i=0;i<n;i++){
+    const c=canvases[i],pg=3+3*i,ct=4+3*i,im=5+3*i;
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));
+    if(!blob)throw new Error('Không tạo được ảnh trang');
+    const jpg=new Uint8Array(await blob.arrayBuffer());
+    open(pg);push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PWp+' '+PHp+'] /Resources << /XObject << /Im'+i+' '+im+' 0 R >> >> /Contents '+ct+' 0 R >>\nendobj\n');
+    const cs='q\n'+PWp+' 0 0 '+PHp+' 0 0 cm\n/Im'+i+' Do\nQ\n';
+    open(ct);push('<< /Length '+cs.length+' >>\nstream\n'+cs+'endstream\nendobj\n');
+    open(im);push('<< /Type /XObject /Subtype /Image /Width '+c.width+' /Height '+c.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n');
+    push(jpg);push('\nendstream\nendobj\n');
+  }
+  const N=3+3*n,xref=len;
+  let x='xref\n0 '+N+'\n0000000000 65535 f \n';
+  for(let i=1;i<N;i++)x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  push(x+'trailer\n<< /Size '+N+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+  return new Blob(parts,{type:'application/pdf'});
+}
+function stamp(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes());}
+function wireName(c){if(c==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return c||'—';}
+async function diagramImage(){
+  const sSel=selected,sPend=pending;selected=null;pending=null;exportMode=true;render();
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  S.devs.forEach(d=>{const T=TYPES[d.t];x0=Math.min(x0,d.x-30);y0=Math.min(y0,d.y-40);x1=Math.max(x1,d.x+T.w+50);y1=Math.max(y1,d.y+T.h+40);});
+  S.wires.forEach(w=>{const p=wirePts(w);if(p)p.forEach(q=>{x0=Math.min(x0,q[0]-20);x1=Math.max(x1,q[0]+20);y0=Math.min(y0,q[1]-20);y1=Math.max(y1,q[1]+20);});});
+  const bw=x1-x0,bh=y1-y0,sc=Math.min(4,2800/bw,2000/bh),W=Math.round(bw*sc),H=Math.round(bh*sc);
+  const clone=svg.cloneNode(true);
+  exportMode=false;selected=sSel;pending=sPend;render();
+  clone.querySelector('#fxg').innerHTML='';
+  clone.setAttribute('xmlns',NS);clone.setAttribute('viewBox',`${x0} ${y0} ${bw} ${bh}`);clone.setAttribute('width',W);clone.setAttribute('height',H);clone.removeAttribute('style');clone.removeAttribute('class');
+  const st=document.createElementNS(NS,'style');
+  st.textContent=`text{font-family:${FONT}}.lbl{font-size:8px;fill:#1e293b;font-weight:800}.pr{font-size:6.6px;fill:#334155;font-weight:700}.prw{font-size:6.6px;fill:#cbd5e1;font-weight:700}.tag{font-size:10px;fill:#0f172a;font-weight:900}`;
+  clone.insertBefore(st,clone.firstChild);
+  const str=new XMLSerializer().serializeToString(clone);
+  const img=new Image();
+  await new Promise((r,j)=>{img.onload=r;img.onerror=()=>j(new Error('Không vẽ được sơ đồ'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);});
+  return{img,w:W,h:H};
+}
+async function svgImg(str){const img=new Image();await new Promise((r,j)=>{img.onload=r;img.onerror=()=>j(new Error('Không vẽ được sơ đồ'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);});return img;}
+async function buildPages(){
+  const PW=2339,PH=1654,M=90,pages=[];
+  // ---- trang 1: sơ đồ nguyên lý
+  const sc=buildSchematic(),C=sc.C;
+  const big=sc.svg.replace(`width="${sc.W}" height="${sc.H}"`,`width="${PW}" height="${PH}"`);
+  const im=await svgImg(big);
+  {const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,PW,PH);
+   const k=Math.min(PW/sc.W,PH/sc.H);x.drawImage(im,(PW-sc.W*k)/2,(PH-sc.H*k)/2,sc.W*k,sc.H*k);pages.push(c);}
+  const cols=wireColors();const date=new Date().toLocaleString('vi-VN');
+  let x,y;
+  const newPage=(title)=>{const c=document.createElement('canvas');c.width=PW;c.height=PH;x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,PW,PH);x.strokeStyle='#0f172a';x.lineWidth=4;x.strokeRect(M/2,M/2,PW-M,PH-M);
+    x.fillStyle='#0f172a';x.font='800 46px '+FONT;x.textAlign='left';x.fillText(title,M,M+66);
+    x.font='500 24px '+FONT;x.fillStyle='#475569';x.textAlign='right';x.fillText((S.meta&&S.meta.prj?S.meta.prj+'   ·   ':'')+'Ngày xuất: '+date+'   ·   Trang '+(pages.length+1),PW-M,M+62);x.textAlign='left';
+    x.strokeStyle='#cbd5e1';x.lineWidth=2;x.beginPath();x.moveTo(M,M+92);x.lineTo(PW-M,M+92);x.stroke();
+    pages.push(c);y=M+130;};
+  const TW=PW-2*M,LH=28;
+  const wrap=(t,w)=>{const out=[];String(t).split('\n').forEach(par=>{let line='';par.split(' ').forEach(wd=>{const tt=line?line+' '+wd:wd;if(x.measureText(tt).width>w&&line){out.push(line);line=wd;}else line=tt;});out.push(line);});return out;};
+  function section(t,title){if(y+140>PH-M-30)newPage(title);x.font='800 30px '+FONT;x.fillStyle='#0f172a';x.fillText(t,M,y+26);y+=46;}
+  function table(head,widths,rows,title,swatch){
+    const drawHead=()=>{x.fillStyle='#e2e8f0';x.fillRect(M,y,TW,40);x.font='800 22px '+FONT;x.fillStyle='#0f172a';let cx=M+12;head.forEach((h,i)=>{x.fillText(h,cx,y+27);cx+=widths[i];});y+=40;};
+    drawHead();
+    rows.forEach((r,ri)=>{
+      x.font='500 22px '+FONT;
+      const cells=r.slice(0,head.length).map((c,i)=>wrap(c,widths[i]-24));
+      const rh=Math.max(...cells.map(l=>l.length))*LH+14;
+      if(y+rh>PH-M-30){newPage(title+' (tiếp)');drawHead();x.font='500 22px '+FONT;}
+      if(ri%2){x.fillStyle='#f8fafc';x.fillRect(M,y,TW,rh);}
+      let cx=M+12;
+      cells.forEach((lines,i)=>{
+        if(swatch&&i===head.length-1){const col=r[head.length];
+          if(col==='PE'){for(let j=0;j<5;j++){x.fillStyle=j%2?'#facc15':'#16a34a';x.fillRect(cx+j*10,y+15,10,10);}}else{x.fillStyle=PCOL[col]||'#94a3b8';x.fillRect(cx,y+15,50,10);}
+          x.fillStyle='#1e293b';x.fillText(lines[0],cx+64,y+28);}
+        else{x.fillStyle=i===1?'#0f172a':'#1e293b';x.font=(i===1?'700 ':'500 ')+'22px '+FONT;lines.forEach((l,li)=>x.fillText(l,cx,y+28+li*LH));x.font='500 22px '+FONT;}
+        cx+=widths[i];});
+      x.strokeStyle='#e2e8f0';x.lineWidth=1;x.beginPath();x.moveTo(M,y+rh);x.lineTo(PW-M,y+rh);x.stroke();y+=rh;});
+    y+=26;
+  }
+  // ---- trang 2: bảng tính chọn
+  const T1='BẢNG TÍNH CHỌN THIẾT BỊ & DÂY DẪN';newPage(T1);
+  section('1. Thiết bị và thông số',T1);
+  table(['STT','Ký hiệu','Thiết bị / thông số nhập','Chọn theo tính toán'],[90,190,820,TW-1100],
+    S.devs.map((d,i)=>[String(i+1),tagOf(d),TYPES[d.t].name+(PDEF[d.t]&&d.t!=='timer'?'\n'+paramText(d):''),(C.rec[d.id]||[]).join('\n')]),T1);
+  section('2. Dây dẫn & ghi chú',T1);
+  x.font='500 23px '+FONT;
+  C.notes.forEach(t=>{wrap('• '+t,TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T1+' (tiếp)');x.fillStyle='#1e293b';x.font='500 23px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  x.font='italic 500 20px '+FONT;x.fillStyle='#64748b';x.fillText('Kết quả mang tính tham khảo – kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).',M+12,y+26);y+=50;
+  // ---- bảng đấu dây
+  const T2='BẢNG ĐẤU DÂY';newPage(T2);
+  const rowsW=S.wires.map((w,i)=>{const a=dev(w.a.d),b=dev(w.b.d);return[String(i+1),tagOf(a)+' : '+w.a.t,tagOf(b)+' : '+w.b.t,wireName(cols[w.id]),cols[w.id]];});
+  table(['STT','Từ chân','Đến chân','Dây / pha'],[90,500,500,TW-1090],rowsW,T2,true);
+  section('Kết quả kiểm tra mạch',T2);
+  (result&&result.msgs?result.msgs:[]).forEach(m=>{x.font='500 22px '+FONT;wrap(m[0]+'  '+m[1],TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T2+' (tiếp)');x.fillStyle='#1e293b';x.font='500 22px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  // ---- sơ đồ bố trí thực tế
+  const dg=await diagramImage();
+  newPage('SƠ ĐỒ ĐẤU NỐI THỰC TẾ (bố trí trên bảng)');
+  const ay=M+120,ah=PH-ay-M-60,k=Math.min(TW/dg.w,ah/dg.h),dw=dg.w*k,dh=dg.h*k;
+  x.drawImage(dg.img,M+(TW-dw)/2,ay+(ah-dh)/2,dw,dh);
+  return pages;
+}
+async function exportPDF(){
+  showModal('<div class="ic">⏳</div><h2>Đang tạo PDF…</h2><p>Chờ một chút nhé.</p>');
+  const fail=msg=>{const m=showModal('<div class="ic">⚠️</div><h2>Chưa xuất được</h2><p>'+msg+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;};
+  try{
+    const pages=await buildPages();
+    const blob=await makePDF(pages);const name='so-do-dien-'+stamp()+'.pdf';
+    let dl=null;
+    if(window.claude&&typeof window.claude.use==='function'){try{dl=await window.claude.use('downloads');}catch(e){dl=null;}}
+    if(dl){
+      try{await dl.save({filename:name,data:blob});}
+      catch(e){if(e&&e.code==='declined'){closeModal();hint('Đã hủy lưu file PDF.');return;}
+        if(e&&e.code==='rate_limited'){fail('Đang có một hộp thoại lưu file khác, thử lại sau giây lát nhé.');return;}
+        fail('Chế độ xem này không cho tải file ('+((e&&e.code)||'lỗi')+'). Mở trang trên claude.ai để xuất PDF nhé.');return;}
+    }else if(!window.claude){
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    }else{fail('Chế độ xem này không hỗ trợ tải file. Mở trang trên claude.ai (web hoặc app) để xuất PDF nhé.');return;}
+    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p>'+name+'<br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, sơ đồ bố trí.</p><div class="row"><button class="btn run" id="mOk">Xong</button></div>');
+    m.querySelector('#mOk').onclick=thanks;
+  }catch(e){fail((e&&e.message)||'Lỗi không rõ khi tạo PDF.');}
+}
+document.getElementById('modal').addEventListener('pointerdown',e=>{if(e.target.id==='modal'&&!document.querySelector('#modal .ic')?.textContent.includes('⏳'))closeModal();});
+
+/* ================= THÔNG SỐ & TÍNH TOÁN ================= */
+const MOT=[['kw','Công suất (kW)',7.5],['u','Điện áp định mức (V)',380],['hz','Tần số (Hz)',50],['pole','Số cực',4],['cos','Hệ số công suất cosφ',0.85],['eff','Hiệu suất η (%)',88],['len','Chiều dài cáp tới động cơ (m)',20]];
+const PDEF={
+  motor:MOT,motor6:MOT.map(x=>x[0]==='kw'?['kw',x[1],15]:x),
+  lamp:[['w','Công suất (W)',40],['len','Chiều dài dây (m)',15]],
+  fan:[['w','Công suất (W)',75],['cos','Hệ số cosφ',0.9],['len','Chiều dài dây (m)',15]],
+  socket:[['w','Tải dự kiến (W)',2000],['len','Chiều dài dây (m)',15]],
+  src1:[['len','Chiều dài cáp nguồn cấp (m)',30]],src3:[['len','Chiều dài cáp nguồn cấp (m)',30]],
+  timer:[['sec','Thời gian đặt (giây)',5]],
+  vfd:[['fmax','Tần số max (Hz)',50],['acc','Thời gian tăng tốc (s)',5],['dec','Thời gian giảm tốc (s)',5],['f1','Tốc độ cài 1 – DI3 (Hz)',15],['f2','Tốc độ cài 2 – DI4 (Hz)',30],['f3','Tốc độ cài 3 – DI3+DI4 (Hz)',45]],
+  pot:[['pos','Vị trí chiết áp (%)',50]]
+};
+function PV(d,k){if(k==='sec')return tsec(d);const def=(PDEF[d.t]||[]).find(x=>x[0]===k);const v=d.p&&d.p[k];return(v===undefined||v===''||isNaN(+v))?(def?def[2]:0):+v;}
+const CB_STD=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250,320,400,500,630,800];
+const K_AC3=[9,12,18,22,25,32,40,50,65,75,85,100,130,150,185,225,265,330,400,500,630];
+const OL_R=[[0.63,1],[1,1.6],[1.6,2.5],[2.5,4],[4,6],[5,8],[6,9],[7,10],[9,13],[12,18],[16,22],[18,25],[22,32],[28,40],[34,50],[45,65],[54,75],[63,85],[80,105],[95,130],[110,150],[130,180],[160,220],[200,280],[260,350],[300,400],[400,520],[500,650]];
+const CAB_S=[1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240,300];
+const IZ3=[15.5,21,28,36,50,68,89,110,134,171,207,239,262,296,346,394];
+const IZ2=[17.5,24,32,41,57,76,101,125,151,192,232,269,300,341,400,458];
+const upStd=(arr,v)=>arr.find(x=>x>=v-1e-9)||arr[arr.length-1];
+const fS=s=>String(s);
+function pickCable(Iload,Ireq,len,three,cos,U,minS){
+  const tab=three?IZ3:IZ2;let last=null;
+  for(let i=0;i<CAB_S.length;i++){const s=CAB_S[i];if(s<minS||tab[i]<Ireq)continue;
+    const vd=(three?Math.sqrt(3):2)*Iload*len*0.0225*cos/s/U*100;last={s,iz:tab[i],vd};if(vd<=4)return last;}
+  return last||{s:CAB_S[CAB_S.length-1],iz:tab[tab.length-1],vd:0,over:true};
+}
+function peSize(s){return s<=16?s:s<=35?16:upStd(CAB_S,s/2);}
+function olRange(I){let best=null,bd=1e9;OL_R.forEach(r=>{if(I>=r[0]&&I<=r[1]){const m=(r[0]+r[1])/2,dd=Math.abs(I-m)/m;if(dd<bd){bd=dd;best=r;}}});return best||OL_R[OL_R.length-1];}
+
+function wireUF(){
+  const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
+  S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
+  S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
+  return f;
+}
+const PWR={vfd:{a:['L1','L2','L3'],b:['U','V','W']},cb3:{a:['1','3','5'],b:['2','4','6']},contactor:{a:['1','3','5'],b:['2','4','6']},ol:{a:['1','3','5'],b:['2','4','6']},cb2:{a:['1','3'],b:['2','4']}};
+function powerTree(){
+  const src=S.devs.find(d=>TYPES[d.t].cat==='src');if(!src)return null;
+  const f=wireUF();
+  const bus=TYPES[src.t].terms.map(t=>({name:t.p,net:f(key(src.id,t.id))}));
+  const visited=new Set(),netName={},netNode={};
+  const root={kind:'bus',src,bus,children:[],lines:bus.filter(b=>b.name!=='PE')};
+  const sideNets=(d,s)=>PWR[d.t][s].map(t=>f(key(d.id,t)));
+  function expand(node,lines){
+    if(node.kind!=='bus'&&lines.length&&lines.every(l=>l.net in netName)&&!(new Set(lines.map(l=>l.net)).size===1)){
+      node.children.push({kind:'join',lines,perm:lines.map((_,i)=>i),to:lines.map(l=>netName[l.net]),tgt:netNode[lines[0].net],parent:node});return;}
+    lines.forEach(l=>{if(!(l.net in netName)){netName[l.net]=l.name;netNode[l.net]=node;}});
+    const avail=new Set(lines.map(l=>l.net));
+    const idx=n=>lines.findIndex(l=>l.net===n);
+    const kids=[];
+    S.devs.forEach(d=>{
+      if(!PWR[d.t]||visited.has(d.id))return;
+      for(const side of['a','b']){
+        const sn=sideNets(d,side);
+        if(!sn.every(n=>avail.has(n))||new Set(sn).size!==sn.length)continue;
+        if(node.kind==='bus'&&sn.every(n=>netName[n]==='N'))continue;
+        if(side==='b'&&sideNets(d,'a').every(n=>n in netName||avail.has(n)))continue;
+        visited.add(d.id);
+        const other=side==='a'?'b':'a',on=sideNets(d,other),perm=sn.map(idx);
+        const out=on.map((n,i)=>({net:n,name:lines[perm[i]].name}));
+        const child={kind:'dev',d,perm,inT:PWR[d.t][side],outT:PWR[d.t][other],children:[],lines:out,parent:node};
+        node.children.push(child);kids.push({child,on,sn,out});
+        break;
+      }
+    });
+    S.devs.forEach(d=>{
+      if(d.t==='motor'||d.t==='motor6'){
+        const top=(d.t==='motor'?['U','V','W']:['U1','V1','W1']).map(t=>f(key(d.id,t)));
+        if(!visited.has(d.id)&&top.every(n=>avail.has(n))&&new Set(top).size===3){visited.add(d.id);node.children.push({kind:'motor',d,perm:top.map(idx),lines,parent:node});return;}
+        if(d.t==='motor6'){const bot=['W2','U2','V2'].map(t=>f(key(d.id,t)));
+          if(bot.every(n=>avail.has(n))&&new Set(bot).size===3)node.children.push({kind:'ref',d,terms:['W2','U2','V2'],perm:bot.map(idx),lines,parent:node});}
+      }
+    });
+    kids.forEach(({child,on,sn,out})=>{
+      if(new Set(on).size===1&&on.length>1){
+        const m=S.devs.find(x=>x.t==='motor6'&&new Set(['W2','U2','V2'].map(t=>f(key(x.id,t)))).size===3&&['W2','U2','V2'].every(t=>sn.includes(f(key(x.id,t)))));
+        child.children.push({kind:'star',lines:out,m,parent:child,perm:out.map((_,i)=>i)});
+      }else expand(child,out);
+    });
+  }
+  expand(root,root.lines);
+  const ord={motor:0,dev:1,ref:2,star:3,join:4};
+  (function so(n){(n.children||[]).sort((a,b)=>ord[a.kind]-ord[b.kind]);(n.children||[]).forEach(so);})(root);
+  return{root,f,netName,netNode,visited,src};
+}
+function subParts(n,acc,dep){dep=dep||0;if(dep>30)return acc;(n.children||[]).forEach(c=>{if(c.kind==='motor')acc.push({d:c.d,p:'top'});else if(c.kind==='ref')acc.push({d:c.d,p:'bot'});else if(c.kind==='star')acc.push({d:c.m,p:'star'});else if(c.kind==='join'){if(c.tgt)subParts(c.tgt,acc,dep+1);}else subParts(c,acc,dep+1);});return acc;}
+
+function calc(ptIn){
+  const pt=ptIn||powerTree();const R={rec:{},rows:[],mot:{},notes:[],cables:[]};
+  const f=pt?pt.f:wireUF();
+  // động cơ
+  S.devs.filter(d=>d.t==='motor'||d.t==='motor6').forEach(d=>{
+    const kw=PV(d,'kw'),u=PV(d,'u')||380,hz=PV(d,'hz')||50,pole=PV(d,'pole')||4,cos=PV(d,'cos')||0.85,eff=(PV(d,'eff')||88)/100,len=PV(d,'len');
+    const In=kw*1000/(Math.sqrt(3)*u*cos*eff),yd=d.t==='motor6',ns=120*hz/pole,nr=ns*(1-(kw<5?0.05:kw<30?0.035:0.02));
+    const onVfd=d.t==='motor'&&S.devs.some(v=>v.t==='vfd'&&vfdMotor(f,v).some(x=>x.m===d));
+    const Iph=yd?In/Math.sqrt(3):In;const cab=pickCable(Iph,Iph*1.25,len,true,cos,u,2.5),pe=peSize(cab.s);
+    const cs=(yd?'2 sợi ':'')+'CVV 3×'+fS(cab.s)+' + E'+fS(pe)+' mm²';
+    R.mot[d.id]={kw,u,hz,pole,cos,eff,In,Iph,ns,nr,yd,onVfd,Ist:onVfd?In*1.5:yd?In*2.2:In*6.5,cab,pe,cs,len};
+    R.rec[d.id]=[kw+' kW · '+u+' V · '+hz+' Hz','In ≈ '+In.toFixed(1)+' A · n ≈ '+Math.round(nr)+' v/ph','Cáp: '+cs];
+  });
+  // tải 1 pha
+  const L1P={};
+  S.devs.filter(d=>['lamp','fan','socket'].includes(d.t)).forEach(d=>{
+    const w=PV(d,'w'),cos=d.t==='fan'?(PV(d,'cos')||0.9):1,len=PV(d,'len'),I=w/(220*cos);
+    const cab=pickCable(I,Math.max(I*1.25,d.t==='socket'?16:10),len,false,cos,220,d.t==='socket'?2.5:1.5);
+    L1P[d.id]={w,I,cab};R.rec[d.id]=[w+' W · I ≈ '+I.toFixed(2)+' A','Dây: VCm/CV 2×'+fS(cab.s)+' mm²'+(d.t==='socket'?' + E'+fS(cab.s):'')];
+  });
+  if(pt){
+    // dòng 1 pha đi về nhóm động lực nào
+    const flow={};const ctl=new Set(['13','14','21','22','95','96','97','98']);
+    const adj={};const addE=(a,b)=>{(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);};
+    S.devs.forEach(d=>{const T=TYPES[d.t];if(PWR[d.t]&&pt.visited.has(d.id)){(T.contacts||[]).forEach(c=>{if(ctl.has(c[0]))addE(f(key(d.id,c[0])),f(key(d.id,c[1])));});return;}
+      (T.contacts||[]).forEach(c=>addE(f(key(d.id,c[0])),f(key(d.id,c[1]))));});
+    Object.keys(L1P).forEach(id=>{const d=dev(id);const ts=d.t==='socket'?['L','N']:['a','b'];
+      for(const t of ts){const st=[f(key(id,t))],seen=new Set(st);let hit=null;
+        while(st.length&&!hit){const n=st.pop();if(pt.netName[n]&&pt.netName[n]!=='N'&&pt.netName[n]!=='PE'){hit=n;break;}(adj[n]||[]).forEach(m=>{if(!seen.has(m)){seen.add(m);st.push(m);}});}
+        if(hit){flow[id]={node:pt.netNode[hit],name:pt.netName[hit]};break;}}});
+    // dòng qua từng nút
+    function nodeI(n){
+      const per={};const add=(nm,v)=>{per[nm]=(per[nm]||0)+v;};
+      const parts=subParts(n,[]);const byM={};parts.forEach(p=>{if(!p.d)return;(byM[p.d.id]=byM[p.d.id]||new Set()).add(p.p);});
+      let imot=0,ydAny=false;const vfdAny=(function g(x){return(x.children||[]).some(c=>(c.d&&c.d.t==='vfd')||g(c));})(n)||(n.d&&n.d.t==='vfd');
+      Object.keys(byM).forEach(id=>{const m=R.mot[id];if(!m)return;const ps=byM[id];
+        let I=m.In;if(m.yd){if(ps.has('star')&&ps.size===1)I=m.In/3;else if(!(ps.has('top')&&ps.has('bot')))I=m.Iph;ydAny=true;}
+        n.lines.forEach(l=>add(l.name,I));imot=Math.max(imot,I);});
+      Object.keys(flow).forEach(id=>{let x=flow[id].node;while(x){if(x===n){add(flow[id].name,L1P[id].I);break;}x=x.parent;}});
+      const Imax=Math.max(0,...Object.values(per));return{Imax,imot,ydAny,vfdAny,per};
+    }
+    (function walk(n){
+      if(n.kind==='dev'){const d=n.d,r=nodeI(n);
+        if(d.t==='cb3'||d.t==='cb2'){
+          let rt=6;if(r.Imax>0){const fac=r.vfdAny?1.25:r.ydAny?1.3:1.6;rt=upStd(CB_STD,Math.max(1.25*r.Imax,r.Imax-r.imot+fac*r.imot));if(!r.imot)rt=Math.max(rt,10);}
+          R.rec[d.id]=[(rt>63?'MCCB ':'MCB ')+(d.t==='cb3'?'3P ':'2P ')+rt+'A','I tính toán ≈ '+r.Imax.toFixed(1)+' A'];
+        }else if(d.t==='contactor'){
+          const parts=subParts(n,[]);const jn=n.children.find(c=>c.kind==='join');const isFw=(function f(x){return(x.children||[]).some(c=>(c.kind==='join'&&c.tgt===n)||f(c));})(pt.root);
+          const role=n.children.some(c=>c.kind==='star')?'KY (sao)':jn?'K nghịch (đảo pha)':isFw?'K thuận':parts.some(p=>p.p==='bot')&&!parts.some(p=>p.p==='top')?'KΔ (tam giác)':'K chính';
+          const sz=upStd(K_AC3,Math.max(r.Imax,1));
+          R.rec[d.id]=['AC3 '+sz+'A · cuộn 220V AC',role+' · I ≈ '+r.Imax.toFixed(1)+' A'];
+        }else if(d.t==='vfd'){const ms=subParts(n,[]).map(p=>p.d&&R.mot[p.d.id]).filter(Boolean);const kw=ms.reduce((a,m)=>a+m.kw,0);
+          const KW=[0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,200,250];const sel=upStd(KW,kw||0.75);
+          R.rec[d.id]=['ABB ACS580 – '+sel+' kW (380V)','I ra ≈ '+r.Imax.toFixed(1)+' A · 0–'+PV(d,'fmax')+' Hz','Tăng/giảm tốc '+PV(d,'acc')+'/'+PV(d,'dec')+' s'];
+        }else if(d.t==='ol'){const rg=olRange(Math.max(r.Imax,0.7));R.rec[d.id]=['Dải '+rg[0]+'–'+rg[1]+' A','Chỉnh '+r.Imax.toFixed(1)+' A'];}
+      }
+      (n.children||[]).forEach(walk);
+    })(pt.root);
+    // cáp nguồn
+    const rr=nodeI(pt.root);const three=pt.src.t==='src3',len=PV(pt.src,'len');
+    const Ireq=Math.max(1.25*rr.Imax,rr.Imax-rr.imot+(rr.ydAny?1.3:1.6)*rr.imot,1);
+    const cab=pickCable(Math.max(rr.Imax,0.5),Ireq,len,three,0.85,three?380:220,three?4:2.5);
+    const pe=peSize(cab.s);
+    const cs=three?'CVV 4×'+fS(cab.s)+' + E'+fS(pe)+' mm²':'CVV 2×'+fS(cab.s)+' + E'+fS(pe)+' mm²';
+    R.feeder={I:rr.Imax,cab,cs,per:rr.per,len};
+    R.rec[pt.src.id]=[three?'3 pha 4 dây 380/220V':'1 pha 220V','I tính toán ≈ '+rr.Imax.toFixed(1)+' A','Cáp nguồn: '+cs];
+  }
+  S.devs.forEach(d=>{
+    if(R.rec[d.id])return;
+    if(d.t==='contactor'||d.t==='relay')R.rec[d.id]=['Cuộn 220V AC'];
+    else if(d.t==='timer')R.rec[d.id]=['On-delay, cuộn 220V','Đặt '+tsec(d)+' s'];
+    else if(d.t==='cb2'||d.t==='cb3')R.rec[d.id]=['2P 6A (bảo vệ mạch điều khiển)'];
+    else if(d.t.startsWith('pilot'))R.rec[d.id]=['220V AC'];
+    else if(d.t==='ol')R.rec[d.id]=['Chọn theo dòng động cơ'];
+  });
+  R.ctrl='VCm 1.0 mm² (dây mềm 1 chấm 0); dây tín hiệu/đèn báo có thể dùng 0.75 mm²';
+  // ghi chú
+  if(R.feeder)R.notes.push('Cáp nguồn cấp: '+R.feeder.cs+' – dài '+R.feeder.len+' m, sụt áp ≈ '+R.feeder.cab.vd.toFixed(1)+'%');
+  Object.keys(R.mot).forEach(id=>{const m=R.mot[id];R.notes.push(tagOf(dev(id))+': '+m.cs+' – dài '+m.len+' m, sụt áp ≈ '+m.cab.vd.toFixed(1)+'%, I khởi động ≈ '+m.Ist.toFixed(0)+' A ('+(m.onVfd?'biến tần':m.yd?'Y/Δ':'trực tiếp')+')');});
+  R.notes.push('Dây điều khiển: '+R.ctrl);
+  R.notes.push('Tra dòng cho phép theo IEC 60364-5-52, cáp Cu/PVC đi trong ống, 30°C; sụt áp ≤ 4%.');
+  return R;
+}
+function paramText(d){return(PDEF[d.t]||[]).filter(x=>x[0]!=='len'||true).map(x=>{const v=PV(d,x[0]);const u={kw:'kW',u:'V',hz:'Hz',pole:'cực',eff:'%',len:'m',w:'W',sec:'s',fmax:'Hz',acc:'s',dec:'s',f1:'Hz',f2:'Hz',f3:'Hz',pos:'%'}[x[0]]||'';return(x[0]==='cos'?'cosφ ':'')+v+(u?' '+u:'');}).join(', ');}
+
+/* ================= SƠ ĐỒ NGUYÊN LÝ (SVG) ================= */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function T_(x,y,s,o){o=o||{};return`<text x="${x}" y="${y}" font-size="${o.fs||11}"${o.b?' font-weight="700"':''} text-anchor="${o.a||'start'}" fill="${o.c||'#111'}"${o.it?' font-style="italic"':''}>${esc(s)}</text>`;}
+function Ln(x1,y1,x2,y2,o){o=o||{};return`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${o.c||'#111'}" stroke-width="${o.w||1.6}"${o.d?` stroke-dasharray="${o.d}"`:''} stroke-linecap="round"/>`;}
+function Pt(d,o){o=o||{};return`<path d="${d}" fill="${o.f||'none'}" stroke="${o.c||'#111'}" stroke-width="${o.w||1.6}"${o.d?` stroke-dasharray="${o.d}"`:''} stroke-linejoin="round"/>`;}
+const Dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.2" fill="#111"/>`;
+const Ring=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.4" fill="#fff" stroke="#111" stroke-width="1.4"/>`;
+
+function drawPower(pt,C,ctrlNets){
+  let s='';const LS=30,DH=92;let maxX=200,maxY=0;
+  const busY={};let by=56;
+  pt.root.bus.forEach(b=>{busY[b.name]=by;by+=17;});
+  function wid(n){
+    if(n.kind==='motor')return 340;if(n.kind==='ref'||n.kind==='star'||n.kind==='join')return n.lines.length*LS+130;
+    const k=n.lines.length,self=k*LS+190;let cw=0;(n.children||[]).forEach(c=>cw+=wid(c));return Math.max(self,cw);
+  }
+  function children(n,px,yFrom,x0){
+    let x=x0,bottom=yFrom;const k=n.lines.length;
+    n.children.forEach((c,j)=>{
+      const kc=c.perm.length,cpx=[...Array(kc)].map((_,i)=>x+24+i*LS);
+      const yTop=n.kind==='bus'?by+34:yFrom+18+k*9;
+      c.perm.forEach((p,i)=>{
+        if(n.kind==='bus'){const yb=busY[n.lines[p].name];s+=Ln(cpx[i],yb,cpx[i],yTop)+Dot(cpx[i],yb);}
+        else{const yr=yFrom+10+p*9;
+          s+=Pt(`M${px[p]} ${yFrom}V${yr}H${cpx[i]}V${yTop}`);
+          if(j>0)s+=Dot(px[p],yr);}
+      });
+      const b=node(c,cpx,yTop);bottom=Math.max(bottom,b);x+=wid(c);
+    });
+    maxX=Math.max(maxX,x);return bottom;
+  }
+  function tapMark(n,px,yOut){
+    n.lines.forEach((l,i)=>{if(!ctrlNets.has(l.net))return;const y=yOut+7,dir=i===0?-1:1;
+      s+=Dot(px[i],y)+Ln(px[i],y,px[i]+dir*16,y)+Pt(`M${px[i]+dir*16} ${y-3}l${dir*5} 3l${-dir*5} 3z`,{f:'#111',w:1})+T_(px[i]+dir*24,y+3.5,'ĐK',{fs:8,b:1,a:dir<0?'end':'start'});});
+  }
+  function label(x,y,tag,lines){s+=T_(x,y,tag,{fs:13,b:1});(lines||[]).forEach((t,i)=>s+=T_(x,y+15+i*13,t,{fs:10,c:'#333'}));}
+  function node(n,px,y){
+    const k=px.length,last=px[k-1];
+    if(n.kind==='dev'){
+      const d=n.d;
+      px.forEach((x,i)=>{
+        if(d.t==='vfd'){s+=Ln(x,y,x,y+24)+Ln(x,y+68,x,y+DH);}
+        else if(d.t==='ol'){s+=Ln(x,y,x,y+30)+Pt(`M${x} ${y+30}V${y+38}h7v14h-7V${y+62}`)+Ln(x,y+62,x,y+DH);}
+        else{
+          s+=Ln(x,y,x,y+30)+Ln(x,y+62,x,y+DH)+Ln(x,y+62,x-13,y+32);
+          if(d.t==='contactor')s+=Pt(`M${x-6} ${y+30}A6 6 0 0 0 ${x+6} ${y+30}`);
+          else s+=Ln(x-4,y+26,x+4,y+34)+Ln(x+4,y+26,x-4,y+34);
+        }
+        s+=T_(x+5,y+11,n.inT[i],{fs:8,c:'#444'})+T_(x+5,y+DH-4,n.outT[i],{fs:8,c:'#444'});
+      });
+      if(d.t==='vfd'){s+=`<rect x="${px[0]-14}" y="${y+24}" width="${last-px[0]+28}" height="44" fill="#fff" stroke="#111" stroke-width="1.8"/>`+Ln(px[0]-14,y+68,last+14,y+24,{w:1})+T_(px[0]-6,y+40,'≈',{fs:14,b:1})+T_(last+2,y+62,'~',{fs:14,b:1});
+        const ff=pt.f,kk=t=>ff(key(d.id,t)),who=t=>{const r=[];S.devs.forEach(o=>{if(o===d)return;TYPES[o.t].terms.forEach(tt=>{if(ff(key(o.id,tt.id))===kk(t))r.push(tagOf(o)+':'+tt.id);});});return r.join(',');};
+        const cl=[['13','DI1 chạy'],['14','DI2 đảo chiều'],['15','DI3'],['16','DI4'],['2','AI1 tốc độ']].filter(([t])=>who(t)).map(([t,n])=>t+' '+n+' ← '+who(t));
+        const sto=[kk('34'),kk('35'),kk('10')].includes(kk('37'))&&[kk('34'),kk('35'),kk('10')].includes(kk('38'));
+        C.rec[d.id]=(C.rec[d.id]||[]).concat(cl,['STO 34→37,38: '+(sto?'đã nối':'CHƯA NỐI')]);}
+      else if(d.t==='ol')s+=`<rect x="${px[0]-12}" y="${y+33}" width="${last-px[0]+30}" height="24" fill="none" stroke="#111" stroke-width="1.3"/>`;
+      else if(d.t!=='vfd')s+=Ln(px[0]-7,y+47,last+4,y+47,{d:'4 3',w:1.1});
+      label(last+26,y+34,tagOf(d),C.rec[d.id]);
+      const yOut=y+DH;tapMark(n,px,yOut);
+      maxY=Math.max(maxY,yOut);
+      if(!n.children.length)return yOut;
+      return children(n,px,yOut,px[0]-24);
+    }
+    if(n.kind==='motor'){
+      const d=n.d,m=C.mot[d.id],cx=px[1],r=36,cy=y+28+r+4,tn=d.t==='motor'?['U','V','W']:['U1','V1','W1'];
+      px.forEach((x,i)=>{const ye=cy-Math.sqrt(Math.max(0,r*r-(x-cx)*(x-cx)));s+=Ln(x,y,x,y+20)+Ring(x,y+20)+Ln(x,y+24,x,ye)+T_(x-5,y+16,tn[i],{fs:9,b:1,a:'end'});});
+      s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="#111" stroke-width="1.8"/>`+T_(cx,cy+2,'M',{fs:20,b:1,a:'middle'})+T_(cx,cy+18,'3~',{fs:12,a:'middle'});
+      s+=Ln(cx+r,cy,cx+r+22,cy)+Ln(cx+r+22,cy,cx+r+22,cy+10)+Ln(cx+r+12,cy+10,cx+r+32,cy+10)+Ln(cx+r+15,cy+14,cx+r+29,cy+14)+Ln(cx+r+18,cy+18,cx+r+26,cy+18)+T_(cx+r+36,cy+4,'PE',{fs:9,b:1});
+      let yb=cy+r;
+      if(d.t==='motor6'){const bt=['W2','U2','V2'];px.forEach((x,i)=>{const ye=cy+Math.sqrt(Math.max(0,r*r-(x-cx)*(x-cx)));s+=Ln(x,ye,x,cy+r+18)+Ring(x,cy+r+22)+T_(x,cy+r+38,bt[i],{fs:9,b:1,a:'middle'});});
+        const refs=[];(function f(n){(n.children||[]).forEach(c=>{if(c.kind==='ref'&&c.d===d)refs.push(tagOf(c.parent.d));f(c);});})(pt.root);
+        if(refs.length)s+=T_(cx,cy+r+52,'(nối '+refs.join(', ')+')',{fs:9,it:1,a:'middle',c:'#333'});yb=cy+r+56;}
+      label(cx+r+56,y+30,tagOf(d),C.rec[d.id]);
+      maxY=Math.max(maxY,yb);return yb;
+    }
+    if(n.kind==='ref'){
+      px.forEach((x,i)=>{s+=Ln(x,y,x,y+22)+Pt(`M${x-4} ${y+16}l4 7l4 -7`,{f:'#111',w:1})+T_(x,y+36,n.terms[i],{fs:9,b:1,a:'middle'});});
+      s+=T_(px[0]-6,y+50,'→ '+tagOf(n.d)+' ('+n.terms.join(' ')+')',{fs:9,it:1});
+      maxY=Math.max(maxY,y+52);return y+52;
+    }
+    if(n.kind==='join'){
+      const swap=n.to.join()!==n.lines.map(l=>l.name).join();
+      px.forEach((x,i)=>{s+=Ln(x,y,x,y+22)+Pt(`M${x-4} ${y+16}l4 7l4 -7`,{f:'#111',w:1})+T_(x,y+36,n.to[i],{fs:9,b:1,a:'middle'});});
+      s+=T_(px[0]-6,y+50,'→ nối ngõ ra '+(n.tgt&&n.tgt.d?tagOf(n.tgt.d):'')+(swap?' (đảo pha)':''),{fs:9,it:1});
+      maxY=Math.max(maxY,y+52);return y+52;
+    }
+    if(n.kind==='star'){
+      px.forEach(x=>s+=Ln(x,y,x,y+22)+Dot(x,y+22));s+=Ln(px[0],y+22,last,y+22,{w:2.2})+T_(last+12,y+26,'Đấu sao (Y)',{fs:10,it:1});
+      maxY=Math.max(maxY,y+30);return y+30;
+    }
+    return y;
+  }
+  const bottom=children(pt.root,null,by,40);
+  const W=Math.max(maxX+60,340);
+  pt.root.bus.forEach(b=>{s=Ln(30,busY[b.name],W-10,busY[b.name],{w:2,d:b.name==='PE'?'10 3 2 3':''})+T_(24,busY[b.name]+4,b.name,{fs:11,b:1,a:'end'})+s;});
+  const head=(pt.src.t==='src3'?'NGUỒN 3 PHA 380/220V – 50Hz':'NGUỒN 1 PHA 220V – 50Hz')+(C.feeder?'  ·  '+C.feeder.cs:'');
+  s=T_(30,34,head,{fs:11,b:1})+s;
+  return{svg:s,w:W,h:Math.max(bottom,maxY)+20};
+}
+
+function buildLadder(pt){
+  const f=pt.f,EL=[],ctrlNets=new Set();
+  const add=(d,ta,tb,kind)=>{if(!connected(d,ta)&&!connected(d,tb))return;const u=f(key(d.id,ta)),v=f(key(d.id,tb));ctrlNets.add(u);ctrlNets.add(v);EL.push({u,v,e:{t:'l',d,ta,tb,kind}});};
+  S.devs.forEach(d=>{const inP=pt.visited.has(d.id);switch(d.t){
+    case'contactor':if(!inP){add(d,'1','2','no');add(d,'3','4','no');add(d,'5','6','no');}add(d,'13','14','no');add(d,'21','22','nc');add(d,'A1','A2','coil');break;
+    case'ol':add(d,'95','96','olnc');add(d,'97','98','olno');break;
+    case'vfd':add(d,'19','20','nc');add(d,'19','21','no');add(d,'22','23','nc');add(d,'22','24','no');add(d,'25','26','nc');add(d,'25','27','no');break;
+    case'relay':add(d,'9','1','nc');add(d,'9','5','no');add(d,'12','4','nc');add(d,'12','8','no');add(d,'13','14','rcoil');break;
+    case'timer':add(d,'1','4','tmnc');add(d,'1','3','tmno');add(d,'8','5','tmnc');add(d,'8','6','tmno');add(d,'2','7','tcoil');break;
+    case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
+    case'switch':add(d,'1','2','sw');break;
+    case'cb2':if(!inP){add(d,'1','2','cb');add(d,'3','4','cb');}break;
+    case'lamp':add(d,'a','b','lamp');break;case'fan':add(d,'a','b','fan');break;
+    case'pilotG':case'pilotR':case'pilotY':add(d,'X1','X2','pilot');break;
+    case'socket':add(d,'L','N','socket');break;}});
+  const rails=new Set();
+  const cls=n=>{const nm=pt.netName[n];if(!nm||nm==='PE')return n;if(nm==='N')return'N';rails.add(nm);return'P';};
+  const edges=EL.map(x=>({u:cls(x.u),v:cls(x.v),e:x.e})).filter(x=>x.u!==x.v);
+  const r=spReduce(edges);
+  let e=r.e,fallback=false;
+  if(!r.ok){fallback=true;e=pathsExpr(r.E);}
+  return{e,fallback,rail:[...rails].join('/')||'L',ctrlNets,hasCoil:EL.some(x=>/coil|pilot/.test(x.e.kind))||S.devs.some(d=>d.t==='vfd')};
+}
+const revE=e=>e.t==='s'?{t:'s',c:e.c.slice().reverse().map(revE)}:e.t==='p'?{t:'p',c:e.c.map(revE)}:Object.assign({},e,{rv:!e.rv});
+const mkE=(t,a,b)=>{const c=[];[a,b].forEach(x=>{if(x.t===t)c.push(...x.c);else c.push(x);});return{t,c};};
+function spReduce(edges){
+  let E=edges.slice(),guard=0,changed=true;
+  while(changed&&guard++<4000){
+    changed=false;E=E.filter(x=>x.u!==x.v);
+    const deg={};E.forEach(x=>{deg[x.u]=(deg[x.u]||0)+1;deg[x.v]=(deg[x.v]||0)+1;});
+    const term=n=>n==='P'||n==='N';
+    const di=E.findIndex(x=>(!term(x.u)&&deg[x.u]===1)||(!term(x.v)&&deg[x.v]===1));
+    if(di>=0){E.splice(di,1);changed=true;continue;}
+    let done=false;
+    for(let i=0;i<E.length&&!done;i++)for(let j=i+1;j<E.length&&!done;j++){const a=E[i],b=E[j];
+      if(a.u===b.u&&a.v===b.v){E[i]={u:a.u,v:a.v,e:mkE('p',a.e,b.e)};E.splice(j,1);done=true;}
+      else if(a.u===b.v&&a.v===b.u){E[i]={u:a.u,v:a.v,e:mkE('p',a.e,revE(b.e))};E.splice(j,1);done=true;}}
+    if(done){changed=true;continue;}
+    for(const n in deg){if(term(n)||deg[n]!==2)continue;
+      const ix=[];E.forEach((x,i)=>{if(x.u===n||x.v===n)ix.push(i);});if(ix.length!==2)continue;
+      const a=E[ix[0]],b=E[ix[1]];
+      const ae=a.v===n?a.e:revE(a.e),au=a.v===n?a.u:a.v,be=b.u===n?b.e:revE(b.e),bv=b.u===n?b.v:b.u;
+      E=E.filter((x,i)=>i!==ix[0]&&i!==ix[1]);E.push({u:au,v:bv,e:mkE('s',ae,be)});changed=true;break;}
+  }
+  E=E.filter(x=>x.u!==x.v);
+  if(!E.length)return{ok:true,e:null};
+  if(E.length===1&&((E[0].u==='P'&&E[0].v==='N')||(E[0].u==='N'&&E[0].v==='P')))return{ok:true,e:E[0].u==='P'?E[0].e:revE(E[0].e)};
+  return{ok:false,E};
+}
+function pathsExpr(E){
+  const res=[];
+  (function dfs(n,used,acc){if(res.length>40)return;if(n==='N'){res.push(acc.length===1?acc[0]:{t:'s',c:acc.slice()});return;}
+    E.forEach((x,i)=>{if(used.has(i))return;let nx=null,ex=null;if(x.u===n){nx=x.v;ex=x.e;}else if(x.v===n){nx=x.u;ex=revE(x.e);}if(nx===null)return;
+      used.add(i);acc.push(ex);dfs(nx,used,acc);acc.pop();used.delete(i);});})('P',new Set(),[]);
+  if(!res.length)return null;return res.length===1?res[0]:{t:'p',c:res};
+}
+const BOTK=['coil','rcoil','tcoil','lamp','pilot','fan','socket'];
+function hLeaf(l){return{coil:80,rcoil:80,tcoil:80,fan:82,lamp:76,pilot:76,socket:76}[l.kind]||66;}
+function meas(e){
+  if(e.t==='s'){let w=0,h=0;e.c.forEach(c=>{const m=meas(c);w=Math.max(w,m.w);h+=m.h;});return e.m={w,h};}
+  if(e.t==='p'){let w=0,h=0;e.c.forEach(c=>{const m=meas(c);w+=m.w;h=Math.max(h,m.h);});return e.m={w,h:h+32};}
+  return e.m={w:1,h:hLeaf(e)};
+}
+function drawLadder(lad){
+  const e=lad.e;if(!e)return null;meas(e);
+  const CW=104,BAR=16,X0=60,yT=56,H=e.m.h,yN=yT+H;let s='';
+  const X=c=>X0+c*CW+CW/2;
+  const wire=(x,y1,y2)=>{if(y2>y1+0.5)s+=Ln(x,y1,x,y2);};
+  function sym(l,cx,y){
+    const k=l.kind,tag=tagOf(l.d),top=l.rv?l.tb:l.ta,bot=l.rv?l.ta:l.tb;
+    const tn=(t,yy)=>T_(cx+7,yy,t,{fs:9,c:'#333'});
+    if(!BOTK.includes(k)){
+      const no=['no','pbno','olno','tmno','sw','cb'].includes(k),act=['pbno','pbnc','estop','olnc','olno','tmno','tmnc'].includes(k);
+      s+=Ln(cx,y,cx,y+22)+Ln(cx,y+44,cx,y+66);
+      if(no)s+=Ln(cx,y+44,cx-13,y+21);else s+=Ln(cx,y+22,cx+11,y+22)+Ln(cx,y+44,cx+12,y+19);
+      if(k==='cb')s+=Ln(cx-4,y+18,cx+4,y+26)+Ln(cx+4,y+18,cx-4,y+26);
+      if(act){const ay=y+33,bx=no?cx-6:cx+5;s+=Ln(bx,ay,cx-26,ay,{d:'3 2',w:1.1});
+        if(k==='pbno'||k==='pbnc')s+=Pt(`M${cx-26} ${ay-6}V${ay+6}M${cx-26} ${ay-6}h-5M${cx-26} ${ay+6}h-5`);
+        if(k==='estop')s+=Pt(`M${cx-26} ${ay-8}A8 8 0 0 0 ${cx-26} ${ay+8}Z`,{f:'#111'});
+        if(k==='olnc'||k==='olno')s+=Pt(`M${cx-26} ${ay}h-3v-6h-6v12h-6v-6h-3`);
+        if(k==='tmno'||k==='tmnc')s+=Pt(`M${cx-20} ${ay-7}A9 9 0 0 1 ${cx-20} ${ay+7}`)+Ln(cx-26,ay-7,cx-26,ay+7);}
+      const off=k==='olnc'||k==='olno'?52:k==='estop'?40:k==='pbno'||k==='pbnc'?38:act?34:18;s+=tn(top,y+12)+tn(bot,y+62)+T_(cx-off,y+37,tag,{fs:11,b:1,a:'end'});
+      return;
+    }
+    const nh=hLeaf(l);
+    if(k==='coil'||k==='rcoil'||k==='tcoil'){
+      s+=Ln(cx,y,cx,y+28)+`<rect x="${cx-15}" y="${y+28}" width="30" height="24" fill="#fff" stroke="#111" stroke-width="1.6"/>`+Ln(cx,y+52,cx,y+nh);
+      if(k==='tcoil')s+=`<rect x="${cx-27}" y="${y+28}" width="12" height="24" fill="#111"/>`;
+      s+=tn(top,y+14)+tn(bot,y+nh-6)+T_(cx-(k==='tcoil'?31:19),y+44,tag,{fs:11,b:1,a:'end'});return;
+    }
+    if(k==='lamp'||k==='pilot'){
+      s+=Ln(cx,y,cx,y+26)+`<circle cx="${cx}" cy="${y+38}" r="12" fill="#fff" stroke="#111" stroke-width="1.6"/>`+Ln(cx-8.5,y+29.5,cx+8.5,y+46.5)+Ln(cx+8.5,y+29.5,cx-8.5,y+46.5)+Ln(cx,y+50,cx,y+nh);
+      s+=T_(cx-17,y+40,tag,{fs:11,b:1,a:'end'});
+      if(k==='pilot'){s+=tn(top,y+12)+tn(bot,y+nh-6)+T_(cx-17,y+52,{pilotG:'xanh',pilotR:'đỏ',pilotY:'vàng'}[l.d.t],{fs:8,a:'end',c:'#444'});}
+      else if(C_.rec[l.d.id])s+=T_(cx-17,y+52,PV(l.d,'w')+'W',{fs:8,a:'end',c:'#444'});
+      return;
+    }
+    if(k==='fan'){s+=Ln(cx,y,cx,y+25)+`<circle cx="${cx}" cy="${y+40}" r="15" fill="#fff" stroke="#111" stroke-width="1.6"/>`+T_(cx,y+40,'M',{fs:12,b:1,a:'middle'})+T_(cx,y+50,'1~',{fs:8,a:'middle'})+Ln(cx,y+55,cx,y+nh)+T_(cx-20,y+42,tag,{fs:11,b:1,a:'end'})+T_(cx-20,y+54,PV(l.d,'w')+'W',{fs:8,a:'end',c:'#444'});return;}
+    if(k==='socket'){s+=Ln(cx,y,cx,y+26)+Pt(`M${cx-13} ${y+26}h26v22h-26z`)+Ln(cx-5,y+31,cx-5,y+40)+Ln(cx+5,y+31,cx+5,y+40)+Ln(cx,y+48,cx,y+nh)+tn(top,y+12)+tn(bot,y+nh-6)+T_(cx-18,y+41,tag,{fs:11,b:1,a:'end'});return;}
+  }
+  function dr(e,col,y,h,root){
+    const x=X(col);
+    if(e.t==='l'){const nh=hLeaf(e);if(BOTK.includes(e.kind)){wire(x,y,y+h-nh);sym(e,x,y+h-nh);}else{sym(e,x,y);wire(x,y+nh,y+h);}return;}
+    if(e.t==='s'){let cy=y;const sum=e.c.reduce((a,c)=>a+c.m.h,0),extra=h-sum;
+      e.c.forEach((c,i)=>{if(i===e.c.length-1&&extra>0){wire(x,cy,cy+extra);cy+=extra;}dr(c,col,cy,c.m.h);cy+=c.m.h;});return;}
+    if(e.t==='p'){let c=col;const xs=[];
+      e.c.forEach(ch=>{const cx=X(c);xs.push(cx);wire(cx,y,y+BAR);dr(ch,c,y+BAR,h-2*BAR);wire(cx,y+h-BAR,y+h);c+=ch.m.w;});
+      s+=Ln(xs[0],y,xs[xs.length-1],y)+Ln(xs[0],y+h,xs[xs.length-1],y+h);
+      xs.forEach((cx,i)=>{if(i<xs.length-1||root){s+=Dot(cx,y)+Dot(cx,y+h);}});
+    }
+  }
+  const Wc=e.m.w,right=X0+Wc*CW+20;
+  dr(e,0,yT,H,true);
+  if(e.t!=='p')s+=Dot(X(0),yT)+Dot(X(0),yN);
+  s=Ln(20,yT,right,yT,{w:2.2})+Ln(20,yN,right,yN,{w:2.2})+T_(14,yT+4,lad.rail,{fs:12,b:1,a:'end'})+T_(14,yN+4,'N',{fs:12,b:1,a:'end'})+s;
+  for(let c=0;c<Wc;c++)s+=`<rect x="${X(c)-11}" y="${yT-34}" width="22" height="16" fill="#fff" stroke="#999" stroke-width="1"/>`+T_(X(c),yT-22,String(c+1),{fs:10,a:'middle',c:'#555'});
+  if(lad.fallback)s+=T_(20,yN+22,'* Mạch có nhánh cầu – một số tiếp điểm được vẽ lặp lại.',{fs:9,it:1,c:'#b45309'});
+  return{svg:s,w:right+30,h:yN+30};
+}
+let C_={rec:{}};
+function buildSchematic(){
+  const pt=powerTree();const C=calc(pt);C_=C;
+  const meta=S.meta||{};
+  let lad=null,pw=null,ld=null;
+  if(pt){lad=buildLadder(pt);pw=drawPower(pt,C,lad.ctrlNets);ld=drawLadder(lad);}
+  const M=24,top=M+48,gap=70;
+  const pW=pw?pw.w:300,pH=pw?pw.h:120,lW=ld?ld.w:0,lH=ld?ld.h:0;
+  const tw=470;
+  const wrapC=(t,n)=>{const out=[];let line='';t.split(' ').forEach(w=>{const tt=line?line+' '+w:w;if(tt.length>n&&line){out.push(line);line='  '+w;}else line=tt;});if(line)out.push(line);return out;};
+  let notesRaw=C.notes;
+  let W=Math.max(M*2+pW+(ld?gap+lW:0)+20,1000),notes=[],band=150;
+  for(let it=0;it<3;it++){const nc=Math.max(30,Math.floor((W-2*M-tw-50)/5.9));notes=[];notesRaw.forEach(t=>wrapC('• '+t,nc).forEach(l=>notes.push(l)));band=Math.max(150,notes.length*16+50);
+    let H0=top+Math.max(pH,lH)+band+M+20;if(W/H0<1.414)W=Math.round(H0*1.414);}
+  let H=Math.round(W/1.414);if(H<top+Math.max(pH,lH)+band+M+20){H=top+Math.max(pH,lH)+band+M+20;W=Math.round(H*1.414);}
+  let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+  s+=`<rect x="${M}" y="${M}" width="${W-2*M}" height="${H-2*M}" fill="none" stroke="#111" stroke-width="2.6"/>`;
+  s+=`<rect x="${M+6}" y="${M+6}" width="${W-2*M-12}" height="${H-2*M-12}" fill="none" stroke="#111" stroke-width="0.8"/>`;
+  const px=M+20,lx=px+pW+gap;
+  s+=T_(px,M+34,'MẠCH ĐỘNG LỰC',{fs:15,b:1})+(ld?T_(lx,M+34,lad.hasCoil?'MẠCH ĐIỀU KHIỂN':'MẠCH CHIẾU SÁNG – Ổ CẮM',{fs:15,b:1}):'');
+  if(pw)s+=`<g transform="translate(${px},${top})">${pw.svg}</g>`;else s+=T_(px,top+40,'Chưa có nguồn điện trên bảng.',{fs:13,it:1});
+  if(ld){s+=Ln(lx-gap/2,M+12,lx-gap/2,H-M-band-6,{w:0.8,d:'6 4',c:'#888'});s+=`<g transform="translate(${lx},${top})">${ld.svg}</g>`;}
+  // ghi chú
+  const ny=H-M-band+8;
+  s+=Ln(M,ny-8,W-M,ny-8,{w:1.4});
+  s+=T_(M+16,ny+14,'GHI CHÚ – TÍNH CHỌN DÂY DẪN',{fs:12,b:1});
+  notes.forEach((t,i)=>s+=T_(M+16,ny+34+i*16,t,{fs:10.5}));
+  // khung tên
+  const th=Math.min(band-16,150),tx=W-M-tw,ty=H-M-th;
+  s+=`<rect x="${tx}" y="${ty}" width="${tw}" height="${th}" fill="#fff" stroke="#111" stroke-width="1.8"/>`;
+  const rows=[['CÔNG TRÌNH',meta.prj||'—'],['TÊN BẢN VẼ','SƠ ĐỒ NGUYÊN LÝ MẠCH ĐIỆN'],['NGƯỜI VẼ',meta.by||'—'],['NGÀY',new Date().toLocaleDateString('vi-VN')]];
+  const rh=th/(rows.length+1);
+  rows.forEach((r,i)=>{const yy=ty+i*rh;if(i)s+=Ln(tx,yy,tx+tw,yy,{w:1});s+=T_(tx+10,yy+rh/2+4,r[0],{fs:10,b:1,c:'#444'})+T_(tx+120,yy+rh/2+5,r[1],{fs:12,b:i===1});});
+  const yy=ty+rows.length*rh;s+=Ln(tx,yy,tx+tw,yy,{w:1})+Ln(tx+110,ty,tx+110,yy,{w:1})+Ln(tx+tw/2,yy,tx+tw/2,ty+th,{w:1});
+  s+=T_(tx+10,yy+rh/2+4,'TỶ LỆ: KHÔNG TỶ LỆ',{fs:10,b:1})+T_(tx+tw/2+10,yy+rh/2+4,'SỐ BV: ĐL-01',{fs:10,b:1});
+  const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif'>${s}</svg>`;
+  return{svg:svgStr,W,H,C};
+}
+
+/* ================= UI: thông số & bản vẽ ================= */
+function openParams(d){
+  const defs=PDEF[d.t];if(!defs)return;
+  const old=JSON.stringify(d.p||{});d.p=d.p||{};
+  const fld=x=>{const v=PV(d,x[0]);
+    if(x[0]==='pole')return`<label>${x[1]}<select data-k="pole">${[2,4,6,8].map(p=>`<option ${p===v?'selected':''}>${p}</option>`).join('')}</select></label>`;
+    if(x[0]==='hz')return`<label>${x[1]}<select data-k="hz">${[50,60].map(p=>`<option ${p===v?'selected':''}>${p}</option>`).join('')}</select></label>`;
+    return`<label>${x[1]}<input data-k="${x[0]}" type="number" inputmode="decimal" step="any" value="${v}"></label>`;};
+  const m=showModal(`<div class="ic">⚙️</div><h2>${esc(nameOf(d))}</h2><div class="form">${defs.map(fld).join('')}</div><div class="calcbox" id="pcalc"></div><div class="row"><button class="btn" id="pCancel">Hủy</button><button class="btn run" id="pOk">Lưu</button></div>`);
+  const upd=()=>{m.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k,v=i.value;if(k==='sec'){const n=+v;if(n>0)d.sec=n;}else d.p[k]=v;});
+    const C=calc();const r=C.rec[d.id]||[];let extra='';
+    if(C.mot[d.id]){const mm=C.mot[d.id];extra='<br>Tốc độ đồng bộ '+mm.ns+' v/ph · I khởi động ≈ '+mm.Ist.toFixed(0)+' A · sụt áp '+mm.cab.vd.toFixed(1)+'%';}
+    if(C.feeder&&TYPES[d.t].cat==='src')extra='<br>Sụt áp ≈ '+C.feeder.cab.vd.toFixed(1)+'%';
+    m.querySelector('#pcalc').innerHTML='<b>Kết quả tính:</b><br>'+r.map(esc).join('<br>')+extra;};
+  m.querySelectorAll('[data-k]').forEach(i=>i.addEventListener('input',upd));upd();
+  m.querySelector('#pCancel').onclick=()=>{d.p=JSON.parse(old);closeModal();};
+  m.querySelector('#pOk').onclick=()=>{upd();closeModal();save();render();hint('Đã lưu thông số '+nameOf(d)+'.');};
+}
+let sheetZoom=false;
+function openSheet(){
+  const sh=document.getElementById('sheet');sh.hidden=false;
+  S.meta=S.meta||{};
+  document.getElementById('mPrj').value=S.meta.prj||'';document.getElementById('mBy').value=S.meta.by||'';
+  refreshSheet();
+}
+function refreshSheet(){
+  const r=buildSchematic();
+  const box=document.getElementById('sheetSvg');box.innerHTML=r.svg;const sv=box.querySelector('svg');
+  sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
+  const C=r.C;
+  const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(TYPES[d.t].name)}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
+  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>';
+}
+
+document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d)openParams(d);};
+document.getElementById('sheetBtn').onclick=openSheet;
+document.getElementById('shClose').onclick=()=>{document.getElementById('sheet').hidden=true;};
+document.getElementById('shZoom').onclick=()=>{sheetZoom=!sheetZoom;const sv=document.querySelector('#sheetSvg svg');if(sv)sv.style.width=sheetZoom?'260%':'100%';};
+document.getElementById('shPdf').onclick=exportPDF;
+let metaT=0;['mPrj','mBy'].forEach(id=>document.getElementById(id).addEventListener('input',e=>{S.meta=S.meta||{};S.meta[id==='mPrj'?'prj':'by']=e.target.value;save();clearTimeout(metaT);metaT=setTimeout(refreshSheet,400);}));
+/* ================= LẬP MẠCH: chọn thiết bị, tự đấu / đấu tự động ================= */
+function normVN(s){return(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/[Δδ]/g,'d');}
+function parseNotes(t){
+  const s=normVN(t);const R={};let m;
+  const NUM='(\\d+(?:[.,]\\d+)?)\\s*(giay|gi|s|sec|phut|ph|p)?\\b';
+  const toS=(n,u)=>{let v=parseFloat(String(n).replace(',','.'));if(u&&/^(phut|ph|p)$/.test(u))v*=60;return Math.max(1,Math.round(v*10)/10);};
+  const rx=p=>new RegExp(p);
+  if(/dao chieu|thuan nghich|2 chieu|hai chieu/.test(s))R.rev=true;
+  if(/sao.{0,3}tam giac|\by ?[-/]? ?d\b|\by ?[-/]? ?delta\b|sao.?tg\b/.test(s))R.yd=true;
+  if(/dung khan|khan cap|e.?stop|emergency/.test(s))R.estop=true;
+  if(/den bao/.test(s))R.pilots=true;
+  if(/cau thang/.test(s))R.stair=true;
+  if(/bien tan|\bvfd\b|inverter|acs ?580/.test(s))R.vfd=true;
+  if((m=s.match(rx('\\b(?:dong|chay|bat|sang|on)\\s*'+NUM+'.{0,14}?\\b(?:ngat|nghi|tat|dung|off)\\s*'+NUM))))R.cyc={on:toS(m[1],m[2]),off:toS(m[3],m[4])};
+  else if((m=s.match(rx('dong.?ngat\\D{0,20}'+NUM))))R.cyc={on:toS(m[1],m[2]),off:toS(m[1],m[2])};
+  if(!R.cyc){
+    if((m=s.match(rx('\\b(?:tat|ngat|dung|off)\\s*sau\\s*'+NUM))))R.run=toS(m[1],m[2]);
+    else if((m=s.match(rx('\\b(?:tre|delay)\\b\\D{0,20}'+NUM)))||(m=s.match(rx('\\b(?:khoi dong|chay|dong|bat|sang)\\s*sau\\s*'+NUM)))||(m=s.match(rx('\\bsau\\s*'+NUM+'\\s*(?:moi|thi)?\\s*(?:chay|dong|khoi dong|bat|sang)'))))R.delay=toS(m[1],m[2]);
+    else if((m=s.match(rx('\\b(?:chay|bat|dong|sang)\\s*(?:trong)?\\s*'+NUM+'\\s*(?:roi|thi)?\\s*(?:tu)?\\s*(?:tat|ngat|dung)')))||(m=s.match(rx('\\btu\\s*(?:tat|ngat|dung)\\D{0,12}'+NUM))))R.run=toS(m[1],m[2]);
+  }
+  if(R.yd&&(m=s.match(rx(NUM))))R.ydT=toS(m[1],m[2]);
+  if(R.stair&&!R.run&&!R.cyc&&!R.delay){const mm=s.match(rx(NUM));R.run=mm?toS(mm[1],mm[2]):60;}
+  return R;
+}
+function descReq(R){const a=[];
+  if(R.yd)a.push('Khởi động sao – tam giác, chuyển Y→Δ sau '+(R.ydT||5)+' s');
+  if(R.rev&&!R.vfd)a.push('Đảo chiều thuận – nghịch, có khóa chéo');
+  if(R.cyc)a.push('Chạy chu kỳ: đóng '+R.cyc.on+' s → ngắt '+R.cyc.off+' s, lặp lại');
+  if(R.delay)a.push('Nhấn ON, trễ '+R.delay+' s mới đóng');
+  if(R.run)a.push('Nhấn ON, chạy '+R.run+' s rồi tự ngắt'+(R.stair?' (đèn cầu thang)':''));
+  if(R.vfd)a.push('Chạy bằng biến tần ABB ACS580 – chiết áp chỉnh tốc độ'+(R.rev?', đảo chiều bằng DI2':''));
+  if(R.estop)a.push('Có nút dừng khẩn cấp');
+  if(R.pilots)a.push('Có đèn báo chạy / quá tải');
+  return a;}
+
+function autoBuild(cnt,R){
+  const pool={};Object.keys(cnt).forEach(k=>pool[k]=cnt[k]|0);
+  const added={},rep=[];let nid=1;const devs=[],wires=[];
+  const mk=(t,x,y,ex)=>{const d=Object.assign({id:'d'+(nid++),t,x:Math.round(x/10)*10,y:Math.round(y/10)*10},ex||{});if(t==='timer'&&!d.sec)d.sec=5;if(t==='cb2'||t==='cb3')d.on=true;devs.push(d);return d;};
+  const take=(t,x,y,ex)=>{if(pool[t]>0)pool[t]--;else added[t]=(added[t]||0)+1;return mk(t,x,y,ex);};
+  const W=(a,ta,b,tb)=>wires.push({id:'w'+(wires.length+1),a:{d:a.id,t:ta},b:{d:b.id,t:tb}});
+  const has=t=>(pool[t]|0)>0;
+  // ---- quyết định động cơ
+  let m3=pool.motor|0,m6=pool.motor6|0;
+  if(R.yd&&m6===0){if(m3>0){pool.motor--;m3--;pool.motor6=(pool.motor6|0)+1;rep.push('Đổi 1 động cơ 3 đầu → động cơ 6 đầu dây để chạy sao – tam giác.');}else{pool.motor6=1;added.motor6=1;}m6=1;}
+  const nL=(pool.lamp|0)+(pool.fan|0),nS=pool.socket|0;
+  if(m3+m6===0&&R.rev){pool.motor=1;added.motor=1;m3=1;}
+  if(m3+m6===0&&nL+nS===0){
+    if(has('contactor')||has('ol')||has('cb3')||has('src3')){pool.motor=1;added.motor=1;m3=1;}
+    else return{err:'Chưa có thiết bị tải (đèn, quạt, ổ cắm, động cơ…) để đấu mạch.'};
+  }
+  const three=m3+m6>0;
+  const src=three?take('src3',20,20):has('src3')?take('src3',20,20):take('src1',20,20);
+  const LN=src.t==='src3'?['L1','L2','L3']:['L'];
+  // ---- bố trí nhánh động lực
+  if((pool.vfd|0)>0)R=Object.assign({},R,{vfd:true});
+  const kinds=[...Array(m6)].map(()=>'yd').concat([...Array(m3)].map(()=>R.vfd?'vfd':R.rev?'rev':'dol'));
+  const BW={dol:220,rev:410,yd:440,vfd:440};
+  let main=null,perCB=false,ctlX=560,S0=null,Nn={d:src,t:'N'};
+  const pos=[];
+  if(three){
+    main=take('cb3',40,120);W(src,'L1',main,'1');W(src,'L2',main,'3');W(src,'L3',main,'5');
+    perCB=(pool.cb3|0)>=kinds.length&&kinds.length>1;
+    let bx=20,row=0;kinds.forEach(k=>{if(bx+BW[k]>1000&&bx>20){bx=20;row++;}pos.push({x:bx,row});bx+=BW[k];});
+    const maxX=Math.max(...pos.map((p,i)=>p.x+BW[kinds[i]]));ctlX=Math.max(maxX,520)+40;
+    S0={d:main,t:'2'};
+    if(R.estop||has('estop')){const em=take('estop',ctlX+250,20);W(main,'2',em,'1');S0={d:em,t:'2'};}
+  }
+  const BLK=330;let ctlRow=0;
+  const pilotsFor=(roles)=>{const out={};roles.forEach(([col,role])=>{const t=col==='G'?'pilotG':col==='R'?'pilotR':'pilotY';if(has(t)||(R.pilots&&(col==='G'||col==='R')))out[role]=t;});return out;};
+  // mạch điều khiển chung cho 1 contactor K (dol / run / delay / cyc)
+  function ctrl(mode,K,entry,N,x,y,withOff,ol){
+    let a=entry;
+    if(ol){W(a.d,a.t,ol,'95');a={d:ol,t:'96'};}
+    let off=null;if(withOff){off=take('pbnc',x,y);W(a.d,a.t,off,'1');a={d:off,t:'2'};}
+    const on=take('pbno',x+(withOff?70:0),y);
+    W(K,'A2',N.d,N.t);const n2={d:K,t:'A2'};
+    if(mode==='dol'){W(a.d,a.t,on,'3');W(on,'4',K,'A1');W(K,'13',on,'3');W(K,'14',K,'A1');return{run:{d:K,t:'A1'},n2};}
+    if(mode==='run'){const T=take('timer',x,y+110,{sec:R.run});W(a.d,a.t,T,'1');W(T,'4',on,'3');W(on,'4',K,'A1');W(K,'13',on,'3');W(K,'14',K,'A1');W(K,'A1',T,'2');W(T,'7',K,'A2');
+      rep.push(tagOfTmp(T)+': đặt '+R.run+' s – chạy đủ thời gian thì tự ngắt.');return{run:{d:K,t:'A1'},n2};}
+    const Rl=take('relay',x+(mode==='cyc'?0:170),y+110);
+    W(a.d,a.t,on,'3');W(on,'4',Rl,'13');W(Rl,'9',on,'3');W(Rl,'5',Rl,'13');W(Rl,'14',K,'A2');
+    if(mode==='delay'){const T=take('timer',x,y+110,{sec:R.delay});W(Rl,'13',T,'2');W(T,'7',K,'A2');W(Rl,'13',T,'1');W(T,'3',K,'A1');
+      rep.push(tagOfTmp(T)+': đặt '+R.delay+' s – nhấn ON, trễ rồi mới đóng '+tagOfTmp(K)+'.');return{run:{d:K,t:'A1'},n2};}
+    if(mode==='cyc'){const T1=take('timer',x+170,y+110,{sec:R.cyc.on}),T2=take('timer',x+340,y+110,{sec:R.cyc.off});
+      W(Rl,'13',T2,'1');W(T2,'4',T1,'2');W(T1,'7',K,'A2');W(Rl,'13',T1,'1');W(T1,'3',T2,'2');W(T2,'7',K,'A2');W(Rl,'13',T1,'8');W(T1,'5',K,'A1');
+      rep.push(tagOfTmp(T1)+' = thời gian đóng '+R.cyc.on+' s, '+tagOfTmp(T2)+' = thời gian ngắt '+R.cyc.off+' s, '+tagOfTmp(Rl)+' giữ trạng thái chạy.');return{run:{d:K,t:'A1'},n2};}
+  }
+  function tagOfTmp(d){const T=TYPES[d.t];const same=devs.filter(x=>TYPES[x.t].tag===T.tag);return T.tag+(same.indexOf(d)+1);}
+  const tmode=R.cyc?'cyc':R.delay?'delay':R.run?'run':'dol';
+  // ---- từng động cơ
+  kinds.forEach((k,i)=>{
+    const p=pos[i],bx=p.x,oy=p.row*900;let top=(perCB?360:260)+oy;
+    let feed=main;
+    if(perCB){feed=take('cb3',bx+40,240+oy);W(main,'2',feed,'1');W(main,'4',feed,'3');W(main,'6',feed,'5');}
+    const cx=ctlX,cy=110+ctlRow*BLK;ctlRow++;
+    if(k==='dol'){
+      const K=take('contactor',bx,top),OL=take('ol',bx+10,top+160),M=take('motor',bx+20,top+320);
+      W(feed,'2',K,'1');W(feed,'4',K,'3');W(feed,'6',K,'5');W(K,'2',OL,'1');W(K,'4',OL,'3');W(K,'6',OL,'5');
+      W(OL,'2',M,'U');W(OL,'4',M,'V');W(OL,'6',M,'W');W(src,'PE',M,'PE');
+      const r=ctrl(tmode,K,S0,Nn,cx,cy,true,OL);
+      const pl=pilotsFor([['G','run'],['R','ol'],['Y','stop']]);let px=cx+150;const py=cy;
+      const pp=()=>{const q={x:px,y:py};px+=60;return q;};
+      if(pl.run){const q=pp(),H=take(pl.run,q.x,q.y);W(K,'A1',H,'X1');W(H,'X2',K,'A2');}
+      if(pl.ol){const q=pp(),H=take(pl.ol,q.x,q.y);W(S0.d,S0.t,OL,'97');W(OL,'98',H,'X1');W(H,'X2',K,'A2');}
+      if(pl.stop){const q=pp(),H=take(pl.stop,q.x,q.y);W(S0.d,S0.t,K,'21');W(K,'22',H,'X1');W(H,'X2',K,'A2');}
+      rep.unshift(tagOfTmp(M)+': khởi động trực tiếp qua '+tagOfTmp(K)+' + rơ-le nhiệt '+tagOfTmp(OL)+(tmode==='dol'?', ON/OFF tự giữ.':tmode==='run'?', chạy có thời gian.':tmode==='delay'?', đóng trễ.':', chạy chu kỳ.'));
+    }else if(k==='vfd'){
+      const V=take('vfd',bx,top),M=take('motor',bx+10,top+260),RV=take('pot',bx+130,top-110,{p:{pos:60}}),S1=take('switch',bx+260,top-130);
+      W(feed,'2',V,'L1');W(feed,'4',V,'L2');W(feed,'6',V,'L3');W(V,'U',M,'U');W(V,'V',M,'V');W(V,'W',M,'W');W(src,'PE',V,'PE');W(src,'PE',M,'PE');
+      W(V,'4',RV,'1');W(RV,'2',V,'2');W(RV,'3',V,'3');W(V,'10',S1,'1');W(S1,'2',V,'13');
+      let S2=null;if(R.rev){S2=take('switch',bx+320,top-130);W(V,'10',S2,'1');W(S2,'2',V,'14');}
+      W(V,'34',V,'37');W(V,'34',V,'38');
+      const pl=pilotsFor([['G','run'],['R','fault']]);let px=bx+230;const pp=()=>{const q=px;px+=60;return q;};
+      if(pl.run){const H=take(pl.run,pp(),top+340);W(S0.d,S0.t,V,'22');W(V,'24',H,'X1');W(H,'X2',src,'N');}
+      if(pl.fault){const H=take(pl.fault,pp(),top+340);W(S0.d,S0.t,V,'25');W(V,'26',H,'X1');W(H,'X2',src,'N');}
+      rep.unshift(tagOfTmp(M)+': chạy biến tần '+tagOfTmp(V)+' (ABB ACS580) – '+tagOfTmp(S1)+' chạy/dừng (DI1)'+(S2?', '+tagOfTmp(S2)+' đảo chiều (DI2)':'')+', chiết áp '+tagOfTmp(RV)+' chỉnh tốc độ (AI1), STO nối 34→37/38.');
+      if(R.cyc||R.delay||R.run)rep.push('Biến tần: hẹn giờ cài trong tham số biến tần – app chưa mô phỏng, bỏ qua.');
+    }else if(k==='rev'){
+      const KT=take('contactor',bx,top),KN=take('contactor',bx+200,top),OL=take('ol',bx+10,top+160),M=take('motor',bx+20,top+320);
+      W(feed,'2',KT,'1');W(feed,'4',KT,'3');W(feed,'6',KT,'5');W(feed,'2',KN,'1');W(feed,'4',KN,'3');W(feed,'6',KN,'5');
+      W(KT,'2',OL,'1');W(KT,'4',OL,'3');W(KT,'6',OL,'5');W(KN,'2',OL,'5');W(KN,'4',OL,'3');W(KN,'6',OL,'1');
+      W(OL,'2',M,'U');W(OL,'4',M,'V');W(OL,'6',M,'W');W(src,'PE',M,'PE');
+      W(S0.d,S0.t,OL,'95');const off=take('pbnc',cx,cy),onT=take('pbno',cx+70,cy),onN=take('pbno',cx+140,cy);
+      W(OL,'96',off,'1');W(off,'2',onT,'3');W(onT,'4',KN,'21');W(KN,'22',KT,'A1');W(KT,'13',onT,'3');W(KT,'14',onT,'4');
+      W(onT,'3',onN,'3');W(onN,'4',KT,'21');W(KT,'22',KN,'A1');W(KN,'13',onN,'3');W(KN,'14',onN,'4');
+      W(KT,'A2',Nn.d,Nn.t);W(KN,'A2',KT,'A2');
+      const pl=pilotsFor([['G','fw'],['Y','bw'],['R','ol']]);let px=cx+210;const pp=()=>{const q=px;px+=60;return q;};
+      if(pl.fw){const H=take(pl.fw,pp(),cy);W(KT,'A1',H,'X1');W(H,'X2',KT,'A2');}
+      if(pl.bw){const H=take(pl.bw,pp(),cy);W(KN,'A1',H,'X1');W(H,'X2',KT,'A2');}
+      if(pl.ol){const H=take(pl.ol,pp(),cy);W(S0.d,S0.t,OL,'97');W(OL,'98',H,'X1');W(H,'X2',KT,'A2');}
+      rep.unshift(tagOfTmp(M)+': đảo chiều – '+tagOfTmp(KT)+' thuận ('+tagOfTmp(onT)+'), '+tagOfTmp(KN)+' nghịch ('+tagOfTmp(onN)+'), khóa chéo bằng tiếp điểm 21-22, nhấn OFF rồi mới đổi chiều.');
+      if(R.cyc||R.delay||R.run)rep.push('Mạch đảo chiều chưa hỗ trợ hẹn giờ – bỏ qua yêu cầu thời gian.');
+    }else{
+      const K1=take('contactor',bx,top),OL=take('ol',bx+10,top+160),M=take('motor6',bx+10,top+340),KD=take('contactor',bx+240,top+300),KY=take('contactor',bx+240,top+520);
+      W(feed,'2',K1,'1');W(feed,'4',K1,'3');W(feed,'6',K1,'5');W(K1,'2',OL,'1');W(K1,'4',OL,'3');W(K1,'6',OL,'5');
+      W(OL,'2',M,'U1');W(OL,'4',M,'V1');W(OL,'6',M,'W1');W(src,'PE',M,'PE');
+      W(OL,'2',KD,'1');W(OL,'4',KD,'3');W(OL,'6',KD,'5');W(KD,'2',M,'W2');W(KD,'4',M,'U2');W(KD,'6',M,'V2');
+      W(KY,'1',M,'U2');W(KY,'3',M,'V2');W(KY,'5',M,'W2');W(KY,'2',KY,'4');W(KY,'4',KY,'6');
+      W(S0.d,S0.t,OL,'95');const off=take('pbnc',cx,cy),on=take('pbno',cx+70,cy),T=take('timer',cx,cy+110,{sec:R.ydT||5});
+      W(OL,'96',off,'1');W(off,'2',on,'3');W(on,'4',K1,'A1');W(K1,'13',on,'3');W(K1,'14',K1,'A1');
+      W(K1,'A1',T,'2');W(K1,'A1',T,'1');W(T,'1',T,'8');W(T,'4',KD,'21');W(KD,'22',KY,'A1');W(T,'6',KY,'21');W(KY,'22',KD,'A1');
+      W(K1,'A2',Nn.d,Nn.t);W(T,'7',K1,'A2');W(KD,'A2',T,'7');W(KY,'A2',KD,'A2');
+      const pl=pilotsFor([['G','run'],['Y','star'],['R','ol']]);let px=cx+170;const pp=()=>{const q=px;px+=60;return q;};
+      if(pl.run){const H=take(pl.run,pp(),cy);W(K1,'A1',H,'X1');W(H,'X2',K1,'A2');}
+      if(pl.star){const H=take(pl.star,pp(),cy);W(KY,'A1',H,'X1');W(H,'X2',K1,'A2');}
+      if(pl.ol){const H=take(pl.ol,pp(),cy);W(S0.d,S0.t,OL,'97');W(OL,'98',H,'X1');W(H,'X2',K1,'A2');}
+      if(R.cyc||R.delay||R.run)rep.push('Mạch sao – tam giác dùng timer cho chuyển Y→Δ, chưa thêm hẹn giờ khác.');
+      rep.unshift(tagOfTmp(M)+': sao – tam giác: '+tagOfTmp(K1)+' chính, '+tagOfTmp(KD)+' tam giác, '+tagOfTmp(KY)+' sao, timer '+tagOfTmp(T)+' = '+(R.ydT||5)+' s, khóa chéo 21-22.');
+    }
+  });
+  // ---- chiếu sáng / ổ cắm
+  if(nL+nS>0){
+    let lx,ly;
+    if(three){lx=ctlX;ly=110+ctlRow*BLK+10;}else{lx=40;ly=120;}
+    const cb=take('cb2',lx,ly);
+    W(src,src.t==='src3'?'L1':'L',cb,'1');W(src,'N',cb,'3');
+    const Lp={d:cb,t:'2'},Np={d:cb,t:'4'};
+    const loads=[];for(let i=0;i<(pool.lamp|0);i++)loads.push('lamp');for(let i=0;i<(pool.fan|0);i++)loads.push('fan');
+    const swY=ly+120,ldY=ly+250;let x=three?lx:150;
+    const timed=!three&&nL>0&&(R.run||R.cyc||R.delay);
+    if(timed){
+      const K=take('contactor',x,swY);
+      const mode=R.cyc?'cyc':R.delay?'delay':'run';
+      ctrl(mode,K,Lp,Np,x+200,swY,mode!=='run',null);
+      let lxp=x;loads.forEach(t=>{const L=take(t,lxp,swY+240);W(K,'2',L,'a');W(L,'b',Np.d,Np.t);lxp+=90;});
+      W(Lp.d,Lp.t,K,'1');x=lxp;
+      rep.unshift((R.stair?'Đèn cầu thang: ':'Chiếu sáng có hẹn giờ: ')+'nhấn ON → '+tagOfTmp(K)+' đóng cấp điện cho đèn/quạt.');
+    }else{
+      loads.forEach(t=>{const sw=take('switch',x+5,swY,{on:true}),L=take(t,x,ldY);W(Lp.d,Lp.t,sw,'1');W(sw,'2',L,'a');W(L,'b',Np.d,Np.t);x+=95;});
+      if(loads.length)rep.push('Mỗi đèn/quạt có 1 công tắc riêng, công tắc cắt dây pha.');
+    }
+    for(let i=0;i<nS;i++){const so=take('socket',x,ldY);W(Lp.d,Lp.t,so,'L');W(Np.d,Np.t,so,'N');W(src,'PE',so,'PE');x+=95;}
+    if(nS)rep.push('Ổ cắm đấu song song sau aptomat, có dây tiếp địa PE.');
+  }
+  // ---- đèn báo dư → báo có điện
+  let lpN=0;['pilotG','pilotR','pilotY'].forEach(t=>{while(has(t)){const ent=S0||{d:src,t:LN[0]};const H=take(t,ctlX+320+(lpN++)*60,20);
+    if(three)W(ent.d,ent.t,H,'X1');else{const cb=devs.find(d=>d.t==='cb2');W(cb||src,cb?'2':'L',H,'X1');}
+    W(H,'X2',src,'N');rep.push(tagOfTmp(H)+': đèn báo có điện.');}});
+  // ---- thiết bị không dùng
+  let maxY=Math.max(...devs.map(d=>d.y+TYPES[d.t].h));let ux=20,uy=maxY+90;const unused={};
+  Object.keys(pool).forEach(t=>{while(pool[t]>0){pool[t]--;unused[t]=(unused[t]||0)+1;mk(t,ux,uy);ux+=TYPES[t].w+40;if(ux>1100){ux=20;uy+=130;}}});
+  return{devs,wires,rep,added,unused,nid};
+}
+
+/* ---------- giao diện bảng Lập mạch ---------- */
+const BD_ORDER=['src','prot','ctrl','t1','t3'];
+function bdState(){S.build=S.build||{counts:null,note:''};if(!S.build.counts){const c={};S.devs.forEach(d=>c[d.t]=(c[d.t]||0)+1);S.build.counts=c;}return S.build;}
+function openBuilder(){
+  const st=bdState();document.getElementById('builder').hidden=false;
+  document.getElementById('bdNote').value=st.note||'';renderBuilder();
+}
+function renderBuilder(){
+  const st=bdState(),c=st.counts;const list=document.getElementById('bdList');list.innerHTML='';
+  const names={src:'Nguồn',prot:'Đóng cắt',ctrl:'Điều khiển',t1:'Tải 1 pha',t3:'Tải 3 pha'};
+  BD_ORDER.forEach(cat=>{
+    const h=document.createElement('div');h.className='bdCat';h.textContent=names[cat];list.appendChild(h);
+    Object.keys(TYPES).filter(k=>TYPES[k].cat===cat).forEach(k=>{
+      const T=TYPES[k],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
+      row.appendChild(iconSvg(k));const nm=document.createElement('div');nm.className='bdName';nm.textContent=T.name;row.appendChild(nm);
+      const stp=document.createElement('div');stp.className='step';
+      const mx=T.max||8;
+      stp.innerHTML=`<button data-d="-1">−</button><b>${n}</b><button data-d="1">+</button>`;
+      stp.querySelectorAll('button').forEach(b=>b.onclick=()=>{c[k]=Math.max(0,Math.min(mx,(c[k]|0)+(+b.dataset.d)));save();renderBuilder();});
+      row.appendChild(stp);list.appendChild(row);
+    });
+  });
+  updParse();
+}
+function updParse(){
+  const st=bdState();const R=parseNotes(st.note);const d=descReq(R);const total=Object.values(st.counts).reduce((a,b)=>a+(b|0),0);
+  document.getElementById('bdParse').innerHTML='<b>Đã chọn '+total+' thiết bị.</b>'+(d.length?'<br><b>Hệ thống hiểu yêu cầu:</b><br>• '+d.map(esc).join('<br>• '):(st.note.trim()?'<br><span style="color:#fbbf24">Chưa nhận ra yêu cầu nào trong ghi chú – thử các mẫu bên trên.</span>':'<br><span class="mut">Không có ghi chú: đấu mạch cơ bản (ON/OFF tự giữ, công tắc cho đèn).</span>'));
+}
+function confirmReplace(go){
+  if(!S.devs.length){go();return;}
+  const m=showModal('<div class="ic">♻️</div><h2>Thay mạch hiện tại?</h2><p>Mạch đang có trên bảng sẽ được thay bằng mạch mới.</p><div class="row"><button class="btn" id="cNo">Hủy</button><button class="btn run" id="cYes">Tiếp tục</button></div>');
+  m.querySelector('#cNo').onclick=closeModal;m.querySelector('#cYes').onclick=()=>{closeModal();go();};
+}
+function applyBoard(devs,wires,nid){
+  stop();const keep={meta:S.meta,build:S.build};
+  S=Object.assign({devs,wires,nid:nid+5},keep);selected=null;pending=null;updSel();
+  document.getElementById('builder').hidden=true;render();fit();save();buildItems();
+}
+function manualPlace(){
+  const st=bdState(),c=st.counts;const devs=[];let nid=1,x=20,y=24,rowH=0;
+  BD_ORDER.forEach(cat=>{Object.keys(TYPES).filter(k=>TYPES[k].cat===cat).forEach(k=>{for(let i=0;i<(c[k]|0);i++){const T=TYPES[k];
+    if(x+T.w>900){x=20;y+=rowH+70;rowH=0;}const d={id:'d'+(nid++),t:k,x,y};if(k==='timer')d.sec=5;devs.push(d);x+=T.w+50;rowH=Math.max(rowH,T.h);}});
+    if(x>20){x=20;y+=rowH+70;rowH=0;}});
+  if(!devs.length){hint('Chưa chọn thiết bị nào.');return;}
+  confirmReplace(()=>{applyBoard(devs,[],nid);hint('Đã đặt '+devs.length+' thiết bị lên bảng – anh tự nối dây rồi bấm ▶ Chạy thử nhé.');});
+}
+function autoPlace(){
+  const st=bdState(),R=parseNotes(st.note);const r=autoBuild(st.counts,R);
+  if(r.err){const m=showModal('<div class="ic">⚠️</div><h2>Chưa đấu được</h2><p>'+esc(r.err)+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;return;}
+  confirmReplace(()=>{
+    applyBoard(r.devs,r.wires,r.nid);
+    const nm=t=>TYPES[t].name.replace(/ \(.*\)/,'');
+    const ad=Object.keys(r.added).map(t=>r.added[t]+' '+nm(t)),un=Object.keys(r.unused).map(t=>r.unused[t]+' '+nm(t));
+    const m=showModal('<div class="ic">⚡</div><h2>Đã đấu tự động!</h2><div class="calcbox">'+r.rep.map(t=>'• '+esc(t)).join('<br>')+
+      (ad.length?'<br><b style="color:#4ade80">Đã thêm cho đủ mạch:</b> '+esc(ad.join(', ')):'')+
+      (un.length?'<br><b style="color:#fbbf24">Chưa dùng (để dưới bảng):</b> '+esc(un.join(', ')):'')+
+      '</div><div class="row"><button class="btn" id="aSheet">📐 Bản vẽ</button><button class="btn run" id="aRun">▶ Chạy thử</button></div>');
+    m.querySelector('#aSheet').onclick=()=>{closeModal();openSheet();};
+    m.querySelector('#aRun').onclick=()=>{closeModal();unlockAudio();start();};
+  });
+}
+document.getElementById('bdClose').onclick=()=>{document.getElementById('builder').hidden=true;};
+document.getElementById('bdReset').onclick=()=>{bdState().counts={};save();renderBuilder();};
+document.getElementById('bdNote').addEventListener('input',e=>{bdState().note=e.target.value;save();updParse();});
+document.querySelectorAll('#bdChips button').forEach(b=>b.onclick=()=>{const ta=document.getElementById('bdNote');ta.value=(ta.value.trim()?ta.value.trim()+', ':'')+b.textContent;bdState().note=ta.value;save();updParse();});
+document.getElementById('bdManual').onclick=manualPlace;
+document.getElementById('bdAuto').onclick=autoPlace;
+
+content.addEventListener('pointerdown',bgDown);
+load();buildItems();applyView();render();
+if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
+})();
+</script>
+</body>
+</html>
