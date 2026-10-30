@@ -168,6 +168,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
       <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.1" fill="#aab4bf"/></pattern>
       <filter id="glow" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <linearGradient id="mgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d9cbb"/><stop offset=".45" stop-color="#4a6a8b"/><stop offset="1" stop-color="#253c55"/></linearGradient>
+      <linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f5f9"/><stop offset=".4" stop-color="#cbd5e1"/><stop offset="1" stop-color="#64748b"/></linearGradient>
       <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#dc2626"/><stop offset=".5" stop-color="#f97316"/><stop offset="1" stop-color="#fde047"/></linearGradient>
     </defs>
     <g id="content"></g>
@@ -242,19 +243,37 @@ const TYPES={
   fan:{cat:'t1',name:'Quạt 220V',tag:'Q',w:66,h:72,load:1,lp:['a','b'],terms:[P_('a',18,0,''),P_('b',48,0,'')]},
   socket:{cat:'t1',name:'Ổ cắm 220V',tag:'OC',w:72,h:52,terms:[P_('L',16,52),P_('PE',36,52),P_('N',56,52)]},
   motor:{cat:'t3',name:'Động cơ 3 pha (3 đầu)',tag:'M',w:116,h:90,terms:[P_('U',22,0),P_('V',48,0),P_('W',74,0),P_('PE',100,0)]},
-  vfd:{cat:'t3',name:'Biến tần ABB ACS580',tag:'VFD',w:390,h:140,ctl:'vfd',
-    terms:[P_('L1',20,0,'L1'),P_('L2',44,0,'L2'),P_('L3',68,0,'L3'),P_('PE',92,0,'PE'),
-      P_('2',130,0,'AI1'),P_('3',156,0,'AGND'),P_('4',182,0,'+10V'),P_('10',208,0,'+24V'),P_('11',234,0,'DGND'),P_('12',260,0,'DCOM'),
-      P_('13',286,0,'DI1'),P_('14',312,0,'DI2'),P_('15',338,0,'DI3'),P_('16',364,0,'DI4'),
-      P_('U',20,140,'U'),P_('V',44,140,'V'),P_('W',68,140,'W'),
-      P_('19',110,140,'R1C'),P_('20',130,140,'R1A'),P_('21',150,140,'R1B'),P_('22',170,140,'R2C'),P_('23',190,140,'R2A'),P_('24',210,140,'R2B'),
-      P_('25',230,140,'R3C'),P_('26',250,140,'R3A'),P_('27',270,140,'R3B'),
-      P_('34',298,140,'OUT1'),P_('35',318,140,'OUT2'),P_('36',338,140,'SGND'),P_('37',358,140,'IN1'),P_('38',378,140,'IN2')],
-    contacts:[['19','20','NC',0],['19','21','NO',0],['22','23','NC',1],['22','24','NO',1],['25','26','NC',2],['25','27','NO',2]]},
   pot:{cat:'ctrl',name:'Chiết áp 10kΩ',tag:'RV',w:56,h:56,terms:[P_('1',12,0,'1'),P_('2',28,0,'2'),P_('3',44,0,'3')]},
   motor6:{cat:'t3',name:'Động cơ 6 đầu (Y/Δ)',tag:'M',w:132,h:100,
     terms:[P_('U1',24,0),P_('V1',60,0),P_('W1',96,0),P_('W2',24,100),P_('U2',60,100),P_('V2',96,100),P_('PE',122,100)]}
 };
+/* ---- họ biến tần ABB: mỗi model một loại. Mã chân nội bộ giữ theo vai trò của ACS580
+   (2 AI1, 3 AGND, 4 +10V, 10 +24V, 11 DGND, 12 DCOM, 13-16 DI1-4, 19-27 rơ-le, 34-38 STO),
+   chỉ nhãn in trên chân, số rơ-le và có/không STO là khác nhau giữa các model ---- */
+const VFD_LB580={2:'AI1',3:'AGND',4:'+10V',10:'+24V',11:'DGND',12:'DCOM',13:'DI1',14:'DI2',15:'DI3',16:'DI4',
+  19:'R1C',20:'R1A',21:'R1B',22:'R2C',23:'R2A',24:'R2B',25:'R3C',26:'R3A',27:'R3B',34:'OUT1',35:'OUT2',36:'SGND',37:'IN1',38:'IN2'};
+const VFD_LBS={2:'AI',3:'GND',11:'GND',19:'ROCOM',20:'RONC',21:'RONO'};
+const VFD_MODELS={
+  vfd150:{m:'ACS150',kw:'0.37–4kW',ro:1,sto:null,lb:VFD_LBS,col:'#f1f5f9'},
+  vfd310:{m:'ACS310',kw:'0.37–22kW · bơm/quạt',ro:1,sto:null,lb:Object.assign({},VFD_LBS,{2:'AI1'}),col:'#f1f5f9'},
+  vfd355:{m:'ACS355',kw:'0.37–22kW',ro:1,sto:['34','35','37','38'],lb:VFD_LBS,col:'#f1f5f9'},
+  vfd380:{m:'ACS380',kw:'0.25–22kW',ro:1,sto:['34','36','37','38'],lb:{19:'RC',20:'RA',21:'RB',34:'S+',37:'S1',38:'S2'},col:'#e5e7eb'},
+  vfd480:{m:'ACS480',kw:'0.75–22kW',ro:1,sto:['34','36','37','38'],lb:{19:'RC',20:'RA',21:'RB',34:'S+',37:'S1',38:'S2'},col:'#e5e7eb'},
+  vfd:{m:'ACS580',kw:'0.75–500kW',ro:3,sto:['34','35','36','37','38'],lb:{},col:'#e5e7eb'},
+  vfd880:{m:'ACS880',kw:'0.55–5600kW',ro:3,sto:['34','36','37','38'],lb:{34:'OUT',19:'RO1C',20:'RO1A',21:'RO1B',22:'RO2C',23:'RO2A',24:'RO2B',25:'RO3C',26:'RO3A',27:'RO3B'},col:'#d1d5db'}
+};
+Object.keys(VFD_MODELS).forEach(id=>{
+  const M=VFD_MODELS[id],lb=Object.assign({},VFD_LB580,M.lb);
+  const top=[P_('L1',20,0,'L1'),P_('L2',44,0,'L2'),P_('L3',68,0,'L3'),P_('PE',92,0,'PE')];let x=130;
+  ['2','3','4','10','11','12','13','14','15','16'].forEach(t=>{top.push(P_(t,x,0,lb[t]));x+=26;});
+  const bot=[P_('U',20,140,'U'),P_('V',44,140,'V'),P_('W',68,140,'W')],contacts=[];let bx=110;
+  for(let i=0;i<M.ro;i++){const c=String(19+3*i),a=String(20+3*i),b=String(21+3*i);
+    [c,a,b].forEach(t=>{bot.push(P_(t,bx,140,lb[t]));bx+=20;});contacts.push([c,a,'NC',i],[c,b,'NO',i]);}
+  if(M.sto){bx+=8;M.sto.forEach(t=>{bot.push(P_(t,bx,140,lb[t]));bx+=20;});}
+  TYPES[id]={cat:'t3',name:'Biến tần ABB '+M.m+' ('+M.kw+')',tag:'VFD',model:M.m,col:M.col,ro:M.ro,sto:!!M.sto,
+    w:Math.max(x,bx-8),h:140,ctl:'vfd',terms:top.concat(bot),contacts};
+});
+const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
 const CATS=[['lap','🧩 Lập mạch'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
 
@@ -269,8 +288,12 @@ function save(){try{localStorage.setItem('machdien_v3',JSON.stringify(S));localS
 function load(){try{const t=localStorage.getItem('machdien_v3');if(t){const o=JSON.parse(t);if(o&&o.devs)S=o;}const v=localStorage.getItem('machdien_v3_view');if(v)view=JSON.parse(v);}catch(e){}}
 const dev=id=>S.devs.find(d=>d.id===id);
 const key=(d,t)=>d+':'+t;
-function tagOf(d){const T=TYPES[d.t];if(T.max)return T.tag;const same=S.devs.filter(x=>TYPES[x.t].tag===T.tag);return T.tag+(same.indexOf(d)+1);}
-function nameOf(d){return TYPES[d.t].name.replace(/ \(.*\)/,'')+' '+tagOf(d);}
+/* biến thể dùng chung kiểu đấu với loại gốc (d.sub): bơm chìm = động cơ 3 đầu */
+const SUBS={pump:{t:'motor',name:'Bơm chìm 3 pha',tag:'P',p:{kw:5.5,cos:0.8,eff:82,len:60}}};
+const tagBase=d=>d.sub&&SUBS[d.sub]?SUBS[d.sub].tag:TYPES[d.t].tag;
+function typeName(d){return d.sub&&SUBS[d.sub]?SUBS[d.sub].name:TYPES[d.t].name;}
+function tagOf(d){const T=TYPES[d.t];if(T.max)return T.tag;const tg=tagBase(d);const same=S.devs.filter(x=>tagBase(x)===tg);return tg+(same.indexOf(d)+1);}
+function nameOf(d){return typeName(d).replace(/ \(.*\)/,'')+' '+tagOf(d);}
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
 function txt(g,x,y,s,attrs){const t=el('text',Object.assign({x,y,'text-anchor':'middle'},attrs||{}),g);t.textContent=s;return t;}
 function hint(t){document.getElementById('hint').textContent=t;}
@@ -355,9 +378,9 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
   b.onclick=()=>{if(c==='lap'){openBuilder();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
-function iconSvg(t){
+function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
-  const g=el('g',{},s);drawBody(g,{id:'x',t,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
+  const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
   T.terms.forEach(tt=>el('circle',{cx:tt.x,cy:tt.y,r:4,fill:pinFill(tt),stroke:'#334155'},g));return s;
 }
 function buildItems(){
@@ -366,9 +389,11 @@ function buildItems(){
   Object.keys(TYPES).filter(k=>TYPES[k].cat===curCat).forEach(k=>{
     const T=TYPES[k];const b=document.createElement('button');b.className='item';
     b.appendChild(iconSvg(k));b.appendChild(document.createTextNode(T.name));
-    b.disabled=!!T.max&&S.devs.filter(d=>d.t===k).length>=T.max;b.onclick=()=>addDev(k);itemsEl.appendChild(b);});
+    b.disabled=!!T.max&&S.devs.filter(d=>d.t===k).length>=T.max;b.onclick=()=>addDev(k);itemsEl.appendChild(b);
+    Object.keys(SUBS).filter(s=>SUBS[s].t===k).forEach(s=>{const b2=document.createElement('button');b2.className='item';
+      b2.appendChild(iconSvg(k,s));b2.appendChild(document.createTextNode(SUBS[s].name));b2.onclick=()=>addDev(k,s);itemsEl.appendChild(b2);});});
 }
-function addDev(t){
+function addDev(t,sub){
   const T=TYPES[t];const vh=view.w*asp();
   const bx=Math.max(0,view.x+16),by=Math.max(20,view.y+30),ex=Math.min(WW,view.x+view.w-50),ey=Math.min(WH,view.y+vh-20);
   let x=bx,y=by,found=false;
@@ -376,8 +401,9 @@ function addDev(t){
     if(!S.devs.some(d=>xx<d.x+TYPES[d.t].w+24&&d.x<xx+T.w+24&&yy<d.y+TYPES[d.t].h+40&&d.y<yy+T.h+40)){x=xx;y=yy;found=true;}}
   x=Math.round(x/GRID)*GRID;y=Math.round(y/GRID)*GRID;
   const d={id:'d'+(S.nid++),t,x,y};if(t==='timer')d.sec=5;
+  if(sub&&SUBS[sub]){d.sub=sub;d.p=Object.assign({},SUBS[sub].p);}
   S.devs.push(d);selected=T.multi?{kind:'dev',id:d.id}:null;updSel();
-  hint(T.name+' đã gắn lên bảng.'+(T.multi?' Đang hiện chân – chạm chân để nối dây.':' Kéo để dời, chạm chân ● để nối dây.'));
+  hint(typeName(d)+' đã gắn lên bảng.'+(T.multi?' Đang hiện chân – chạm chân để nối dây.':' Kéo để dời, chạm chân ● để nối dây.'));
   changed();buildItems();
 }
 
@@ -502,7 +528,7 @@ function vfdState(f,P,d){
   for(const t of['U','V','W']){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'){st.burnOut=true;return st;}}
   const ph=new Set(['L1','L2','L3'].map(t=>pot1(f,P,key(d.id,t))).filter(p=>p&&p[0]==='L'));st.pw=ph.size;
   const v24=[k('10'),k('34'),k('35')];
-  st.sto=v24.includes(k('37'))&&v24.includes(k('38'));
+  st.sto=!TYPES[d.t].sto||(v24.includes(k('37'))&&v24.includes(k('38')));/* model không có STO thì luôn cho chạy */
   const di=n=>v24.includes(k(String(n)));
   st.di=[di(13),di(14),di(15),di(16)];
   const fmax=PV(d,'fmax')||50;
@@ -531,7 +557,7 @@ function vfdUI(d){const e=vfdEls[d.id];if(e){const l=vfdLcd(d);e[0].textContent=
   (result&&result.vmot&&result.vmot[d.id]||[]).forEach(x=>{const r=motRot[x.id];if(!r)return;const fo=d.fo||0;
     if(fo<0.3){r.style.animationPlayState='paused';}else{r.style.animationPlayState='running';r.style.animationDuration=(0.45*50/fo).toFixed(2)+'s';}});}
 setInterval(()=>{if(!running)return;let edge=false;
-  S.devs.forEach(v=>{if(v.t!=='vfd')return;const tgt=v.vs&&v.vs.run&&!v.burned?v.vs.hz:0,old=v.fo||0;
+  S.devs.forEach(v=>{if(!isV(v))return;const tgt=v.vs&&v.vs.run&&!v.burned?v.vs.hz:0,old=v.fo||0;
     const fmax=PV(v,'fmax')||50,rate=fmax/Math.max(0.2,tgt>old?PV(v,'acc'):PV(v,'dec'))*0.1;
     let n=old;if(n<tgt)n=Math.min(tgt,n+rate);else if(n>tgt)n=Math.max(tgt,n-rate);
     if(n!==old){v.fo=n;vfdUI(v);if((old<0.3)!==(n<0.3))edge=true;}});
@@ -556,7 +582,7 @@ function shortNets(f,P){return Object.keys(P).filter(r=>isShort(P[r]));}
 function settle(newBurn){
   for(let i=0;i<16;i++){
     const f=nets('cur'),P=pots(f);let ch=false;
-    S.devs.forEach(d=>{if(d.t!=='vfd')return;const vs=vfdState(f,P,d);d.vs=vs;
+    S.devs.forEach(d=>{if(!isV(d))return;const vs=vfdState(f,P,d);d.vs=vs;
       if((vs.burnOut||vs.burnCtl)&&!d.burned){d.burned=true;d.burnWhy=vs.burnOut?'out':'ctl:'+vs.burnCtl;newBurn.push(d);}
       const ro=[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),!vs.fault&&vs.pw===3];
       if(JSON.stringify(ro)!==JSON.stringify(d.ro||[])){d.ro=ro;ch=true;}});
@@ -692,7 +718,7 @@ function evaluate(){
       const pe=pot1(f,P,key(d.id,'PE'));
       if(pe&&pe[0]==='L'){warns++;msgs.push(['⚠️',nm+': chân PE đang có điện pha – RÒ ĐIỆN ra vỏ!']);}
       else if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': chưa đấu dây tiếp địa PE (xanh-vàng).']);
-    }else if(d.t==='vfd'){
+    }else if(isV(d)){
       const vs=d.vs||{};
       if(d.burned){errors++;msgs.push(['🔥',nm+': NỔ BIẾN TẦN! '+(d.burnWhy==='out'?'Cấp nguồn vào ngõ ra U V W – nguồn phải vào L1 L2 L3.':'Điện 220/380V lọt vào chân điều khiển '+(d.burnWhy||'').replace('ctl:','')+' (chỉ dùng +24V/+10V nội của biến tần).')]);return;}
       if(!vs.pw){errors++;msgs.push(['❌',nm+': chưa cấp nguồn 3 pha vào L1 L2 L3.']);return;}
@@ -705,8 +731,8 @@ function evaluate(){
       if(!ms.length){const fc=nets('closed');if(vfdMotor(fc,d).length){warns++;msgs.push(['⚠️',nm+': có contactor/thiết bị đóng cắt giữa biến tần và động cơ – không được đóng ngắt khi biến tần đang chạy.']);}
         else{warns++;msgs.push(['⚠️',nm+': ngõ ra U V W chưa nối động cơ.']);}}
       if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối tiếp địa PE cho biến tần.']);
-    }else if(d.t==='motor'&&S.devs.some(v=>v.t==='vfd'&&!v.burned&&vfdMotor(f,v).some(x=>x.m===d))){
-      const v=S.devs.find(v=>v.t==='vfd'&&vfdMotor(f,v).some(x=>x.m===d)),mp=vfdMotor(f,v).find(x=>x.m===d).mp;
+    }else if(d.t==='motor'&&S.devs.some(v=>isV(v)&&!v.burned&&vfdMotor(f,v).some(x=>x.m===d))){
+      const v=S.devs.find(v=>isV(v)&&vfdMotor(f,v).some(x=>x.m===d)),mp=vfdMotor(f,v).find(x=>x.m===d).mp;
       const par=(mp[1]-mp[0]+3)%3===1,vs=v.vs||{},fo=v.fo||0;
       if(vs.run||fo>0.3){const fwd=par===!!vs.fwd;res.motor[d.id]={st:'on',fwd,vfd:v.id};
         const hz=vs.run?vs.hz:0;msgs.push(['✅',nm+': chạy bằng biến tần '+tagOf(v)+' – '+hz.toFixed(1)+' Hz ≈ '+Math.round(120*hz/(PV(d,'pole')||4)*0.97)+' v/ph, '+(fwd?'THUẬN ↻':'NGƯỢC ↺')+'.']);}
@@ -779,7 +805,7 @@ function wireColors(){
   const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
   S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
   S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
-  const adj={};S.devs.forEach(d=>{const T=TYPES[d.t];(T.contacts||[]).concat(d.t==='vfd'?[['L1','U'],['L2','V'],['L3','W']]:[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}});});
+  const adj={};S.devs.forEach(d=>{const T=TYPES[d.t];(T.contacts||[]).concat(isV(d)?[['L1','U'],['L2','V'],['L3','W']]:[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}});});
   const best={};let q=[];
   S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(t.src){const r=f(key(d.id,t.id));best[r]=best[r]||{d:0,l:new Set()};best[r].l.add(t.src);q.push(r);}}));
   let dist=0;q=[...new Set(q)];
@@ -828,7 +854,7 @@ function syncSound(){
       if(m.st==='on'){nm++;if(m.vfd){const v=dev(m.vfd),fo=v?v.fo||0:0;if(fo>0.3)want['m'+d.id]={kind:'motor',f:2*fo,g:0.03+0.05*fo/50,lp:300+fo*25};}
         else want['m'+d.id]={kind:'motor',f:m.mode==='Y'?100:100,g:m.mode==='Y'?0.05:0.07,lp:m.mode==='Y'?500:800};}
       else if(m.st==='hum'||m.st==='bad')want['m'+d.id]={kind:'hum',f:100,g:0.16,lp:1400};});
-    S.devs.forEach(d=>{if(d.t==='vfd'&&(d.fo||0)>0.3)want['v'+d.id]={kind:'whine',f:2600+d.fo*12,g:0.012,lp:6000};
+    S.devs.forEach(d=>{if(isV(d)&&(d.fo||0)>0.3)want['v'+d.id]={kind:'whine',f:2600+d.fo*12,g:0.012,lp:6000};
       if(d.t==='fan'&&result.state[d.id]==='on')want['f'+d.id]={kind:'fan',f:45,g:0.05,lp:700};});
     const sc=1/Math.max(1,Math.sqrt(Object.keys(want).length));Object.values(want).forEach(w=>w.g*=sc);
   }
@@ -1167,18 +1193,19 @@ function drawBody(g,d,R){
     el('rect',{x:20,y:12,width:5,height:15,rx:1,fill:'#334155'},g);el('rect',{x:47,y:12,width:5,height:15,rx:1,fill:'#334155'},g);
     el('circle',{cx:36,cy:30,r:3,fill:'#334155'},g);
     el('circle',{cx:62,cy:8,r:3,fill:s==='on'?'#22c55e':s==='hot'?'#ef4444':'#94a3b8'},g);break;}
-  case'vfd':{
-    el('rect',{x:0,y:6,width:T.w,height:T.h-12,rx:8,fill:'#e5e7eb',stroke:'#475569','stroke-width':1.5},g);
+  case'vfd':case'vfd150':case'vfd310':case'vfd355':case'vfd380':case'vfd480':case'vfd880':{
+    el('rect',{x:0,y:6,width:T.w,height:T.h-12,rx:8,fill:T.col,stroke:'#475569','stroke-width':1.5},g);
     el('rect',{x:2,y:8,width:104,height:T.h-16,rx:7,fill:'#cfd4da'},g);
     txt(g,54,32,'ABB',{fill:'#ff000f','font-size':15,'font-weight':900});
-    txt(g,54,44,'ACS580',{fill:'#111','font-size':8.5,'font-weight':800});
+    txt(g,54,44,T.model,{fill:'#111','font-size':8.5,'font-weight':800});
     el('rect',{x:16,y:52,width:76,height:36,rx:3,fill:d.burned?'#111':'#0b3b2c',stroke:'#111'},g);
     const l=vfdLcd(d);const a=txt(g,54,68,l[0],{fill:d.burned?'#ef4444':'#4ade80','font-size':10,'font-weight':800}),b=txt(g,54,81,l[1],{fill:'#86efac','font-size':7});
     vfdEls[d.id]=[a,b];
     [[30,100],[54,100],[78,100]].forEach(([x,y],i)=>el('circle',{cx:x,cy:y,r:5,fill:['#16a34a','#64748b','#dc2626'][i]},g));
     el('line',{x1:108,y1:70,x2:T.w-6,y2:70,stroke:'#94a3b8','stroke-dasharray':'3 3'},g);
-    txt(g,250,48,'X1 · X2 · X3 – tín hiệu điều khiển',{fill:'#475569','font-size':7.5,'font-weight':700});
-    txt(g,250,92,'RO1 sẵn sàng · RO2 đang chạy · RO3 lỗi(-1) · STO',{fill:'#475569','font-size':7,'font-weight':700});
+    const cx=(108+T.w)/2;
+    txt(g,cx,48,'Đầu điều khiển I/O – '+VFD_MODELS[d.t].kw,{fill:'#475569','font-size':7.5,'font-weight':700});
+    txt(g,cx,92,(T.ro>1?'RO1 sẵn sàng · RO2 đang chạy · RO3 lỗi(-1)':'RO: sẵn sàng')+(T.sto?' · STO':' · không có STO'),{fill:'#475569','font-size':7,'font-weight':700});
     prints(g,d);break;}
   case'pot':{
     const pos=PV(d,'pos'),ang=(-135+pos*2.7)*Math.PI/180;
@@ -1188,6 +1215,29 @@ function drawBody(g,d,R){
     txt(g,28,58,pos+'%',{fill:'#0f172a','font-size':8,'font-weight':800});break;}
   case'motor':case'motor6':{
     const m=R.motor&&R.motor[d.id],W=T.w,run=m&&m.st==='on',hum=m&&(m.st==='hum'||m.st==='bad'),slow=run&&m.mode==='Y';
+    const fanSt={run,hum,slow,fwd:!m||m.fwd!==false};
+    if(d.sub==='pump'){
+      /* bơm chìm nằm ngang: cáp vào trên, động cơ inox bên trái, lưới hút ở giữa, buồng cánh bơm + họng xả bên phải */
+      el('rect',{x:12,y:3,width:W-22,height:12,rx:4,fill:'#1f2937',stroke:'#0f172a'},g);
+      el('circle',{cx:W-16,cy:9,r:3,fill:run?'#22c55e':hum?'#f97316':'#64748b',class:hum?'blink':''},g);
+      el('path',{d:'M22 15V27',stroke:'#111827','stroke-width':6,'stroke-linecap':'round'},g);
+      const bd=el('g',{class:run?'vib':hum?'vibx':''},g);
+      el('rect',{x:4,y:26,width:W-30,height:42,rx:12,fill:'url(#pgrad)',stroke:'#334155','stroke-width':1.4},bd);
+      for(let x=14;x<=52;x+=6)el('line',{x1:x,y1:29,x2:x,y2:65,stroke:'#64748b','stroke-width':.8,opacity:.6},bd);
+      el('rect',{x:16,y:38,width:34,height:18,rx:2,fill:'#e5e7eb',stroke:'#94a3b8'},bd);
+      txt(bd,33,46,'BƠM 3~',{fill:'#0f172a','font-size':6,'font-weight':900});
+      txt(bd,33,53,PV(d,'kw')+'kW',{fill:'#334155','font-size':5.5,'font-weight':700});
+      el('rect',{x:56,y:29,width:9,height:36,fill:'#0f172a',opacity:.75},bd);
+      for(let y=31;y<=63;y+=3)el('line',{x1:56,y1:y,x2:65,y2:y,stroke:'#94a3b8','stroke-width':.9},bd);
+      el('rect',{x:W-26,y:38,width:16,height:16,rx:2,fill:'#475569',stroke:'#1e293b'},bd);
+      el('rect',{x:W-12,y:34,width:5,height:24,rx:1.5,fill:'#334155'},bd);
+      if(run)el('path',{d:`M${W-7} 46q12 0 14-16`,stroke:'#38bdf8','stroke-width':3.2,fill:'none','stroke-linecap':'round',class:'flow'},g);
+      const rot=drawFan(bd,W-40,47,11.5,Object.assign({impeller:true},fanSt));
+      if(m&&m.vfd){motRot[d.id]=rot;const v=dev(m.vfd),fo=v?v.fo||0:0;if(run){if(fo<0.3)rot.style.animationPlayState='paused';else rot.style.animationDuration=(0.45*50/fo).toFixed(2)+'s';}}
+      const lab=run?(m.fwd?'↻ THUẬN':'↺ NGƯỢC – bơm yếu!'):hum?'⚠ KÊU Ù':'';
+      if(lab)txt(g,W/2-6,T.h-4,lab,{fill:run?(m.fwd?'#15803d':'#c2410c'):'#c2410c','font-size':8,'font-weight':900});
+      prints(g,d,'prw');break;
+    }
     el('rect',{x:12,y:3,width:W-22,height:17,rx:3,fill:'#3d5a77',stroke:'#1e2f40'},g);
     el('circle',{cx:W-16,cy:11,r:3,fill:run?'#22c55e':hum?'#f97316':'#64748b',class:hum?'blink':''},g);
     const bd=el('g',{class:run?'vib':hum?'vibx':''},g);
@@ -1201,19 +1251,36 @@ function drawBody(g,d,R){
     txt(bd,nx+18,55,PV(d,'kw')+'kW '+(PV(d,'hz')||50)+'Hz',{fill:'#334155','font-size':5.5,'font-weight':700});
     el('rect',{x:W-24,y:28,width:6,height:40,rx:2,fill:'#33506c',stroke:'#1a2b3c'},bd);
     el('rect',{x:W-19,y:45,width:8,height:6,fill:'#cbd5e1',stroke:'#64748b','stroke-width':.8},bd);
-    el('circle',{cx:W-8,cy:48,r:9.5,fill:'#9ca3af',stroke:'#4b5563','stroke-width':1.2},bd);
-    const rot=el('g',{class:run?'spin'+(slow?' slow':'')+(m.fwd?'':' rev'):''},bd);
+    const rot=drawFan(bd,W-6,48,11,fanSt);
     if(m&&m.vfd){motRot[d.id]=rot;const v=dev(m.vfd),fo=v?v.fo||0:0;if(run){if(fo<0.3)rot.style.animationPlayState='paused';else rot.style.animationDuration=(0.45*50/fo).toFixed(2)+'s';}}
-    for(let i=0;i<3;i++){const an=i*120*Math.PI/180;el('line',{x1:W-8,y1:48,x2:W-8+8*Math.cos(an),y2:48+8*Math.sin(an),stroke:run?'#2563eb':'#374151','stroke-width':2.6,'stroke-linecap':'round'},rot);}
-    el('circle',{cx:W-8+7,cy:48,r:1.6,fill:'#f59e0b'},rot);
-    el('circle',{cx:W-8,cy:48,r:2.4,fill:'#e5e7eb'},bd);
     el('rect',{x:18,y:74,width:20,height:8,rx:1.5,fill:'#2b4560'},g);el('rect',{x:W-52,y:74,width:20,height:8,rx:1.5,fill:'#2b4560'},g);
     el('rect',{x:8,y:82,width:W-20,height:3,rx:1,fill:'#475569'},g);
-    if(run)el('path',{d:`M${W-2} 36 a14 14 0 0 1 0 24`,stroke:'#60a5fa','stroke-width':1.5,fill:'none',class:'blink'},g);
     const lab=run?((m.mode==='Y'?'Y ':m.mode==='D'?'Δ ':'')+(m.fwd?'↻ THUẬN':'↺ NGƯỢC')):hum?'⚠ KÊU Ù':'';
     if(lab)txt(g,W/2-6,d.t==='motor'?T.h-1:T.h-9,lab,{fill:run?'#15803d':'#c2410c','font-size':8,'font-weight':900});
     prints(g,d,'prw');break;}
   }
+}
+/* cánh quạt (động cơ) / cánh bơm: 4 cánh cong, 1 cánh sơn đỏ để nhìn chiều quay,
+   mũi tên cố định quanh vòng chỉ chiều quay thực (↻ thuận / ↺ ngược) khi đang chạy */
+function drawFan(p,cx,cy,r,st){
+  el('circle',{cx,cy,r:r+1.6,fill:st.impeller?'#0c4a6e':'#9ca3af',stroke:'#1e293b','stroke-width':1.2},p);
+  const rot=el('g',{class:st.run?'spin'+(st.slow?' slow':'')+(st.fwd?'':' rev'):''},p);
+  const blade=`M0 0C${r*.5} ${-r*.25} ${r*.42} ${-r*.8} ${r*.06} ${-r}C${-r*.2} ${-r*.72} ${-r*.12} ${-r*.3} 0 0Z`;
+  for(let i=0;i<4;i++)el('path',{d:blade,transform:`translate(${cx} ${cy}) rotate(${i*90})`,
+    fill:i===0?'#ef4444':st.impeller?(st.run?'#7dd3fc':'#94a3b8'):(st.run?'#2563eb':'#475569'),stroke:'#0f172a','stroke-width':.6},rot);
+  el('circle',{cx:cx+r*.14,cy:cy-r*.62,r:Math.max(1,r*.11),fill:'#fff'},rot);
+  el('circle',{cx,cy,r:r*.22,fill:'#e5e7eb',stroke:'#334155','stroke-width':.8},rot);
+  if(st.run||st.hum){
+    const R2=r+4.6,fwd=st.fwd,a0=fwd?-130:130,a1=fwd?120:-120,rad=a=>a*Math.PI/180;
+    const P=a=>[cx+R2*Math.sin(rad(a)),cy-R2*Math.cos(rad(a))];const s=P(a0),e=P(a1);
+    const tx=(fwd?1:-1)*Math.cos(rad(a1)),ty=(fwd?1:-1)*Math.sin(rad(a1)),nx=Math.sin(rad(a1)),ny=-Math.cos(rad(a1));
+    const col=st.hum?'#f97316':fwd?'#16a34a':'#ea580c';
+    const d=`M${s[0]} ${s[1]}A${R2} ${R2} 0 1 ${fwd?1:0} ${e[0]} ${e[1]}`;
+    el('path',{d,stroke:'#fff','stroke-width':3.4,fill:'none',opacity:.8},p);
+    el('path',{d,stroke:col,'stroke-width':1.8,fill:'none','stroke-dasharray':st.hum?'2 2':''},p);
+    el('path',{d:`M${e[0]+tx*3.6} ${e[1]+ty*3.6}L${e[0]+nx*2.6-tx*.6} ${e[1]+ny*2.6-ty*.6}L${e[0]-nx*2.6-tx*.6} ${e[1]-ny*2.6-ty*.6}Z`,fill:col,stroke:'#fff','stroke-width':.6},p);
+  }
+  return rot;
 }
 function timerText(d){if(d.en&&!d.burned){const r=tsec(d)-(Date.now()-d.t0)/1000;return r>0?r.toFixed(1)+'s':'✓ '+tsec(d)+'s';}return'T='+tsec(d)+'s';}
 setInterval(()=>{if(!running)return;S.devs.forEach(d=>{if(d.t==='timer'&&tmEls[d.id])tmEls[d.id].textContent=timerText(d);});},150);
@@ -1233,7 +1300,7 @@ function drawDev(d){
   const m=R.motor&&R.motor[d.id];
   if(d.burned)drawFire(g,T,false);else if(m&&(m.st==='hum'||m.st==='bad'))drawFire(g,T,true);
   const hasTop=T.terms.some(t=>t.y===0);
-  if(hasTop)txt(g,T.w+(d.t.startsWith('motor')?8:4),T.h/2+4,tagOf(d),{class:'tag','text-anchor':'start'});else txt(g,T.w/2,-6,tagOf(d),{class:'tag'});
+  if(hasTop)txt(g,T.w+(d.t.startsWith('motor')?14:4),T.h/2+4,tagOf(d),{class:'tag','text-anchor':'start'});else txt(g,T.w/2,-6,tagOf(d),{class:'tag'});
   const isSel=selected&&selected.kind==='dev'&&selected.id===d.id;
   if(isSel)el('rect',{x:-6,y:-8,width:T.w+12,height:T.h+16,rx:8,class:'sel'},g);
   g.addEventListener('pointerdown',e=>devDown(e,d,g));
@@ -1399,7 +1466,7 @@ async function buildPages(){
   const T1='BẢNG TÍNH CHỌN THIẾT BỊ & DÂY DẪN';newPage(T1);
   section('1. Thiết bị và thông số',T1);
   table(['STT','Ký hiệu','Thiết bị / thông số nhập','Chọn theo tính toán'],[90,190,820,TW-1100],
-    S.devs.map((d,i)=>[String(i+1),tagOf(d),TYPES[d.t].name+(PDEF[d.t]&&d.t!=='timer'?'\n'+paramText(d):''),(C.rec[d.id]||[]).join('\n')]),T1);
+    S.devs.map((d,i)=>[String(i+1),tagOf(d),typeName(d)+(PDEF[d.t]&&d.t!=='timer'?'\n'+paramText(d):''),(C.rec[d.id]||[]).join('\n')]),T1);
   section('2. Dây dẫn & ghi chú',T1);
   x.font='500 23px '+FONT;
   C.notes.forEach(t=>{wrap('• '+t,TW-30).forEach(l=>{if(y+34>PH-M-30)newPage(T1+' (tiếp)');x.fillStyle='#1e293b';x.font='500 23px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
@@ -1441,6 +1508,10 @@ document.getElementById('modal').addEventListener('pointerdown',e=>{if(e.target.
 
 /* ================= THÔNG SỐ & TÍNH TOÁN ================= */
 const MOT=[['kw','Công suất (kW)',7.5],['u','Điện áp định mức (V)',380],['hz','Tần số (Hz)',50],['pole','Số cực',4],['cos','Hệ số công suất cosφ',0.85],['eff','Hiệu suất η (%)',88],['len','Chiều dài cáp tới động cơ (m)',20]];
+/* dải công suất động cơ IEC thông dụng: [kW, hiệu suất η %, cosφ] – giá trị điển hình động cơ 4 cực IE2 */
+const MOTOR_KW=[[0.37,72,.73],[0.55,75,.75],[0.75,79,.76],[1.1,81,.77],[1.5,82,.79],[2.2,84,.81],[3,85,.82],[4,86,.82],[5.5,87.5,.83],[7.5,88.5,.84],
+  [11,89.8,.85],[15,90.6,.86],[18.5,91.2,.86],[22,91.6,.86],[30,92.3,.86],[37,92.7,.87],[45,93.1,.87],[55,93.5,.87],[75,94,.87],[90,94.2,.87],
+  [110,94.5,.88],[132,94.7,.88],[160,94.9,.89],[200,95.1,.89]];
 const PDEF={
   motor:MOT,motor6:MOT.map(x=>x[0]==='kw'?['kw',x[1],15]:x),
   lamp:[['w','Công suất (W)',40],['len','Chiều dài dây (m)',15]],
@@ -1451,6 +1522,7 @@ const PDEF={
   vfd:[['fmax','Tần số max (Hz)',50],['acc','Thời gian tăng tốc (s)',5],['dec','Thời gian giảm tốc (s)',5],['f1','Tốc độ cài 1 – DI3 (Hz)',15],['f2','Tốc độ cài 2 – DI4 (Hz)',30],['f3','Tốc độ cài 3 – DI3+DI4 (Hz)',45]],
   pot:[['pos','Vị trí chiết áp (%)',50]]
 };
+Object.keys(VFD_MODELS).forEach(k=>{PDEF[k]=PDEF.vfd;});
 function PV(d,k){if(k==='sec')return tsec(d);const def=(PDEF[d.t]||[]).find(x=>x[0]===k);const v=d.p&&d.p[k];return(v===undefined||v===''||isNaN(+v))?(def?def[2]:0):+v;}
 const CB_STD=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250,320,400,500,630,800];
 const K_AC3=[9,12,18,22,25,32,40,50,65,75,85,100,130,150,185,225,265,330,400,500,630];
@@ -1476,6 +1548,7 @@ function wireUF(){
   return f;
 }
 const PWR={vfd:{a:['L1','L2','L3'],b:['U','V','W']},cb3:{a:['1','3','5'],b:['2','4','6']},contactor:{a:['1','3','5'],b:['2','4','6']},ol:{a:['1','3','5'],b:['2','4','6']},cb2:{a:['1','3'],b:['2','4']}};
+Object.keys(VFD_MODELS).forEach(k=>{PWR[k]=PWR.vfd;});
 function powerTree(){
   const src=S.devs.find(d=>TYPES[d.t].cat==='src');if(!src)return null;
   const f=wireUF();
@@ -1534,7 +1607,7 @@ function calc(ptIn){
   S.devs.filter(d=>d.t==='motor'||d.t==='motor6').forEach(d=>{
     const kw=PV(d,'kw'),u=PV(d,'u')||380,hz=PV(d,'hz')||50,pole=PV(d,'pole')||4,cos=PV(d,'cos')||0.85,eff=(PV(d,'eff')||88)/100,len=PV(d,'len');
     const In=kw*1000/(Math.sqrt(3)*u*cos*eff),yd=d.t==='motor6',ns=120*hz/pole,nr=ns*(1-(kw<5?0.05:kw<30?0.035:0.02));
-    const onVfd=d.t==='motor'&&S.devs.some(v=>v.t==='vfd'&&vfdMotor(f,v).some(x=>x.m===d));
+    const onVfd=d.t==='motor'&&S.devs.some(v=>isV(v)&&vfdMotor(f,v).some(x=>x.m===d));
     const Iph=yd?In/Math.sqrt(3):In;const cab=pickCable(Iph,Iph*1.25,len,true,cos,u,2.5),pe=peSize(cab.s);
     const cs=(yd?'2 sợi ':'')+'CVV 3×'+fS(cab.s)+' + E'+fS(pe)+' mm²';
     R.mot[d.id]={kw,u,hz,pole,cos,eff,In,Iph,ns,nr,yd,onVfd,Ist:onVfd?In*1.5:yd?In*2.2:In*6.5,cab,pe,cs,len};
@@ -1561,7 +1634,7 @@ function calc(ptIn){
     function nodeI(n){
       const per={};const add=(nm,v)=>{per[nm]=(per[nm]||0)+v;};
       const parts=subParts(n,[]);const byM={};parts.forEach(p=>{if(!p.d)return;(byM[p.d.id]=byM[p.d.id]||new Set()).add(p.p);});
-      let imot=0,ydAny=false;const vfdAny=(function g(x){return(x.children||[]).some(c=>(c.d&&c.d.t==='vfd')||g(c));})(n)||(n.d&&n.d.t==='vfd');
+      let imot=0,ydAny=false;const vfdAny=(function g(x){return(x.children||[]).some(c=>(c.d&&isV(c.d))||g(c));})(n)||(n.d&&isV(n.d));
       Object.keys(byM).forEach(id=>{const m=R.mot[id];if(!m)return;const ps=byM[id];
         let I=m.In;if(m.yd){if(ps.has('star')&&ps.size===1)I=m.In/3;else if(!(ps.has('top')&&ps.has('bot')))I=m.Iph;ydAny=true;}
         n.lines.forEach(l=>add(l.name,I));imot=Math.max(imot,I);});
@@ -1578,7 +1651,7 @@ function calc(ptIn){
           const role=n.children.some(c=>c.kind==='star')?'KY (sao)':jn?'K nghịch (đảo pha)':isFw?'K thuận':parts.some(p=>p.p==='bot')&&!parts.some(p=>p.p==='top')?'KΔ (tam giác)':'K chính';
           const sz=upStd(K_AC3,Math.max(r.Imax,1));
           R.rec[d.id]=['AC3 '+sz+'A · cuộn 220V AC',role+' · I ≈ '+r.Imax.toFixed(1)+' A'];
-        }else if(d.t==='vfd'){const ms=subParts(n,[]).map(p=>p.d&&R.mot[p.d.id]).filter(Boolean);const kw=ms.reduce((a,m)=>a+m.kw,0);
+        }else if(isV(d)){const ms=subParts(n,[]).map(p=>p.d&&R.mot[p.d.id]).filter(Boolean);const kw=ms.reduce((a,m)=>a+m.kw,0);
           const KW=[0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,200,250];const sel=upStd(KW,kw||0.75);
           R.rec[d.id]=['ABB ACS580 – '+sel+' kW (380V)','I ra ≈ '+r.Imax.toFixed(1)+' A · 0–'+PV(d,'fmax')+' Hz','Tăng/giảm tốc '+PV(d,'acc')+'/'+PV(d,'dec')+' s'];
         }else if(d.t==='ol'){const rg=olRange(Math.max(r.Imax,0.7));R.rec[d.id]=['Dải '+rg[0]+'–'+rg[1]+' A','Chỉnh '+r.Imax.toFixed(1)+' A'];}
@@ -1653,7 +1726,7 @@ function drawPower(pt,C,ctrlNets){
     if(n.kind==='dev'){
       const d=n.d;
       px.forEach((x,i)=>{
-        if(d.t==='vfd'){s+=Ln(x,y,x,y+24)+Ln(x,y+68,x,y+DH);}
+        if(isV(d)){s+=Ln(x,y,x,y+24)+Ln(x,y+68,x,y+DH);}
         else if(d.t==='ol'){s+=Ln(x,y,x,y+30)+Pt(`M${x} ${y+30}V${y+38}h7v14h-7V${y+62}`)+Ln(x,y+62,x,y+DH);}
         else{
           s+=Ln(x,y,x,y+30)+Ln(x,y+62,x,y+DH)+Ln(x,y+62,x-13,y+32);
@@ -1662,13 +1735,13 @@ function drawPower(pt,C,ctrlNets){
         }
         s+=T_(x+5,y+11,n.inT[i],{fs:8,c:'#444'})+T_(x+5,y+DH-4,n.outT[i],{fs:8,c:'#444'});
       });
-      if(d.t==='vfd'){s+=`<rect x="${px[0]-14}" y="${y+24}" width="${last-px[0]+28}" height="44" fill="#fff" stroke="#111" stroke-width="1.8"/>`+Ln(px[0]-14,y+68,last+14,y+24,{w:1})+T_(px[0]-6,y+40,'≈',{fs:14,b:1})+T_(last+2,y+62,'~',{fs:14,b:1});
+      if(isV(d)){s+=`<rect x="${px[0]-14}" y="${y+24}" width="${last-px[0]+28}" height="44" fill="#fff" stroke="#111" stroke-width="1.8"/>`+Ln(px[0]-14,y+68,last+14,y+24,{w:1})+T_(px[0]-6,y+40,'≈',{fs:14,b:1})+T_(last+2,y+62,'~',{fs:14,b:1});
         const ff=pt.f,kk=t=>ff(key(d.id,t)),who=t=>{const r=[];S.devs.forEach(o=>{if(o===d)return;TYPES[o.t].terms.forEach(tt=>{if(ff(key(o.id,tt.id))===kk(t))r.push(tagOf(o)+':'+tt.id);});});return r.join(',');};
         const cl=[['13','DI1 chạy'],['14','DI2 đảo chiều'],['15','DI3'],['16','DI4'],['2','AI1 tốc độ']].filter(([t])=>who(t)).map(([t,n])=>t+' '+n+' ← '+who(t));
         const sto=[kk('34'),kk('35'),kk('10')].includes(kk('37'))&&[kk('34'),kk('35'),kk('10')].includes(kk('38'));
         C.rec[d.id]=(C.rec[d.id]||[]).concat(cl,['STO 34→37,38: '+(sto?'đã nối':'CHƯA NỐI')]);}
       else if(d.t==='ol')s+=`<rect x="${px[0]-12}" y="${y+33}" width="${last-px[0]+30}" height="24" fill="none" stroke="#111" stroke-width="1.3"/>`;
-      else if(d.t!=='vfd')s+=Ln(px[0]-7,y+47,last+4,y+47,{d:'4 3',w:1.1});
+      else if(!isV(d))s+=Ln(px[0]-7,y+47,last+4,y+47,{d:'4 3',w:1.1});
       label(last+26,y+34,tagOf(d),C.rec[d.id]);
       const yOut=y+DH;tapMark(n,px,yOut);
       maxY=Math.max(maxY,yOut);
@@ -1718,7 +1791,7 @@ function buildLadder(pt){
   S.devs.forEach(d=>{const inP=pt.visited.has(d.id);switch(d.t){
     case'contactor':if(!inP){add(d,'1','2','no');add(d,'3','4','no');add(d,'5','6','no');}add(d,'13','14','no');add(d,'21','22','nc');add(d,'A1','A2','coil');break;
     case'ol':add(d,'95','96','olnc');add(d,'97','98','olno');break;
-    case'vfd':add(d,'19','20','nc');add(d,'19','21','no');add(d,'22','23','nc');add(d,'22','24','no');add(d,'25','26','nc');add(d,'25','27','no');break;
+    default:if(isV(d))TYPES[d.t].contacts.forEach(c=>add(d,c[0],c[1],c[2]==='NC'?'nc':'no'));break;
     case'relay':add(d,'9','1','nc');add(d,'9','5','no');add(d,'12','4','nc');add(d,'12','8','no');add(d,'13','14','rcoil');break;
     case'timer':add(d,'1','4','tmnc');add(d,'1','3','tmno');add(d,'8','5','tmnc');add(d,'8','6','tmno');add(d,'2','7','tcoil');break;
     case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
@@ -1733,7 +1806,7 @@ function buildLadder(pt){
   const r=spReduce(edges);
   let e=r.e,fallback=false;
   if(!r.ok){fallback=true;e=pathsExpr(r.E);}
-  return{e,fallback,rail:[...rails].join('/')||'L',ctrlNets,hasCoil:EL.some(x=>/coil|pilot/.test(x.e.kind))||S.devs.some(d=>d.t==='vfd')};
+  return{e,fallback,rail:[...rails].join('/')||'L',ctrlNets,hasCoil:EL.some(x=>/coil|pilot/.test(x.e.kind))||S.devs.some(d=>isV(d))};
 }
 const revE=e=>e.t==='s'?{t:'s',c:e.c.slice().reverse().map(revE)}:e.t==='p'?{t:'p',c:e.c.map(revE)}:Object.assign({},e,{rv:!e.rv});
 const mkE=(t,a,b)=>{const c=[];[a,b].forEach(x=>{if(x.t===t)c.push(...x.c);else c.push(x);});return{t,c};};
@@ -1877,6 +1950,7 @@ function openParams(d){
   const fld=x=>{const v=PV(d,x[0]);
     if(x[0]==='pole')return`<label>${x[1]}<select data-k="pole">${[2,4,6,8].map(p=>`<option ${p===v?'selected':''}>${p}</option>`).join('')}</select></label>`;
     if(x[0]==='hz')return`<label>${x[1]}<select data-k="hz">${[50,60].map(p=>`<option ${p===v?'selected':''}>${p}</option>`).join('')}</select></label>`;
+    if(x[0]==='kw'&&TYPES[d.t].cat==='t3')return`<label>${x[1]}<select data-k="kw">${MOTOR_KW.some(r=>r[0]===v)?'':`<option selected value="${v}">${v} kW</option>`}${MOTOR_KW.map(r=>`<option value="${r[0]}" ${r[0]===v?'selected':''}>${r[0]} kW</option>`).join('')}</select></label>`;
     return`<label>${x[1]}<input data-k="${x[0]}" type="number" inputmode="decimal" step="any" value="${v}"></label>`;};
   const m=showModal(`<div class="ic">⚙️</div><h2>${esc(nameOf(d))}</h2><div class="form">${defs.map(fld).join('')}</div><div class="calcbox" id="pcalc"></div><div class="row"><button class="btn" id="pCancel">Hủy</button><button class="btn run" id="pOk">Lưu</button></div>`);
   const upd=()=>{m.querySelectorAll('[data-k]').forEach(i=>{const k=i.dataset.k,v=i.value;if(k==='sec'){const n=+v;if(n>0)d.sec=n;}else d.p[k]=v;});
@@ -1884,7 +1958,12 @@ function openParams(d){
     if(C.mot[d.id]){const mm=C.mot[d.id];extra='<br>Tốc độ đồng bộ '+mm.ns+' v/ph · I khởi động ≈ '+mm.Ist.toFixed(0)+' A · sụt áp '+mm.cab.vd.toFixed(1)+'%';}
     if(C.feeder&&TYPES[d.t].cat==='src')extra='<br>Sụt áp ≈ '+C.feeder.cab.vd.toFixed(1)+'%';
     m.querySelector('#pcalc').innerHTML='<b>Kết quả tính:</b><br>'+r.map(esc).join('<br>')+extra;};
-  m.querySelectorAll('[data-k]').forEach(i=>i.addEventListener('input',upd));upd();
+  m.querySelectorAll('[data-k]').forEach(i=>i.addEventListener('input',upd));
+  /* chọn công suất chuẩn → tự điền η và cosφ điển hình (bơm chìm thấp hơn chút) */
+  const ks=m.querySelector('select[data-k="kw"]');
+  if(ks)ks.addEventListener('change',()=>{const r=MOTOR_KW.find(r=>r[0]===+ks.value);if(!r)return;const k=d.sub==='pump'?0.95:1;
+    const c=m.querySelector('[data-k="cos"]'),e=m.querySelector('[data-k="eff"]');if(c)c.value=(r[2]*k).toFixed(2);if(e)e.value=(r[1]*k).toFixed(1);upd();});
+  upd();
   m.querySelector('#pCancel').onclick=()=>{d.p=JSON.parse(old);closeModal();};
   m.querySelector('#pOk').onclick=()=>{upd();closeModal();save();render();hint('Đã lưu thông số '+nameOf(d)+'.');};
 }
@@ -1900,7 +1979,7 @@ function refreshSheet(){
   const box=document.getElementById('sheetSvg');box.innerHTML=r.svg;const sv=box.querySelector('svg');
   sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
   const C=r.C;
-  const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(TYPES[d.t].name)}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
+  const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(typeName(d))}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
   document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>';
 }
 
