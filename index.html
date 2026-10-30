@@ -176,7 +176,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div class="zoom"><button id="zin" title="Phóng to (+)">+</button><button id="zout" title="Thu nhỏ (−)">−</button><button id="zfit" style="font-size:15px" title="Vừa mạch (0)">⤢</button><button id="zall" style="font-size:13px" title="Xem toàn bảng (9)">▣</button></div>
   <div id="zl">100%</div>
 </div>
-<div class="legend">Chạm thiết bị nhiều chân để <b>hiện chân</b>, chạm ra nền để ẩn · Chạm 1 chân ● rồi chạm chân khác để nối dây · Chạm vào dây để <b>dò dây</b> (sáng các dây nối chung điểm) ·Kéo thiết bị để dời · <span class="touch">2 ngón để thu phóng, kéo nền để di chuyển</span><span class="pc">Lăn chuột để thu phóng, kéo nền (hoặc giữ chuột giữa) để di chuyển · Phím tắt: <b>+ / −</b> thu phóng, <b>0</b> vừa mạch, <b>9</b> toàn bảng, <b>Delete</b> xóa, <b>Esc</b> hủy, <b>Ctrl+Z / Ctrl+Y</b> hoàn tác / làm lại</span> · Khi chạy: chạm CB/công tắc/dừng khẩn để bật tắt, <b>nhấn giữ</b> nút ON/OFF, chạm rơ-le nhiệt để RESET, chạm timer (đang chọn) để đổi thời gian.</div>
+<div class="legend">Chạm thiết bị nhiều chân để <b>hiện chân</b>, chạm ra nền để ẩn · Chạm 1 chân ● rồi chạm chân khác để nối dây · Chạm vào dây để <b>dò dây</b> (sáng các dây nối chung điểm, chạm lại để dò xuyên tiếp điểm đang đóng) · Kéo thiết bị để dời · <span class="touch">2 ngón để thu phóng, kéo nền để di chuyển</span><span class="pc">Lăn chuột để thu phóng, kéo nền (hoặc giữ chuột giữa) để di chuyển · Phím tắt: <b>+ / −</b> thu phóng, <b>0</b> vừa mạch, <b>9</b> toàn bảng, <b>Delete</b> xóa, <b>Esc</b> hủy, <b>Ctrl+Z / Ctrl+Y</b> hoàn tác / làm lại</span> · Khi chạy: chạm CB/công tắc/dừng khẩn để bật tắt, <b>nhấn giữ</b> nút ON/OFF, chạm rơ-le nhiệt để RESET, chạm timer (đang chọn) để đổi thời gian.</div>
 <div id="result"></div>
 <div id="sheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="shClose">✕</button><b style="font-size:15px">📐 Bản vẽ</b><span style="flex:1"></span><button class="btn" id="shZoom">🔍</button><button class="btn run" id="shPdf">Xuất PDF</button></div>
@@ -980,23 +980,28 @@ function buildPaths(){
 }
 
 /* ================= render ================= */
-let wireLayer=null,devLayer=null,renderRq=0,trace=null;
-/* dò dây: mọi dây và chân nối chung một điểm (cùng điện thế qua dây) với dây đang chọn */
+let wireLayer=null,devLayer=null,renderRq=0,trace=null,traceDeep=false;
+/* dò dây: mọi dây và chân nối chung một điểm với dây đang chọn;
+   traceDeep: đi tiếp qua các tiếp điểm đang đóng (CB, công tắc, NC, contactor đã hút…) */
 function traceNet(){
   if(exportMode||!selected||selected.kind!=='wire')return null;
   const w0=S.wires.find(w=>w.id===selected.id);if(!w0)return null;
-  const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
-  S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
+  const par={},touched=new Set();const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
+  S.wires.forEach(w=>{const a=key(w.a.d,w.a.t),b=key(w.b.d,w.b.t);touched.add(a);touched.add(b);par[f(a)]=f(b);});
+  if(traceDeep)S.devs.forEach(d=>(TYPES[d.t].contacts||[]).forEach(c=>{
+    if(d.burned||!conducts(d,c,'cur'))return;const a=key(d.id,c[0]),b=key(d.id,c[1]);touched.add(a);touched.add(b);par[f(a)]=f(b);}));
   const r=f(key(w0.a.d,w0.a.t)),wires=new Set(),terms=new Set(),devs=new Set();
-  S.wires.forEach(w=>{if(f(key(w.a.d,w.a.t))!==r)return;wires.add(w.id);
-    [w.a,w.b].forEach(e=>{terms.add(key(e.d,e.t));devs.add(e.d);});});
+  S.wires.forEach(w=>{if(f(key(w.a.d,w.a.t))===r)wires.add(w.id);});
+  touched.forEach(k=>{if(f(k)!==r)return;terms.add(k);devs.add(k.split(':')[0]);});
   return{wires,terms,devs};
 }
 function traceHint(){
   const tr=traceNet();if(!tr)return;
   const names=[...tr.terms].map(k=>{const[d,t]=k.split(':');const o=dev(d);return o?tagOf(o)+':'+t:k;});
-  hint('🔍 Dò dây: điểm nối này có '+tr.wires.size+' dây, '+names.length+' chân → '+names.join(' · ')+'. Bấm 🗑 để xóa dây đã chọn, chạm nền để bỏ chọn.');
+  hint((traceDeep?'⚡ Dò xuyên tiếp điểm đang đóng: ':'🔍 Dò dây: điểm nối này có ')+tr.wires.size+' dây, '+names.length+' chân → '+names.join(' · ')+
+    (traceDeep?'. Chạm lại dây (hoặc phím T) để chỉ dò theo dây.':'. Chạm lại dây (hoặc phím T) để dò xuyên qua tiếp điểm đang đóng.')+' 🗑 xóa dây, chạm nền để bỏ chọn.');
 }
+function toggleDeep(){if(!selected||selected.kind!=='wire')return;traceDeep=!traceDeep;render();traceHint();}
 /* gom nhiều lần vẽ lại trong cùng một khung hình thành một lần */
 function render(){if(!renderRq)renderRq=requestAnimationFrame(renderNow);}
 function renderNow(){if(renderRq){cancelAnimationFrame(renderRq);renderRq=0;}setTimeout(syncSound,0);
@@ -1038,7 +1043,9 @@ function renderWires(){
     if(inTr)el('path',{d,stroke:'#ecfeff','stroke-width':1.6,fill:'none',class:'flow','pointer-events':'none'},g);
     if(selected&&selected.kind==='wire'&&selected.id===w.id)el('path',{d,class:'sel','pointer-events':'none'},g);
     hit.addEventListener('pointerdown',e=>{if(ptrs.size>1)return;e.stopPropagation();
-      drag={id:e.pointerId,up:(ev,cancel)=>{if(cancel||Date.now()-lastPinch<300)return;selected={kind:'wire',id:w.id};pending=null;updSel();render();traceHint();}};});
+      drag={id:e.pointerId,up:(ev,cancel)=>{if(cancel||Date.now()-lastPinch<300)return;
+        if(selected&&selected.kind==='wire'&&selected.id===w.id){toggleDeep();return;}
+        selected={kind:'wire',id:w.id};traceDeep=false;pending=null;updSel();render();traceHint();}};});
   });
 }
 function pinFill(t){if(t.src==='PE'||t.id==='PE')return'#16a34a';if(t.src)return PCOL[t.src]||'#fff';return'#ffffff';}
@@ -2147,6 +2154,7 @@ window.addEventListener('keydown',e=>{
   else if(k==='-'||k==='_'){e.preventDefault();zoomCenter(1.25);}
   else if(k==='0'){e.preventDefault();fit();}
   else if(k==='9'){e.preventDefault();fitAll();}
+  else if(k==='t'||k==='T'){toggleDeep();}
 });
 
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
