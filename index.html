@@ -2037,7 +2037,9 @@ function parseNotes(t){
   if(/dung khan|khan cap|e.?stop|emergency/.test(s))R.estop=true;
   if(/den bao/.test(s))R.pilots=true;
   if(/cau thang/.test(s))R.stair=true;
-  if(/bien tan|\bvfd\b|inverter|acs ?580/.test(s))R.vfd=true;
+  if(/bien tan|\bvfd\b|inverter|\bacs ?\d{3}/.test(s))R.vfd=true;
+  if((m=s.match(/\bacs ?(150|310|355|380|480|580|880)\b/)))R.vfdM=m[1]==='580'?'vfd':'vfd'+m[1];
+  if(/bom chim|may bom|\bbom\b/.test(s))R.pump=true;
   if((m=s.match(rx('\\b(?:dong|chay|bat|sang|on)\\s*'+NUM+'.{0,14}?\\b(?:ngat|nghi|tat|dung|off)\\s*'+NUM))))R.cyc={on:toS(m[1],m[2]),off:toS(m[3],m[4])};
   else if((m=s.match(rx('dong.?ngat\\D{0,20}'+NUM))))R.cyc={on:toS(m[1],m[2]),off:toS(m[1],m[2])};
   if(!R.cyc){
@@ -2055,7 +2057,8 @@ function descReq(R){const a=[];
   if(R.cyc)a.push('Chạy chu kỳ: đóng '+R.cyc.on+' s → ngắt '+R.cyc.off+' s, lặp lại');
   if(R.delay)a.push('Nhấn ON, trễ '+R.delay+' s mới đóng');
   if(R.run)a.push('Nhấn ON, chạy '+R.run+' s rồi tự ngắt'+(R.stair?' (đèn cầu thang)':''));
-  if(R.vfd)a.push('Chạy bằng biến tần ABB ACS580 – chiết áp chỉnh tốc độ'+(R.rev?', đảo chiều bằng DI2':''));
+  if(R.vfd)a.push('Chạy bằng biến tần ABB '+VFD_MODELS[R.vfdM||'vfd'].m+' – chiết áp chỉnh tốc độ'+(R.rev?', đảo chiều bằng DI2':''));
+  if(R.pump)a.push('Tải là bơm chìm 3 pha');
   if(R.estop)a.push('Có nút dừng khẩn cấp');
   if(R.pilots)a.push('Có đèn báo chạy / quá tải');
   return a;}
@@ -2063,12 +2066,18 @@ function descReq(R){const a=[];
 function autoBuild(cnt,R){
   const pool={};Object.keys(cnt).forEach(k=>pool[k]=cnt[k]|0);
   const added={},rep=[];let nid=1;const devs=[],wires=[];
-  const mk=(t,x,y,ex)=>{const d=Object.assign({id:'d'+(nid++),t,x:Math.round(x/10)*10,y:Math.round(y/10)*10},ex||{});if(t==='timer'&&!d.sec)d.sec=5;if(t==='cb2'||t==='cb3')d.on=true;devs.push(d);return d;};
+  const mk=(t,x,y,ex)=>{if(t.startsWith('sub:')){ex=Object.assign(bdEx(t),ex||{});t=bdT(t);}const d=Object.assign({id:'d'+(nid++),t,x:Math.round(x/10)*10,y:Math.round(y/10)*10},ex||{});if(t==='timer'&&!d.sec)d.sec=5;if(t==='cb2'||t==='cb3')d.on=true;devs.push(d);return d;};
   const take=(t,x,y,ex)=>{if(pool[t]>0)pool[t]--;else added[t]=(added[t]||0)+1;return mk(t,x,y,ex);};
   const W=(a,ta,b,tb)=>wires.push({id:'w'+(wires.length+1),a:{d:a.id,t:ta},b:{d:b.id,t:tb}});
   const has=t=>(pool[t]|0)>0;
-  // ---- quyết định động cơ
-  let m3=pool.motor|0,m6=pool.motor6|0;
+  // ---- quyết định động cơ (bơm chìm tính như động cơ 3 đầu)
+  if(R.pump&&!has('sub:pump')){
+    if(has('motor')){pool.motor--;rep.push('Đổi 1 động cơ 3 đầu → bơm chìm 3 pha theo ghi chú.');}else added['sub:pump']=1;
+    pool['sub:pump']=1;}
+  const takeMotor=(x,y)=>take(has('sub:pump')?'sub:pump':'motor',x,y);
+  const VK=Object.keys(VFD_MODELS);
+  const pickV=()=>VK.find(has)||R.vfdM||'vfd';
+  let m3=(pool.motor|0)+(pool['sub:pump']|0),m6=pool.motor6|0;
   if(R.yd&&m6===0){if(m3>0){pool.motor--;m3--;pool.motor6=(pool.motor6|0)+1;rep.push('Đổi 1 động cơ 3 đầu → động cơ 6 đầu dây để chạy sao – tam giác.');}else{pool.motor6=1;added.motor6=1;}m6=1;}
   const nL=(pool.lamp|0)+(pool.fan|0),nS=pool.socket|0;
   if(m3+m6===0&&R.rev){pool.motor=1;added.motor=1;m3=1;}
@@ -2080,7 +2089,7 @@ function autoBuild(cnt,R){
   const src=three?take('src3',20,20):has('src3')?take('src3',20,20):take('src1',20,20);
   const LN=src.t==='src3'?['L1','L2','L3']:['L'];
   // ---- bố trí nhánh động lực
-  if((pool.vfd|0)>0)R=Object.assign({},R,{vfd:true});
+  if(VK.some(has))R=Object.assign({},R,{vfd:true});
   const kinds=[...Array(m6)].map(()=>'yd').concat([...Array(m3)].map(()=>R.vfd?'vfd':R.rev?'rev':'dol'));
   const BW={dol:220,rev:410,yd:440,vfd:440};
   let main=null,perCB=false,ctlX=560,S0=null,Nn={d:src,t:'N'};
@@ -2113,7 +2122,7 @@ function autoBuild(cnt,R){
       W(Rl,'13',T2,'1');W(T2,'4',T1,'2');W(T1,'7',K,'A2');W(Rl,'13',T1,'1');W(T1,'3',T2,'2');W(T2,'7',K,'A2');W(Rl,'13',T1,'8');W(T1,'5',K,'A1');
       rep.push(tagOfTmp(T1)+' = thời gian đóng '+R.cyc.on+' s, '+tagOfTmp(T2)+' = thời gian ngắt '+R.cyc.off+' s, '+tagOfTmp(Rl)+' giữ trạng thái chạy.');return{run:{d:K,t:'A1'},n2};}
   }
-  function tagOfTmp(d){const T=TYPES[d.t];const same=devs.filter(x=>TYPES[x.t].tag===T.tag);return T.tag+(same.indexOf(d)+1);}
+  function tagOfTmp(d){const tg=tagBase(d);const same=devs.filter(x=>tagBase(x)===tg);return tg+(same.indexOf(d)+1);}
   const tmode=R.cyc?'cyc':R.delay?'delay':R.run?'run':'dol';
   // ---- từng động cơ
   kinds.forEach((k,i)=>{
@@ -2122,7 +2131,7 @@ function autoBuild(cnt,R){
     if(perCB){feed=take('cb3',bx+40,240+oy);W(main,'2',feed,'1');W(main,'4',feed,'3');W(main,'6',feed,'5');}
     const cx=ctlX,cy=110+ctlRow*BLK;ctlRow++;
     if(k==='dol'){
-      const K=take('contactor',bx,top),OL=take('ol',bx+10,top+160),M=take('motor',bx+20,top+320);
+      const K=take('contactor',bx,top),OL=take('ol',bx+10,top+160),M=takeMotor(bx+20,top+320);
       W(feed,'2',K,'1');W(feed,'4',K,'3');W(feed,'6',K,'5');W(K,'2',OL,'1');W(K,'4',OL,'3');W(K,'6',OL,'5');
       W(OL,'2',M,'U');W(OL,'4',M,'V');W(OL,'6',M,'W');W(src,'PE',M,'PE');
       const r=ctrl(tmode,K,S0,Nn,cx,cy,true,OL);
@@ -2133,18 +2142,26 @@ function autoBuild(cnt,R){
       if(pl.stop){const q=pp(),H=take(pl.stop,q.x,q.y);W(S0.d,S0.t,K,'21');W(K,'22',H,'X1');W(H,'X2',K,'A2');}
       rep.unshift(tagOfTmp(M)+': khởi động trực tiếp qua '+tagOfTmp(K)+' + rơ-le nhiệt '+tagOfTmp(OL)+(tmode==='dol'?', ON/OFF tự giữ.':tmode==='run'?', chạy có thời gian.':tmode==='delay'?', đóng trễ.':', chạy chu kỳ.'));
     }else if(k==='vfd'){
-      const V=take('vfd',bx,top),M=take('motor',bx+10,top+260),RV=take('pot',bx+130,top-110,{p:{pos:60}}),S1=take('switch',bx+260,top-130);
+      const vk=pickV(),VM=VFD_MODELS[vk],V=take(vk,bx,top),M=takeMotor(bx+10,top+260),RV=take('pot',bx+130,top-110,{p:{pos:60}}),S1=take('switch',bx+260,top-130);
       W(feed,'2',V,'L1');W(feed,'4',V,'L2');W(feed,'6',V,'L3');W(V,'U',M,'U');W(V,'V',M,'V');W(V,'W',M,'W');W(src,'PE',V,'PE');W(src,'PE',M,'PE');
       W(V,'4',RV,'1');W(RV,'2',V,'2');W(RV,'3',V,'3');W(V,'10',S1,'1');W(S1,'2',V,'13');
       let S2=null;if(R.rev){S2=take('switch',bx+320,top-130);W(V,'10',S2,'1');W(S2,'2',V,'14');}
-      W(V,'34',V,'37');W(V,'34',V,'38');
+      /* STO: ACS355 cầu OUT1→IN1, OUT2→IN2; model khác cầu nguồn STO → IN1, IN2; ACS150/310 không có STO */
+      let stoTxt='không có STO';
+      if(VM.sto){if(vk==='vfd355'){W(V,'34',V,'37');W(V,'35',V,'38');}else{W(V,'34',V,'37');W(V,'34',V,'38');}stoTxt='STO nối 34→37/'+(vk==='vfd355'?'35→':'')+'38';}
       const pl=pilotsFor([['G','run'],['R','fault']]);let px=bx+230;const pp=()=>{const q=px;px+=60;return q;};
-      if(pl.run){const H=take(pl.run,pp(),top+340);W(S0.d,S0.t,V,'22');W(V,'24',H,'X1');W(H,'X2',src,'N');}
-      if(pl.fault){const H=take(pl.fault,pp(),top+340);W(S0.d,S0.t,V,'25');W(V,'26',H,'X1');W(H,'X2',src,'N');}
-      rep.unshift(tagOfTmp(M)+': chạy biến tần '+tagOfTmp(V)+' (ABB ACS580) – '+tagOfTmp(S1)+' chạy/dừng (DI1)'+(S2?', '+tagOfTmp(S2)+' đảo chiều (DI2)':'')+', chiết áp '+tagOfTmp(RV)+' chỉnh tốc độ (AI1), STO nối 34→37/38.');
+      if(VM.ro>1){
+        if(pl.run){const H=take(pl.run,pp(),top+340);W(S0.d,S0.t,V,'22');W(V,'24',H,'X1');W(H,'X2',src,'N');}
+        if(pl.fault){const H=take(pl.fault,pp(),top+340);W(S0.d,S0.t,V,'25');W(V,'26',H,'X1');W(H,'X2',src,'N');}
+      }else{/* 1 rơ-le “lỗi (-1)”: NO = bình thường, NC = lỗi */
+        if(pl.run||pl.fault)W(S0.d,S0.t,V,'19');
+        if(pl.run){const H=take(pl.run,pp(),top+340);W(V,'21',H,'X1');W(H,'X2',src,'N');}
+        if(pl.fault){const H=take(pl.fault,pp(),top+340);W(V,'20',H,'X1');W(H,'X2',src,'N');}
+      }
+      rep.unshift(tagOfTmp(M)+': chạy biến tần '+tagOfTmp(V)+' (ABB '+VM.m+') – '+tagOfTmp(S1)+' chạy/dừng (DI1)'+(S2?', '+tagOfTmp(S2)+' đảo chiều (DI2)':'')+', chiết áp '+tagOfTmp(RV)+' chỉnh tốc độ (AI1), '+stoTxt+'.');
       if(R.cyc||R.delay||R.run)rep.push('Biến tần: hẹn giờ cài trong tham số biến tần – app chưa mô phỏng, bỏ qua.');
     }else if(k==='rev'){
-      const KT=take('contactor',bx,top),KN=take('contactor',bx+200,top),OL=take('ol',bx+10,top+160),M=take('motor',bx+20,top+320);
+      const KT=take('contactor',bx,top),KN=take('contactor',bx+200,top),OL=take('ol',bx+10,top+160),M=takeMotor(bx+20,top+320);
       W(feed,'2',KT,'1');W(feed,'4',KT,'3');W(feed,'6',KT,'5');W(feed,'2',KN,'1');W(feed,'4',KN,'3');W(feed,'6',KN,'5');
       W(KT,'2',OL,'1');W(KT,'4',OL,'3');W(KT,'6',OL,'5');W(KN,'2',OL,'5');W(KN,'4',OL,'3');W(KN,'6',OL,'1');
       W(OL,'2',M,'U');W(OL,'4',M,'V');W(OL,'6',M,'W');W(src,'PE',M,'PE');
@@ -2206,13 +2223,18 @@ function autoBuild(cnt,R){
     W(H,'X2',src,'N');rep.push(tagOfTmp(H)+': đèn báo có điện.');}});
   // ---- thiết bị không dùng
   let maxY=Math.max(...devs.map(d=>d.y+TYPES[d.t].h));let ux=20,uy=maxY+90;const unused={};
-  Object.keys(pool).forEach(t=>{while(pool[t]>0){pool[t]--;unused[t]=(unused[t]||0)+1;mk(t,ux,uy);ux+=TYPES[t].w+40;if(ux>1100){ux=20;uy+=130;}}});
+  Object.keys(pool).forEach(t=>{while(pool[t]>0){pool[t]--;unused[t]=(unused[t]||0)+1;mk(t,ux,uy);ux+=TYPES[bdT(t)].w+40;if(ux>1100){ux=20;uy+=130;}}});
   return{devs,wires,rep,added,unused,nid};
 }
 
 /* ---------- giao diện bảng Lập mạch ---------- */
 const BD_ORDER=['src','prot','ctrl','t1','t3'];
-function bdState(){S.build=S.build||{counts:null,note:''};if(!S.build.counts){const c={};S.devs.forEach(d=>c[d.t]=(c[d.t]||0)+1);S.build.counts=c;}return S.build;}
+/* khóa đếm của bảng Lập mạch: tên loại, hoặc 'sub:<biến thể>' (vd bơm chìm) */
+const bdT=k=>k.startsWith('sub:')?SUBS[k.slice(4)].t:k;
+const bdEx=k=>k.startsWith('sub:')?{sub:k.slice(4),p:Object.assign({},SUBS[k.slice(4)].p)}:{};
+const bdName=k=>k.startsWith('sub:')?SUBS[k.slice(4)].name:TYPES[k].name;
+const bdKeys=cat=>Object.keys(TYPES).filter(k=>TYPES[k].cat===cat).concat(Object.keys(SUBS).filter(s=>TYPES[SUBS[s].t].cat===cat).map(s=>'sub:'+s));
+function bdState(){S.build=S.build||{counts:null,note:''};if(!S.build.counts){const c={};S.devs.forEach(d=>{const k=d.sub&&SUBS[d.sub]?'sub:'+d.sub:d.t;c[k]=(c[k]||0)+1;});S.build.counts=c;}return S.build;}
 function openBuilder(){
   const st=bdState();document.getElementById('builder').hidden=false;
   document.getElementById('bdNote').value=st.note||'';renderBuilder();
@@ -2222,9 +2244,9 @@ function renderBuilder(){
   const names={src:'Nguồn',prot:'Đóng cắt',ctrl:'Điều khiển',t1:'Tải 1 pha',t3:'Tải 3 pha'};
   BD_ORDER.forEach(cat=>{
     const h=document.createElement('div');h.className='bdCat';h.textContent=names[cat];list.appendChild(h);
-    Object.keys(TYPES).filter(k=>TYPES[k].cat===cat).forEach(k=>{
-      const T=TYPES[k],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
-      row.appendChild(iconSvg(k));const nm=document.createElement('div');nm.className='bdName';nm.textContent=T.name;row.appendChild(nm);
+    bdKeys(cat).forEach(k=>{
+      const T=TYPES[bdT(k)],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
+      row.appendChild(iconSvg(bdT(k),bdEx(k).sub));const nm=document.createElement('div');nm.className='bdName';nm.textContent=bdName(k);row.appendChild(nm);
       const stp=document.createElement('div');stp.className='step';
       const mx=T.max||8;
       stp.innerHTML=`<button data-d="-1">−</button><b>${n}</b><button data-d="1">+</button>`;
@@ -2250,8 +2272,8 @@ function applyBoard(devs,wires,nid){
 }
 function manualPlace(){
   const st=bdState(),c=st.counts;const devs=[];let nid=1,x=20,y=24,rowH=0;
-  BD_ORDER.forEach(cat=>{Object.keys(TYPES).filter(k=>TYPES[k].cat===cat).forEach(k=>{for(let i=0;i<(c[k]|0);i++){const T=TYPES[k];
-    if(x+T.w>900){x=20;y+=rowH+70;rowH=0;}const d={id:'d'+(nid++),t:k,x,y};if(k==='timer')d.sec=5;devs.push(d);x+=T.w+50;rowH=Math.max(rowH,T.h);}});
+  BD_ORDER.forEach(cat=>{bdKeys(cat).forEach(k=>{for(let i=0;i<(c[k]|0);i++){const T=TYPES[bdT(k)];
+    if(x+T.w>900){x=20;y+=rowH+70;rowH=0;}const d=Object.assign({id:'d'+(nid++),t:bdT(k),x,y},bdEx(k));if(k==='timer')d.sec=5;devs.push(d);x+=T.w+50;rowH=Math.max(rowH,T.h);}});
     if(x>20){x=20;y+=rowH+70;rowH=0;}});
   if(!devs.length){hint('Chưa chọn thiết bị nào.');return;}
   confirmReplace(()=>{applyBoard(devs,[],nid);hint('Đã đặt '+devs.length+' thiết bị lên bảng – anh tự nối dây rồi bấm ▶ Chạy thử nhé.');});
@@ -2261,7 +2283,7 @@ function autoPlace(){
   if(r.err){const m=showModal('<div class="ic">⚠️</div><h2>Chưa đấu được</h2><p>'+esc(r.err)+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;return;}
   confirmReplace(()=>{
     applyBoard(r.devs,r.wires,r.nid);
-    const nm=t=>TYPES[t].name.replace(/ \(.*\)/,'');
+    const nm=t=>bdName(t).replace(/ \(.*\)/,'');
     const ad=Object.keys(r.added).map(t=>r.added[t]+' '+nm(t)),un=Object.keys(r.unused).map(t=>r.unused[t]+' '+nm(t));
     const m=showModal('<div class="ic">⚡</div><h2>Đã đấu tự động!</h2><div class="calcbox">'+r.rep.map(t=>'• '+esc(t)).join('<br>')+
       (ad.length?'<br><b style="color:#4ade80">Đã thêm cho đủ mạch:</b> '+esc(ad.join(', ')):'')+
@@ -2304,7 +2326,8 @@ window.addEventListener('keydown',e=>{
 });
 
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
-if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');})();
+if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
+})();
 </script>
 </body>
 </html>
