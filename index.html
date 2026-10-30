@@ -499,6 +499,41 @@ const SAMPLES=[
          W_('d2','2','d3','22'),W_('d3','24','d8','X1'),W_('d8','X2','d1','N'),W_('d2','2','d3','25'),W_('d3','26','d9','X1'),W_('d9','X2','d1','N')],
   hint:'Bấm ▶ Chạy thử → bật S1 (DI1) để chạy, chạm chiết áp RV1 để tăng tốc độ, bật S2 (DI2) để đảo chiều.'}
 ];
+/* mạch mẫu cho từng model biến tần ABB: động lực + chiết áp + công tắc DI + STO + đèn rơ-le */
+function vfdSample(t,o){
+  const d=[{id:'d1',t:'src3',x:20,y:20},{id:'d2',t:'cb3',x:40,y:120,on:true},{id:'d3',t,x:20,y:280,p:o.vp||{}},
+           Object.assign({id:'d4',t:'motor',x:20,y:540},o.load||{p:{kw:o.kw||1.5}})];
+  const w=[W_('d1','L1','d2','1'),W_('d1','L2','d2','3'),W_('d1','L3','d2','5'),W_('d2','2','d3','L1'),W_('d2','4','d3','L2'),W_('d2','6','d3','L3'),
+           W_('d3','U','d4','U'),W_('d3','V','d4','V'),W_('d3','W','d4','W'),W_('d1','PE','d3','PE'),W_('d1','PE','d4','PE')];
+  let n=5;const id=()=>'d'+(n++);
+  if(o.pot!==false){const p=id();d.push({id:p,t:'pot',x:150,y:170,p:{pos:60}});w.push(W_('d3','4',p,'1'),W_(p,'2','d3','2'),W_(p,'3','d3','3'));}
+  let sx=280;(o.di||[13,14]).forEach(di=>{const s=id();d.push({id:s,t:'switch',x:sx,y:150});sx+=60;w.push(W_('d3','10',s,'1'),W_(s,'2','d3',String(di)));});
+  if(o.sto){
+    if(o.estop){const e=id();d.push({id:e,t:'pbnc',x:sx+20,y:130});w.push(W_('d3','34',e,'1'),W_(e,'2','d3','37'),W_(e,'2','d3','38'));}
+    else o.sto.forEach(([a,b])=>w.push(W_('d3',a,'d3',b)));}
+  let lx=240;(o.lamps||[]).forEach(([c,k,col])=>{const l=id();d.push({id:l,t:col,x:lx,y:490});lx+=60;w.push(W_('d2','2','d3',c),W_('d3',k,l,'X1'),W_(l,'X2','d1','N'));});
+  return{title:o.title,desc:o.desc,devs:d,wires:w,hint:o.hint};
+}
+SAMPLES.push(
+ vfdSample('vfd150',{title:'Biến tần ABB ACS150',desc:'Loại nhỏ 0.37–4kW, không STO: chiết áp AI, S1 chạy (DI1), S2 đảo chiều (DI2), 1 rơ-le báo lỗi',
+  kw:1.5,lamps:[['19','21','pilotG'],['19','20','pilotR']],
+  hint:'ACS150 không có STO nên chỉ cần cấp nguồn. Bật S1 để chạy, chạm RV1 chỉnh tốc độ, S2 đảo chiều. Rơ-le RO mặc định “lỗi (-1)”: đèn xanh = bình thường (RONO), đèn đỏ = lỗi (RONC).'}),
+ vfdSample('vfd310',{title:'Biến tần ABB ACS310 + bơm chìm',desc:'Bơm chìm 3 pha 5.5kW: S1 chạy, S2 chạy tốc độ cài 35Hz (DI3), chiết áp chỉnh tay',
+  load:{sub:'pump',p:{kw:5.5,cos:0.8,eff:82,len:60}},vp:{f1:35,acc:10,dec:10},di:[13,15],lamps:[['19','21','pilotG'],['19','20','pilotR']],
+  hint:'ACS310 chuyên bơm/quạt. Bật S1 chạy bơm theo chiết áp RV1; bật thêm S2 (DI3) để chạy tốc độ cài 35Hz. Tăng/giảm tốc 10s cho bơm êm. Không có STO.'}),
+ vfdSample('vfd355',{title:'Biến tần ABB ACS355 – 3 cấp tốc độ',desc:'STO cầu OUT1–IN1, OUT2–IN2; S1 chạy, S2 đảo, S3/S4 chọn tốc độ cài 15/30/45Hz',
+  kw:2.2,sto:[['34','37'],['35','38']],di:[13,14,15,16],lamps:[['19','21','pilotG'],['19','20','pilotR']],
+  hint:'ACS355 có STO: phải cầu OUT1→IN1 và OUT2→IN2 mới chạy được. S1 chạy, S2 đảo chiều. S3 (DI3) = 15Hz, S4 (DI4) = 30Hz, bật cả hai = 45Hz; tắt cả hai thì theo chiết áp.'}),
+ vfdSample('vfd380',{title:'Biến tần ABB ACS380 + dừng khẩn STO',desc:'Nút dừng khẩn (NC) nối S+ → S1, S2 (STO); chiết áp, S1 chạy, S2 đảo, rơ-le báo lỗi',
+  kw:4,sto:true,estop:true,lamps:[['19','21','pilotG'],['19','20','pilotR']],
+  hint:'Nút E-STOP (NC) cấp +24V từ S+ cho S1 và S2 của STO. Bật S1 cho chạy, rồi nhấn giữ E-STOP: biến tần cắt mô-men ngay (STO), thả ra là sẵn sàng lại.'}),
+ vfdSample('vfd480',{title:'Biến tần ABB ACS480 – tốc độ cài',desc:'STO cầu S+ → S1, S2; S1 chạy, S2 = DI3, S3 = DI4 chọn 20/35/50Hz, rơ-le báo lỗi',
+  kw:7.5,vp:{f1:20,f2:35,f3:50},sto:[['34','37'],['34','38']],di:[13,15,16],lamps:[['19','21','pilotG'],['19','20','pilotR']],
+  hint:'ACS480: bật S1 để chạy. S2 (DI3) = 20Hz, S3 (DI4) = 35Hz, cả hai = 50Hz; tắt cả hai thì chạy theo chiết áp.'}),
+ vfdSample('vfd880',{title:'Biến tần ABB ACS880 – 3 rơ-le',desc:'Công nghiệp lớn: STO cầu OUT → IN1, IN2; RO1 sẵn sàng, RO2 đang chạy, RO3 lỗi',
+  kw:37,vp:{acc:15,dec:15},sto:[['34','37'],['34','38']],lamps:[['19','21','pilotY'],['22','24','pilotG'],['25','26','pilotR']],
+  hint:'ACS880 có 3 rơ-le: đèn vàng = sẵn sàng (RO1), xanh = đang chạy (RO2), đỏ = lỗi (RO3, NC). Bật S1 chạy, S2 đảo chiều, chạm RV1 chỉnh tốc độ.'})
+);
 function loadSample(sm){
   stop();
   S={nid:80,devs:JSON.parse(JSON.stringify(sm.devs)),wires:sm.wires.map((w,i)=>Object.assign({id:'w'+(i+1)},JSON.parse(JSON.stringify(w))))};
@@ -584,7 +619,8 @@ function settle(newBurn){
     const f=nets('cur'),P=pots(f);let ch=false;
     S.devs.forEach(d=>{if(!isV(d))return;const vs=vfdState(f,P,d);d.vs=vs;
       if((vs.burnOut||vs.burnCtl)&&!d.burned){d.burned=true;d.burnWhy=vs.burnOut?'out':'ctl:'+vs.burnCtl;newBurn.push(d);}
-      const ro=[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),!vs.fault&&vs.pw===3];
+      const ok=!vs.fault&&vs.pw===3;/* model 1 rơ-le: mặc định ABB là “lỗi (-1)” */
+      const ro=TYPES[d.t].ro===1?[ok]:[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),ok];
       if(JSON.stringify(ro)!==JSON.stringify(d.ro||[])){d.ro=ro;ch=true;}});
     S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil)return;
       const v=volt(pot1(f,P,key(d.id,T.coil[0])),pot1(f,P,key(d.id,T.coil[1])));
@@ -1205,7 +1241,7 @@ function drawBody(g,d,R){
     el('line',{x1:108,y1:70,x2:T.w-6,y2:70,stroke:'#94a3b8','stroke-dasharray':'3 3'},g);
     const cx=(108+T.w)/2;
     txt(g,cx,48,'Đầu điều khiển I/O – '+VFD_MODELS[d.t].kw,{fill:'#475569','font-size':7.5,'font-weight':700});
-    txt(g,cx,92,(T.ro>1?'RO1 sẵn sàng · RO2 đang chạy · RO3 lỗi(-1)':'RO: sẵn sàng')+(T.sto?' · STO':' · không có STO'),{fill:'#475569','font-size':7,'font-weight':700});
+    txt(g,cx,92,(T.ro>1?'RO1 sẵn sàng · RO2 đang chạy · RO3 lỗi(-1)':'RO: lỗi(-1) · NO đóng khi bình thường')+(T.sto?' · STO':' · không có STO'),{fill:'#475569','font-size':7,'font-weight':700});
     prints(g,d);break;}
   case'pot':{
     const pos=PV(d,'pos'),ang=(-135+pos*2.7)*Math.PI/180;
@@ -2268,8 +2304,7 @@ window.addEventListener('keydown',e=>{
 });
 
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
-if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
-})();
+if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');})();
 </script>
 </body>
 </html>
