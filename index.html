@@ -3594,7 +3594,7 @@ BOARD.prog: T2 -> Q0.6
 BOARD.prog: I1.4 & Q0.3 -> Q0.4
 BOARD.prog: I1.4 & Q0.6 -> Q0.7
 BOARD.prog: Q0.0 & !I0.2 -> TON T3 10
-BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.']]].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
+BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.']].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
 if(!S.devs.length)hint('Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.');
 })();
