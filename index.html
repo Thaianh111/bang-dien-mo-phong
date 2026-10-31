@@ -97,6 +97,18 @@ h1{font-size:16px;margin:0}
 .mcR{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;border-top:1px dashed #2a3846}
 .mcR span{color:var(--mut)}.mcR b{text-align:right;font-weight:600;color:#e6edf3}
 .mcW{font-size:12px;margin-top:6px;padding:6px 8px;border-radius:8px;background:#450a0a;color:#fecaca}
+#dgBody{padding:4px 12px 20px}#dgBody h3{font-size:15px;margin:10px 0 6px}
+.dgIn{display:flex;gap:6px;margin:6px 0 10px}.dgIn input{flex:1;min-width:0;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:10px;font-size:15px}
+.dgS{display:flex;flex-wrap:wrap;gap:6px}.dgS button{background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:18px;padding:7px 11px;font-size:12.5px;cursor:pointer}
+.dgS button.on{background:#facc15;color:#1a1300;border-color:#facc15;font-weight:700}
+.dgZ{background:#17212c;border:1px solid var(--line);border-left:5px solid;border-radius:10px;padding:8px 10px;margin:8px 0}
+.dgZh{font-weight:700;font-size:13.5px;display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.dgN{flex:0 0 auto;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
+.dgD{font-size:12.5px;margin:4px 0 0 30px;color:#cbd5e1}.dgZ ul{margin:4px 0 0;padding-left:46px;font-size:12.5px;line-height:1.5;color:#e2e8f0}
+.dgOl{font-size:13px;line-height:1.6;padding-left:20px}
+#dgBar{position:fixed;left:8px;right:8px;bottom:8px;z-index:30;background:#0b121aee;border:1px solid #facc15;border-radius:14px;padding:8px 10px;box-shadow:0 8px 30px #000a;backdrop-filter:blur(6px)}
+#dgBar[hidden]{display:none}.dgBt{font-size:13px;margin-bottom:4px}.dgRd{font-size:13px;color:#fde68a;margin-bottom:6px;line-height:1.35}
+.dgBb{display:flex;gap:6px}.dgBb .btn{flex:1;padding:8px 4px;font-size:13px}.dgBb .btn.del{flex:0 0 44px}
 #sheetCalc small,.mut{color:var(--mut);font-size:12px}
 .wg{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;overflow:hidden}
 .wgH{background:#17212c;padding:8px 10px;font-size:14px}.wgH b{color:#facc15}
@@ -211,6 +223,12 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div id="sheetSvg"></div>
   <div id="sheetCalc"></div>
 </div>
+<div id="dgSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="dgClose">✕</button><b style="font-size:15px">🩺 Dò lỗi</b><span style="flex:1"></span></div>
+  <div id="dgTabs" class="mcSeg" style="margin:8px 12px"><button data-t="sym">Nhập lỗi</button><button data-t="scan">Tự soi mạch</button><button data-t="train">🎓 Tập dò lỗi</button></div>
+  <div id="dgBody"></div>
+</div>
+<div id="dgBar" hidden></div>
 <div id="mcSheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="mcClose">✕</button><b style="font-size:15px">🧮 Tính thông số motor</b><span style="flex:1"></span></div>
   <div id="mcForm"></div>
@@ -307,7 +325,7 @@ Object.keys(VFD_MODELS).forEach(id=>{
 });
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
-const CATS=[['lap','🧩 Lập mạch'],['tinh','🧮 Tính motor'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
+const CATS=[['lap','🧩 Lập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
 let pending=null,selected=null,running=false,result=null,curCat='src',lastFault='';
@@ -409,7 +427,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -453,7 +471,7 @@ document.getElementById('clearBtn').onclick=()=>{
 };
 const runBtn=document.getElementById('runBtn');
 runBtn.onclick=()=>{unlockAudio();running?stop():start();};
-function start(){running=true;lastFault='';askedRun=false;runBtn.textContent='■ Dừng';runBtn.className='btn stop';evaluate();render();}
+function start(){running=true;lastFault='';askedRun=false;runBtn.textContent='■ Dừng';runBtn.className='btn stop';evaluate();render();dgBar();}
 function stop(){
   Object.keys(loops).forEach(k=>setLoop(k,null));
   running=false;askedRun=false;result=null;lastFault='';runBtn.textContent='▶ Chạy thử';runBtn.className='btn run';
@@ -463,7 +481,7 @@ function stop(){
   S.wires.forEach(w=>{if(w.burned)fixed=true;w.burned=false;});
   document.getElementById('result').style.display='none';
   if(fixed)hint('Đã thay thiết bị/dây bị cháy. Sửa lại đấu dây rồi chạy thử nhé.');
-  save();snap();render();
+  save();snap();render();dgBar();
 }
 function changed(){if(running)evaluate();save();snap();render();}
 
@@ -582,6 +600,7 @@ function act(d){
   return false;
 }
 function conducts(d,c,mode){
+  if(FAULT&&FAULT.k==='c'&&FAULT.d===d.id&&FAULT.a===c[0]&&FAULT.b===c[1])return FAULT.closed;
   if(c[2]==='M')return true;if(mode==='closed')return true;
   if(mode==='open'&&TYPES[d.t].ctl==='sw')return false;
   const a=TYPES[d.t].ctl==='vfd'?!!(d.ro&&d.ro[c[3]]&&!d.burned):act(d);return c[2]==='NO'?a:!a;
@@ -634,7 +653,7 @@ function nets(mode){
   const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
   const u=(a,b)=>{par[f(a)]=f(b);};
   S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
-  S.wires.forEach(w=>u(key(w.a.d,w.a.t),key(w.b.d,w.b.t)));
+  S.wires.forEach(w=>{if(FAULT&&((FAULT.k==='w'&&FAULT.id===w.id)||(FAULT.k==='t'&&[w.a,w.b].some(e=>e.d===FAULT.d&&e.t===FAULT.t))))return;u(key(w.a.d,w.a.t),key(w.b.d,w.b.t));});
   S.devs.forEach(d=>{const T=TYPES[d.t];if(T.contacts)T.contacts.forEach(c=>{if(conducts(d,c,mode))u(key(d.id,c[0]),key(d.id,c[1]));});});
   return f;
 }
@@ -657,7 +676,7 @@ function settle(newBurn){
     S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil)return;
       const v=volt(pot1(f,P,key(d.id,T.coil[0])),pot1(f,P,key(d.id,T.coil[1])));
       if(v===380&&!d.burned){d.burned=true;newBurn.push(d);}
-      const en=!d.burned&&v===220;
+      const en=!d.burned&&v===220&&!(FAULT&&FAULT.k==='coil'&&FAULT.d===d.id);
       if(en!==!!d.en){d.en=en;if(d.t==='timer')d.t0=en?Date.now():null;sfxQ.add(d.t==='timer'?'tick':'clack');ch=true;}});
     if(!ch)break;
   }
@@ -1142,6 +1161,7 @@ function renderNow(){if(renderRq){cancelAnimationFrame(renderRq);renderRq=0;}set
   renderWires();
   Object.keys(tmEls).forEach(k=>delete tmEls[k]);
   S.devs.forEach(drawDev);
+  drawMarks();
 }
 function bgDown(e){if(e.target.closest&&e.target.closest('[data-dev],[data-wire]'))return;if(ptrs.size>1)return;pan={id:e.pointerId,x0:e.clientX,y0:e.clientY,vx:view.x,vy:view.y,moved:false};}
 function renderWires(){
@@ -1169,6 +1189,7 @@ function renderWires(){
     if(selected&&selected.kind==='wire'&&selected.id===w.id)el('path',{d,class:'sel','pointer-events':'none'},g);
     hit.addEventListener('pointerdown',e=>{if(ptrs.size>1)return;e.stopPropagation();
       drag={id:e.pointerId,up:(ev,cancel)=>{if(cancel||Date.now()-lastPinch<300)return;
+        if(DG.guess){guessPick('w',w.id);return;}
         if(selected&&selected.kind==='wire'&&selected.id===w.id){toggleDeep();return;}
         selected={kind:'wire',id:w.id};traceDeep=false;pending=null;updSel();render();traceHint();}};});
   });
@@ -1372,7 +1393,7 @@ function drawDev(d){
   const isSel=selected&&selected.kind==='dev'&&selected.id===d.id;
   if(isSel)el('rect',{x:-6,y:-8,width:T.w+12,height:T.h+16,rx:8,class:'sel'},g);
   g.addEventListener('pointerdown',e=>devDown(e,d,g));
-  const showPins=exportMode||!T.multi||isSel||(pending&&pending.d===d.id);
+  const showPins=exportMode||!T.multi||isSel||(pending&&pending.d===d.id)||DG.meter;
   T.terms.forEach(t=>{
     const con=connected(d,t.id);
     if(trace&&trace.terms.has(key(d.id,t.id))){
@@ -1410,6 +1431,7 @@ function devDown(e,d,g){
     cancel(){d.x=ox;d.y=oy;render();}};
 }
 function tapDev(d){
+  if(DG.guess){guessPick('d',d.id);return;}
   const T=TYPES[d.t],c=T.ctl;const isSel=selected&&selected.kind==='dev'&&selected.id===d.id;
   if(d.t==='pot'&&(running||isSel)){sfx('tick');d.p=d.p||{};let v=PV(d,'pos')+10;if(v>100)v=0;d.p.pos=v;changed();hint('Chiết áp '+tagOf(d)+': '+v+'%');return;}
   if(running){
@@ -1428,6 +1450,8 @@ function tapDev(d){
   else hint(nameOf(d)+(T.multi?': đang hiện chân – chạm chân để nối, chạm nền để ẩn.':' đã chọn. 🗑 để gỡ.')+(d.t==='timer'?' Chạm lần nữa để đổi thời gian.':(c==='sw'||c==='cb')?' Chạm lần nữa để bật/tắt.':'')+(PDEF[d.t]?' Bấm ⚙ để nhập thông số.':''));
 }
 function tapTerm(did,tid){
+  if(DG.meter){meterTap(did,tid);return;}
+  if(DG.guess){guessPick('d',did);return;}
   if(!pending){pending={d:did,t:tid};selected={kind:'dev',id:did};updSel();render();hint('Chạm chân thứ hai để nối dây (thiết bị nhiều chân: chạm vào nó để hiện chân). Chạm nền để hủy.');return;}
   if(pending.d===did&&pending.t===tid){pending=null;render();hint('Đã hủy nối dây.');return;}
   const a=pending,b={d:did,t:tid};
@@ -2218,6 +2242,273 @@ function openMotorCalc(){
   mcRender();
 }
 document.getElementById('mcClose').onclick=()=>{document.getElementById('mcSheet').hidden=true;};
+/* ================= 🩺 DÒ LỖI: triệu chứng → khoanh vùng · tự soi mạch · tập dò lỗi ================= */
+let FAULT=null;/* lỗi gài ẩn khi tập: {k:'w',id} | {k:'coil',d} | {k:'c',d,a,b,closed} | {k:'t',d,t} */
+const DG={marks:[],title:'',meter:false,pa:null,read:'',train:null,guess:false};
+const byT=(...ts)=>S.devs.filter(d=>ts.includes(d.t));
+const byCtl=c=>S.devs.filter(d=>TYPES[d.t].ctl===c);
+const coilDevs=()=>S.devs.filter(d=>TYPES[d.t].coil);
+const motors=()=>S.devs.filter(d=>TYPES[d.t].cat==='t3'&&!isV(d));
+const tags=ds=>ds.map(tagOf).join(', ');
+const wOf=(ids,terms)=>S.wires.filter(w=>[w.a,w.b].some(e=>ids.includes(e.d)&&(!terms||terms.includes(e.t)))).map(w=>w.id);
+const PWRT=['1','2','3','4','5','6','L1','L2','L3','U','V','W','U1','V1','W1','U2','V2','W2'];
+function sympZones(sid){
+  const src=S.devs.filter(d=>TYPES[d.t].cat==='src'),cb=byCtl('cb'),K=byT('contactor'),ol=byT('ol'),on=byT('pbno'),off=byT('pbnc'),em=byT('estop'),
+    tm=byT('timer'),rl=byT('relay'),M=motors(),V=S.devs.filter(isV),sw=byT('switch'),ld=byT('lamp','fan'),sk=byT('socket'),pl=byT('pilotG','pilotR','pilotY');
+  const ids=ds=>ds.map(d=>d.id),k1=K[0]?tagOf(K[0]):'K',o1=ol[0]?tagOf(ol[0]):'OL',c1=cb[0]?tagOf(cb[0]):'CB',m1=M[0]?tagOf(M[0]):'M';
+  const Z=(title,ds,how,ws)=>({title,devs:ids(ds),wires:ws||[],how});
+  switch(sid){
+  case'cbtrip':return[
+    Z('Dây động lực sau CB chạm nhau / chạm vỏ',[...K,...ol,...M],['Cắt nguồn, tháo dây ra tải. Đóng lại '+c1+': không nhảy nữa → lỗi nằm phía sau.','Đo cách điện (MΩ) từng pha với vỏ và giữa các pha: phải > 1 MΩ.'],wOf(ids([...cb,...K,...ol]),PWRT)),
+    Z('Motor chạm vỏ / chập cuộn dây',M,['Đo điện trở 3 cuộn '+m1+' (U-V, V-W, W-U) phải gần bằng nhau.','Đo từng đầu dây với vỏ motor: phải là ∞ (hở).']),
+    Z('Mạch điều khiển chập (cuộn hút chập, đấu nhầm pha)',[...coilDevs(),...on,...off,...em],['Rút dây A1 các cuộn hút, đóng CB thử lại.','Đo điện trở A1-A2: contactor nhỏ ≈ 200–1000 Ω; gần 0 Ω là cuộn chập.']),
+    Z('Chọn CB quá nhỏ so với dòng khởi động',cb,['So dòng định mức motor với CB (dùng tab 🧮 Tính motor). Khởi động trực tiếp nên dùng CB đặc tính D.'])];
+  case'nopull':return[
+    Z('Nguồn cấp mạch điều khiển',[...src,...cb],['Đo điện áp ra '+c1+': giữa pha và N phải ≈ 220V.','Kiểm tra cầu chì/CB điều khiển (nếu có).']),
+    Z('Chuỗi tiếp điểm thường đóng (OFF, dừng khẩn, rơ-le nhiệt 95-96)',[...off,...em,...ol],['Cắt điện, đo thông mạch từng nút OFF / dừng khẩn: không nhấn phải 0 Ω.','Đo '+o1+' 95-96: phải 0 Ω. Hở → rơ-le nhiệt đang nhảy (bấm RESET) hoặc hỏng.'],wOf(ids([...off,...em])).concat(wOf(ids(ol),['95','96']))),
+    Z('Nút ON (3-4)',on,['Nhấn giữ ON, đo 3-4: phải 0 Ω. Không thông → nút hỏng, mòn tiếp điểm.'],wOf(ids(on))),
+    Z('Cuộn hút A1-A2 và dây N về A2',K.concat(rl,tm),['Nhấn ON, đo A1-A2 của '+k1+': có 220V mà không hút → cuộn đứt (đo ≈ ∞ Ω).','Không có 220V → dò dây N về A2 và dây từ nút ON tới A1.'],wOf(ids(K),['A1','A2'])),
+    ...(K.length>1?[Z('Khóa liên động 21-22 (mạch đảo chiều / sao-tam giác)',K,['Contactor kia đang hút thì 21-22 của nó hở là đúng. Khi tất cả nhả, 21-22 phải 0 Ω.'],wOf(ids(K),['21','22']))]:[])];
+  case'nohold':return[
+    Z('Tiếp điểm duy trì 13-14',K,['Hai dây 13-14 của '+k1+' phải nối SONG SONG với nút ON (13 → chân 3 ON, 14 → chân 4 ON / A1).','Khi '+k1+' hút, đo 13-14 phải 0 Ω. Hở → tiếp điểm phụ mòn/rỗ.'],wOf(ids(K),['13','14'])),
+    Z('Nút ON và dây song song',on,['Kiểm tra 2 dây nối 13-14 có bắt đúng 2 chân 3 và 4 của nút ON không.'],wOf(ids(on)))];
+  case'buzz':return[
+    Z('Cuộn hút thiếu áp / sai điện áp',K.concat(rl),['Đo A1-A2 khi hút: phải 220V (±10%). Thấp hơn 190V → contactor kêu rè.','Kiểm tra nhãn cuộn hút: 220V AC hay 24V/380V.']),
+    Z('Mặt lõi từ bẩn / gãy vòng ngắn mạch',K,['Tháo contactor, lau mặt lõi, kiểm tra vòng đồng ngắn mạch trên lõi.']),
+    Z('Ốc dây điều khiển lỏng',[...on,...off,...ol],['Siết lại các ốc dây trong mạch điều khiển; tiếp xúc chập chờn làm cuộn hút rung.'],wOf(ids([...on,...off,...ol])))];
+  case'kno':return[
+    Z('Tiếp điểm chính contactor 1-2, 3-4, 5-6',K,['Khi '+k1+' hút, đo điện áp đầu ra 2-4-6: 3 cặp phải đều ≈ 380V.','Có 380V ở 1-3-5 mà ra thiếu → tiếp điểm chính cháy rỗ.'],wOf(ids(K),['1','2','3','4','5','6'])),
+    Z('Rơ-le nhiệt đường động lực',ol,['Đo 2-4-6 của '+o1+': 380V giữa các pha.']),
+    Z('Dây ra motor và hộp đấu dây',M,['Đo tại hộp đấu motor U-V-W: 380V. Có điện mà không quay → motor hỏng/kẹt cơ.'],wOf(ids(M)))];
+  case'hum':return[
+    Z('Mất 1 pha nguồn / CB',[...src,...cb],['Đo 3 pha ra '+c1+': L1-L2, L2-L3, L3-L1 đều ≈ 380V. Thiếu 1 cặp → mất pha nguồn hoặc 1 cực CB hỏng.'],wOf(ids(cb),['1','2','3','4','5','6'])),
+    Z('Tiếp điểm chính contactor cháy 1 pha',K,['Đo đầu ra 2-4-6 của '+k1+' khi hút: 3 cặp phải đều 380V.'],wOf(ids(K),['1','2','3','4','5','6'])),
+    Z('Rơ-le nhiệt / dây động lực lỏng ốc',ol,['Siết ốc 1-3-5 / 2-4-6 của '+o1+', kiểm tra vết cháy đen.'],wOf(ids(ol),['1','2','3','4','5','6'])),
+    Z('Cuộn dây motor đứt 1 pha',M,['Cắt điện, đo 3 cuộn U-V, V-W, W-U: một cặp ∞ hoặc lệch nhiều → đứt cuộn.'],wOf(ids(M))),
+    Z('⚠️ Lưu ý',[],['Tắt máy ngay! Chạy mất pha vài phút là cháy motor. Rơ-le nhiệt phải chỉnh đúng dòng để kịp ngắt.'])];
+  case'rev':return[
+    Z('Thứ tự pha ra motor',M,['Đảo 2 trong 3 dây bất kỳ (VD: U ↔ V) tại hộp đấu '+m1+' hoặc đầu ra '+(K[0]?k1:o1)+'.'],wOf(ids(M))),
+    ...(K.length>1?[Z('Mạch đảo chiều: contactor nghịch đảo pha sai',K,['Contactor thuận và nghịch phải đảo đúng 2 pha, pha còn lại giữ nguyên.'])]:[])];
+  case'oltrip':return[
+    Z('Chỉnh dòng rơ-le nhiệt',ol,['Đặt núm '+o1+' bằng dòng định mức trên nhãn motor (≈ In). Xem tab 🧮 Tính motor để có số A.']),
+    Z('Motor quá tải / kẹt cơ / mất pha',M,['Đo dòng 3 pha bằng ampe kìm: lệch nhau > 10% hoặc vượt In → kiểm tra tải, bạc đạn, mất pha.']),
+    Z('Ốc dây động lực lỏng, nóng',[...K,...ol],['Ốc lỏng làm nóng cục bộ và rơ-le nhiệt nhảy oan.'],wOf(ids([...K,...ol]),['1','2','3','4','5','6']))];
+  case'nostop':return[
+    Z('Nút OFF đấu sai / dính',off.concat(em),['OFF phải nối TIẾP trong mạch cuộn hút. Nhấn OFF, đo 1-2: phải ∞ (hở).'],wOf(ids([...off,...em]))),
+    Z('Tiếp điểm chính contactor bị dính',K,['Cắt nguồn điều khiển: nếu motor vẫn chạy → tiếp điểm chính '+k1+' dính, phải thay.']),
+    Z('Nút ON bị kẹt, dây 13-14 nối sai',[...on,...K],['Dây duy trì 13-14 không được nối thẳng từ nguồn vào A1 (bỏ qua nút OFF).'],wOf(ids(K),['13','14']))];
+  case'yd':return[
+    Z('Timer (cuộn 2-7, thời gian, tiếp điểm)',tm,['Đo cuộn timer 2-7: phải có 220V khi chạy sao. Đặt thời gian 5–10s.','Tiếp điểm 1-4 (NC) cấp K sao, 1-3 (NO) cấp K tam giác.'],wOf(ids(tm))),
+    Z('Contactor sao / tam giác và liên động 21-22',K,['Kiểm tra 21-22 liên động giữa K sao và K tam giác.','Đo A1-A2 K tam giác sau khi hết thời gian: phải 220V.'],wOf(ids(K),['A1','A2','21','22'])),
+    Z('Đấu dây motor 6 đầu',byT('motor6'),['Sao: nối chung W2-U2-V2. Tam giác: U1-W2, V1-U2, W1-V2.'],wOf(ids(byT('motor6'))))];
+  case'vfd':return[
+    Z('Nguồn vào biến tần L1-L2-L3',[...cb,...V],['Đo L1-L2-L3: 380V đủ 3 pha (thiếu pha → lỗi F3130).'],wOf(ids(V),['L1','L2','L3'])),
+    Z('Mạch an toàn STO',V,['Nối OUT1 (34) → IN1 (37) và IN2 (38). Thiếu là biến tần báo STO, không chạy.'],wOf(ids(V),['34','35','36','37','38'])),
+    Z('Lệnh chạy DI1 và tốc độ AI1',V.concat(byT('pot')),['DI1 (13) phải nối +24V (10) khi chạy; DCOM (12) nối DGND (11).','Chiết áp: 4 (+10V) – 2 (AI1) – 3 (AGND). AI1 = 0 → chạy 0 Hz.'],wOf(ids(V),['2','3','4','10','11','12','13'])),
+    Z('Dây ra motor U-V-W',M,['Không được đặt contactor đóng cắt giữa biến tần và motor khi đang chạy.'],wOf(ids(M)))];
+  case'lamp':return[
+    Z('CB / công tắc',[...cb,...sw],['Đóng CB, đo ra CB: 220V. Bật công tắc, đo 2 đầu công tắc phải 0V (đã thông).'],wOf(ids(sw))),
+    Z('Dây N về tải',ld.concat(pl),['Đo 2 đầu bóng/quạt: phải 220V. Có 0V với pha → đứt dây N.'],wOf(ids(ld))),
+    Z('Bóng / quạt hỏng',ld,['Cắt điện, đo điện trở bóng/quạt: ∞ là đứt tim / cháy cuộn.'])];
+  case'sock':return[
+    Z('CB nhánh ổ cắm',cb,['Kiểm tra CB có nhảy không, đo ra 220V.']),
+    Z('Dây L – N tới ổ cắm',sk,['Đo L-N tại ổ: 220V. Đo L-PE: 220V, N-PE ≈ 0V.'],wOf(ids(sk)))];
+  case'leak':return[
+    Z('Thiếu dây tiếp địa PE',S.devs.filter(d=>TYPES[d.t].terms.some(t=>t.id==='PE')&&TYPES[d.t].cat!=='src'&&!connected(d,'PE')),['Thiết bị khoanh vùng chưa có dây PE (xanh-vàng). Bắt PE vào vỏ ngay.']),
+    Z('Motor / thiết bị rò ra vỏ',[...M,...sk,...V],['Đo cách điện từng pha với vỏ: phải > 1 MΩ. Thấp → cuộn dây ẩm/hỏng cách điện.']),
+    Z('Lắp CB chống giật (RCBO/ELCB)',cb,['Nên dùng CB chống dòng rò 30 mA cho ổ cắm và thiết bị cầm tay.'])];
+  }
+  return[];
+}
+const SYMS=[['cbtrip','⚡ Đóng CB là nhảy ngay','cb nhay|nhay cb|aptomat nhay|nhay ap|chap|no'],['nopull','🧲 Bấm ON contactor không hút','khong hut|ko hut|k hut|contactor khong|khoi khong|bam on khong'],
+  ['nohold','✋ Nhấn ON thì chạy, buông ra là dừng','buong|khong duy tri|khong giu|tu nha|nha tay'],['buzz','📳 Contactor kêu rè, rung','ke|rung|re re|u u contactor|ken'],
+  ['kno','🔇 Contactor hút mà motor không chạy','hut ma|hut nhung|motor khong chay|dong co khong chay|khong quay'],['hum','💨 Motor kêu ù, không quay, nóng','u u|keu u|mat pha|nong|boc khoi|khet'],
+  ['rev','🔄 Motor quay ngược chiều','nguoc|dao chieu sai|quay nguoc'],['oltrip','🌡️ Rơ-le nhiệt hay nhảy','nhiet nhay|ro le nhiet|relay nhiet|ol nhay|qua tai'],
+  ['nostop','🛑 Bấm OFF không dừng','off khong|khong dung|khong tat|dinh'],['yd','⭐ Sao không chuyển sang tam giác','sao|tam giac|y/d|timer'],
+  ['vfd','🎛️ Biến tần không chạy / báo lỗi','bien tan|vfd|acs|inverter|sto'],['lamp','💡 Đèn / quạt không chạy','den|quat|bong'],
+  ['sock','🔌 Ổ cắm không có điện','o cam'],['leak','⚠️ Rò điện, chạm vỏ giật tay','ro dien|giat|cham vo|ro ri']];
+function sympFromText(t){const s=normVN(t);let best=null,bs=0;SYMS.forEach(x=>{let sc=0;x[2].split('|').forEach(k=>{if(s.includes(k))sc+=k.length;});if(sc>bs){bs=sc;best=x[0];}});return best;}
+const ZCOL=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#a855f7'];
+function setMarks(zs,title){DG.title=title;DG.marks=zs.map((z,i)=>({n:i+1,col:ZCOL[i%ZCOL.length],devs:z.devs||[],wires:z.wires||[]}));render();dgBar();}
+function zonesHTML(zs){
+  return zs.map((z,i)=>'<div class="dgZ" style="border-left-color:'+ZCOL[i%ZCOL.length]+'"><div class="dgZh"><span class="dgN" style="background:'+ZCOL[i%ZCOL.length]+'">'+(i+1)+'</span>'+esc(z.title)+'</div>'+
+    (z.devs.length?'<div class="dgD">Trên bảng: <b>'+esc(z.devs.map(id=>tagOf(dev(id))).join(', '))+'</b></div>':(z.title.startsWith('⚠')?'':'<div class="dgD mut">Mạch trên bảng chưa có thiết bị này.</div>'))+
+    '<ul>'+z.how.map(h=>'<li>'+esc(h)+'</li>').join('')+'</ul></div>').join('');
+}
+/* ---------- tự soi mạch (không cần chạy) ---------- */
+function scanCircuit(){
+  const out=[];const add=(lvl,txt,devs,wires)=>out.push({lvl,txt,devs:devs||[],wires:wires||[]});
+  const src=S.devs.find(d=>TYPES[d.t].cat==='src');
+  if(!src){add('e','Chưa có nguồn điện trên bảng.');return out;}
+  const RS=reachSets(),RK=(d,t)=>RS(key(d.id,t));
+  /* nguồn đi thẳng ra tải, không qua CB */
+  const f0=wireUF();const srcN=TYPES[src.t].terms.filter(t=>t.src&&t.src!=='PE'&&t.src!=='N').map(t=>f0(key(src.id,t.id)));
+  const direct=S.devs.filter(d=>TYPES[d.t].ctl!=='cb'&&d!==src&&TYPES[d.t].terms.some(t=>srcN.includes(f0(key(d.id,t.id)))));
+  if(!S.devs.some(d=>TYPES[d.t].ctl==='cb'))add('w','Không có aptomat (CB) bảo vệ sau nguồn – chập là cháy dây.',[src.id]);
+  else if(direct.length)add('w','Lấy điện thẳng từ nguồn, không qua CB: '+tags(direct)+'.',direct.map(d=>d.id),wOf([src.id]).filter(id=>{const w=S.wires.find(x=>x.id===id);return[w.a,w.b].some(e=>direct.some(d=>d.id===e.d));}));
+  /* thử chập: đóng CB/công tắc, cấp điện lần lượt từng contactor */
+  const keep=S.devs.map(d=>({d,on:d.on,en:d.en,t0:d.t0,pr:d.pressed,la:d.latched,tr:d.trip}));
+  const restore=()=>keep.forEach(o=>{o.d.on=o.on;o.d.en=o.en;o.d.t0=o.t0;o.d.pressed=o.pr;o.d.latched=o.la;o.d.trip=o.tr;});
+  const probe=()=>{const f=nets('cur'),P=pots(f);return shortNets(f,P).map(r=>({r,f,P}));};
+  try{
+    S.devs.forEach(d=>{const c=TYPES[d.t].ctl;if(c==='cb'||c==='sw')d.on=true;d.en=false;d.pressed=false;d.latched=false;d.trip=false;});
+    const tests=[['',null]].concat(coilDevs().filter(d=>d.t!=='timer').map(d=>[tagOf(d),d]));
+    const seen=new Set();
+    for(const[nm,k]of tests){S.devs.forEach(d=>{if(TYPES[d.t].coil)d.en=false;});if(k)k.en=true;
+      probe().forEach(({r,f,P})=>{const sig=[...P[r]].sort().join('-');if(seen.has(sig))return;seen.add(sig);
+        const ws=S.wires.filter(w=>f(key(w.a.d,w.a.t))===r).map(w=>w.id),ds=[...new Set(S.wires.filter(w=>ws.includes(w.id)).flatMap(w=>[w.a.d,w.b.d]))].filter(id=>TYPES[dev(id).t].cat!=='src');
+        add('e','CHẬP '+[...P[r]].map(pn).join(' – ')+(nm?' khi '+nm+' hút':' ngay khi đóng CB')+'.',ds,ws);});}
+    const ons=byT('pbno');ons.forEach(b=>{S.devs.forEach(d=>{if(TYPES[d.t].coil)d.en=false;});b.pressed=true;
+      probe().forEach(({r,P,f})=>{const sig=[...P[r]].sort().join('-');if(seen.has(sig))return;seen.add(sig);
+        add('e','CHẬP '+[...P[r]].map(pn).join(' – ')+' khi nhấn '+tagOf(b)+' (nút ON đang nối tắt nguồn).',[b.id],S.wires.filter(w=>f(key(w.a.d,w.a.t))===r).map(w=>w.id));});b.pressed=false;});
+  }finally{restore();}
+  /* cuộn hút */
+  coilDevs().forEach(d=>{const T=TYPES[d.t],c=T.coil,cn=c.join('-');const a=connected(d,c[0]),b=connected(d,c[1]);
+    if(!a&&!b){if(T.terms.some(t=>connected(d,t.id)))add('w',tagOf(d)+': chưa đấu cuộn '+cn+' – không bao giờ tác động.',[d.id]);return;}
+    if(!a||!b){add('e',tagOf(d)+': cuộn '+cn+' mới đấu 1 đầu ('+(a?c[1]:c[0])+' còn trống).',[d.id],wOf([d.id],c));return;}
+    const A=RK(d,c[0]),B=RK(d,c[1]);
+    if(feas(A,B,380)&&!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' bị cấp 2 pha (380V) – cháy cuộn 220V. Một đầu phải về N.',[d.id],wOf([d.id],c));
+    else if(!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' không thể có 220V (thiếu pha hoặc thiếu N).',[d.id],wOf([d.id],c));
+    if(d.t==='contactor'){const pb=S.devs.find(o=>o.t==='pbno'&&wOf([o.id]).some(id=>wOf([d.id],['A1','A2']).includes(id)));
+      if(pb&&!connected(d,'13')&&!connected(d,'14'))add('w',tagOf(d)+': chưa đấu duy trì 13-14 song song nút '+tagOf(pb)+' – buông tay là dừng.',[d.id,pb.id]);}
+  });
+  byT('ol').forEach(o=>{if((connected(o,'1')||connected(o,'2'))&&!connected(o,'95'))add('w',tagOf(o)+': 95-96 chưa nối tiếp vào mạch cuộn hút – nhảy rồi contactor vẫn không nhả.',[o.id]);});
+  /* motor */
+  motors().forEach(m=>{const tt=m.t==='motor'?['U','V','W']:['U1','V1','W1'];if(tt.every(t=>!connected(m,t))){add('w',tagOf(m)+': chưa đấu dây.',[m.id]);return;}
+    const ph=tt.map(t=>[...RK(m,t)]);
+    if(ph.some(s=>s.includes('N')&&!s.some(p=>p[0]==='L')))add('e',tagOf(m)+': có đầu cuộn dây nối vào N – motor 3 pha chỉ nhận 3 pha L1-L2-L3.',[m.id],wOf([m.id]));
+    else if(new Set(ph.flat().filter(p=>p[0]==='L')).size<3||ph.some(s=>!s.length))add('e',tagOf(m)+': không đủ 3 pha tới '+tt.join('-')+' → chạy mất pha.',[m.id],wOf([m.id]));
+    if(!byT('ol').length&&!S.devs.some(isV))add('w',tagOf(m)+': không có rơ-le nhiệt bảo vệ quá tải / mất pha.',[m.id]);
+    if(!connected(m,'PE'))add('i',tagOf(m)+': chưa nối tiếp địa PE vào vỏ.',[m.id]);});
+  /* tải 220V */
+  S.devs.filter(d=>TYPES[d.t].load).forEach(d=>{const lp=TYPES[d.t].lp;if(!connected(d,lp[0])&&!connected(d,lp[1]))return;
+    const A=RK(d,lp[0]),B=RK(d,lp[1]);if(feas(A,B,380)&&!feas(A,B,220))add('e',tagOf(d)+': nối giữa 2 pha (380V) – cháy thiết bị 220V.',[d.id],wOf([d.id]));
+    else if(!feas(A,B,220))add('e',tagOf(d)+': không thể có 220V – thiếu dây pha hoặc dây N.',[d.id],wOf([d.id]));});
+  S.devs.forEach(d=>{const T=TYPES[d.t];if(T.cat!=='src'&&!T.terms.some(t=>connected(d,t.id)))add('i',tagOf(d)+': đang để thừa, chưa đấu.',[d.id]);});
+  return out;
+}
+/* ---------- đồng hồ đo ---------- */
+const RCOIL={contactor:480,relay:700,timer:1200,pilotG:2000,pilotR:2000,pilotY:2000,lamp:120,fan:60};
+function ohms(ka,kb){
+  const f=nets('cur');const A=f(ka),B=f(kb);if(A===B)return{r:0};
+  const adj={};const E=(x,y,r,why)=>{(adj[x]=adj[x]||[]).push([y,r,why]);(adj[y]=adj[y]||[]).push([x,r,why]);};
+  S.devs.forEach(d=>{const T=TYPES[d.t];
+    if(T.coil&&!(FAULT&&FAULT.k==='coil'&&FAULT.d===d.id))E(f(key(d.id,T.coil[0])),f(key(d.id,T.coil[1])),RCOIL[d.t]||500,'cuộn '+tagOf(d));
+    else if(T.lp)E(f(key(d.id,T.lp[0])),f(key(d.id,T.lp[1])),RCOIL[d.t]||200,tagOf(d));
+    if(d.t==='motor'){const st='*'+d.id;['U','V','W'].forEach(t=>{if(!(FAULT&&FAULT.k==='t'&&FAULT.d===d.id&&FAULT.t===t))E(f(key(d.id,t)),st,1.5,'cuộn dây '+tagOf(d));});}
+    if(d.t==='motor6')[['U1','U2'],['V1','V2'],['W1','W2']].forEach(p=>E(f(key(d.id,p[0])),f(key(d.id,p[1])),3,'cuộn dây '+tagOf(d)));});
+  const dist={[A]:0},why={};const Q=[A];
+  while(Q.length){Q.sort((x,y)=>dist[x]-dist[y]);const n=Q.shift();if(n===B)break;(adj[n]||[]).forEach(([m,r,w])=>{const nd=dist[n]+r;if(dist[m]===undefined||nd<dist[m]){dist[m]=nd;why[m]=w;Q.push(m);}});}
+  return dist[B]===undefined?{r:Infinity}:{r:dist[B],why:why[B]};
+}
+function meterRead(a,b){
+  const ka=key(a.d,a.t),kb=key(b.d,b.t);
+  if(running&&result&&!result.short){const f=nets('cur'),P=pots(f),pa=pot1(f,P,ka),pb=pot1(f,P,kb);
+    if(pa==='X'||pb==='X')return'⚡ Chập mạch!';const v=volt(pa,pb);return'🔴 '+v+' V AC'+(v?'':' (không có điện áp)');}
+  const r=ohms(ka,kb);return r.r===0?'🟢 0 Ω – thông mạch':r.r===Infinity?'⚪ ∞ Ω – HỞ mạch':'🟡 ≈ '+Math.round(r.r)+' Ω (qua '+r.why+')';
+}
+function meterTap(did,tid){
+  const lbl=(d,t)=>tagOf(dev(d))+':'+t;
+  if(!DG.pa||(DG.pa.d===did&&DG.pa.t===tid)){DG.pa=DG.pa?null:{d:did,t:tid};DG.read=DG.pa?'Que 1 ở '+lbl(did,tid)+' – chạm chân thứ 2':'';dgBar();render();return;}
+  const b={d:did,t:tid},rd=meterRead(DG.pa,b);
+  DG.read=lbl(DG.pa.d,DG.pa.t)+' ↔ '+lbl(did,tid)+': '+rd;DG.pa=null;if(DG.train)DG.train.n++;dgBar();render();
+}
+/* ---------- tập dò lỗi ---------- */
+function faultCands(){
+  const C=[];const both=(d,a,b)=>connected(d,a)&&connected(d,b);
+  S.wires.forEach((w,i)=>{const c=wireColors()[w.id];if(c==='PE')return;C.push({k:'w',id:w.id,nm:'Đứt dây / lỏng ốc – dây #'+(i+1)+' ('+tagOf(dev(w.a.d))+':'+w.a.t+' → '+tagOf(dev(w.b.d))+':'+w.b.t+')'});});
+  S.devs.forEach(d=>{const T=TYPES[d.t],tg=tagOf(d);
+    if(T.coil&&both(d,T.coil[0],T.coil[1]))C.push({k:'coil',d:d.id,nm:'Cuộn hút '+tg+' ('+T.coil.join('-')+') bị đứt'});
+    (T.contacts||[]).forEach(c=>{if(c[2]==='M'||!both(d,c[0],c[1])||isV(d))return;
+      const nm=T.ctl==='cb'?'Aptomat '+tg+' hỏng 1 cực ('+c[0]+'-'+c[1]+')':T.ctl==='pb'?'Nút '+tg+' hỏng – tiếp điểm '+c[0]+'-'+c[1]+' không '+(c[2]==='NC'?'thông':'ăn'):
+        T.ctl==='ol'?'Rơ-le nhiệt '+tg+' hỏng – tiếp điểm '+c[0]+'-'+c[1]+' hở':T.ctl==='estop'?'Nút dừng khẩn '+tg+' hở tiếp điểm':'Tiếp điểm '+c[0]+'-'+c[1]+' của '+tg+' cháy rỗ, không đóng';
+      if(c[2]!=='NO'||T.ctl!=='sw')C.push({k:'c',d:d.id,a:c[0],b:c[1],closed:false,nm});
+      if(d.t==='contactor'&&+c[0]<=5&&Math.random()<0.25)C.push({k:'c',d:d.id,a:c[0],b:c[1],closed:true,nm:'Tiếp điểm chính '+c[0]+'-'+c[1]+' của '+tg+' bị DÍNH (hàn dính)'});});
+    if(d.t==='motor')['U','V','W'].forEach(t=>{if(connected(d,t))C.push({k:'t',d:d.id,t,nm:'Cuộn dây motor '+tg+' đứt / lỏng đầu cos ở '+t});});});
+  return C;
+}
+function startTrain(){
+  if(!S.wires.length){showModal('<div class="ic">🎓</div><h2>Cần có mạch trước</h2><p>Vào tab <b>Mạch mẫu</b> chọn 1 mạch (VD: khởi động từ, đảo chiều, sao–tam giác) rồi bấm lại 🎓 Tập dò lỗi.</p><div class="row"><button class="btn run" id="mOk">OK</button></div>').querySelector('#mOk').onclick=closeModal;return;}
+  const C=faultCands();if(!C.length)return;
+  if(running)stop();FAULT=C[Math.floor(Math.random()*C.length)];
+  DG.train={n:0,wrong:0,t0:Date.now()};DG.marks=[];DG.title='';DG.meter=true;DG.guess=false;DG.pa=null;DG.read='';
+  document.getElementById('dgSheet').hidden=true;render();dgBar();
+  hint('🎓 Mạch đã bị gài 1 lỗi ẩn. Bấm ▶ Chạy thử để xem triệu chứng, dùng 📏 đo, rồi bấm 🎯 để chỉ chỗ hỏng.');
+}
+function endTrain(){FAULT=null;DG.train=null;DG.guess=false;DG.meter=false;DG.pa=null;DG.read='';DG.marks=[];if(running)stop();dgBar();render();hint('Đã thoát chế độ tập – mạch trở lại bình thường.');}
+function faultHit(kind,id){if(!FAULT)return false;return kind==='w'?FAULT.k==='w'&&FAULT.id===id:FAULT.k!=='w'&&FAULT.d===id;}
+function guessPick(kind,id){
+  const tr=DG.train;if(!tr)return;DG.guess=false;
+  if(faultHit(kind,id)){const sc=Math.max(10,100-Math.max(0,tr.n-4)*4-tr.wrong*20),sec=Math.round((Date.now()-tr.t0)/1000),nm=FAULT.nm;
+    DG.marks=[{n:'✓',col:'#22c55e',devs:FAULT.k==='w'?[]:[FAULT.d],wires:FAULT.k==='w'?[FAULT.id]:[]}];DG.title='Đáp án';
+    const m=showModal('<div class="ic">🏆</div><h2>Chính xác!</h2><p><b>'+esc(nm)+'</b></p><p>Đo '+tr.n+' lần · đoán sai '+tr.wrong+' lần · '+Math.floor(sec/60)+' phút '+sec%60+' giây</p><h2 style="color:#facc15">'+sc+' điểm</h2><div class="row"><button class="btn" id="mEnd">Thoát</button><button class="btn run" id="mNew">Bài khác</button></div>');
+    m.querySelector('#mEnd').onclick=()=>{closeModal();endTrain();};m.querySelector('#mNew').onclick=()=>{closeModal();startTrain();};dogReact('ok');}
+  else{tr.wrong++;hint('❌ Chưa đúng ('+tr.wrong+' lần sai). Đo thêm rồi đoán lại nhé.');dogReact('trip');}
+  dgBar();render();
+}
+function revealTrain(){if(!FAULT)return;DG.marks=[{n:'!',col:'#ef4444',devs:FAULT.k==='w'?[]:[FAULT.d],wires:FAULT.k==='w'?[FAULT.id]:[]}];DG.title='Đáp án';render();
+  const m=showModal('<div class="ic">🔎</div><h2>Đáp án</h2><p><b>'+esc(FAULT.nm)+'</b></p><p class="mut">Đã khoanh đỏ trên bảng. Chạy thử và đo lại để thấy vì sao.</p><div class="row"><button class="btn" id="mEnd">Thoát tập</button><button class="btn run" id="mNew">Bài khác</button></div>');
+  m.querySelector('#mEnd').onclick=()=>{closeModal();endTrain();};m.querySelector('#mNew').onclick=()=>{closeModal();startTrain();};}
+/* ---------- vẽ khoanh vùng & thanh công cụ ---------- */
+function drawMarks(){
+  if(exportMode)return;
+  const g=el('g',{'pointer-events':'none'},content);
+  if(DG.marks.length){const paths=buildPaths();
+    DG.marks.slice().reverse().forEach(mk=>{mk.wires.forEach(id=>{const d=paths[id];if(d)el('path',{d,stroke:mk.col,'stroke-width':12,fill:'none',opacity:.45,'stroke-linecap':'round','stroke-linejoin':'round'},g);});});
+    const done=new Set();
+    DG.marks.forEach(mk=>mk.devs.forEach(id=>{if(done.has(id))return;done.add(id);const d=dev(id);if(!d)return;const T=TYPES[d.t];
+      el('rect',{x:d.x-12,y:d.y-14,width:T.w+24,height:T.h+28,rx:12,fill:mk.col+'22',stroke:mk.col,'stroke-width':3,'stroke-dasharray':'9 6',class:'flow'},g);
+      el('circle',{cx:d.x-10,cy:d.y-12,r:12,fill:mk.col,stroke:'#fff','stroke-width':2},g);
+      txt(g,d.x-10,d.y-7.5,String(mk.n),{fill:'#fff','font-size':13,'font-weight':900});}));}
+  if(DG.pa){const d=dev(DG.pa.d);const t=d&&tdef(d,DG.pa.t);if(t){el('circle',{cx:d.x+t.x,cy:d.y+t.y,r:11,fill:'#ef444455',stroke:'#ef4444','stroke-width':3,class:'flow'},g);}}
+}
+function dgBar(){
+  const b=document.getElementById('dgBar');const on=!!(DG.marks.length||DG.meter||DG.train);b.hidden=!on;document.body.style.paddingBottom=on?'150px':'';if(!on)return;
+  const tr=DG.train;
+  b.innerHTML=(tr?'<div class="dgBt">🎓 <b>Tập dò lỗi</b> · đo '+tr.n+' · sai '+tr.wrong+'</div>':DG.title?'<div class="dgBt">🩺 '+esc(DG.title)+'</div>':'')+
+    (DG.meter?'<div class="dgRd">📏 '+(DG.read?esc(DG.read):(running?'Đo ĐIỆN ÁP: chạm 2 chân bất kỳ':'Đo ĐIỆN TRỞ (đang cắt điện): chạm 2 chân · ▶ Chạy thử để đo điện áp'))+'</div>':'')+
+    '<div class="dgBb"><button class="btn'+(DG.meter?' run':'')+'" id="dgM">📏 Đo</button>'+
+    (tr?'<button class="btn'+(DG.guess?' stop':'')+'" id="dgG">🎯 Chỗ hỏng</button><button class="btn" id="dgA">🏳 Đáp án</button>':'<button class="btn" id="dgL">📋 Danh sách</button>')+
+    '<button class="btn del" id="dgX">✕</button></div>';
+  b.querySelector('#dgM').onclick=()=>{DG.meter=!DG.meter;DG.pa=null;DG.read='';DG.guess=false;dgBar();render();};
+  const g=b.querySelector('#dgG');if(g)g.onclick=()=>{DG.guess=!DG.guess;DG.meter=false;DG.pa=null;dgBar();render();hint(DG.guess?'🎯 Chạm vào THIẾT BỊ hoặc DÂY mà bạn cho là hỏng.':'Đã hủy chọn chỗ hỏng.');};
+  const a=b.querySelector('#dgA');if(a)a.onclick=revealTrain;
+  const l=b.querySelector('#dgL');if(l)l.onclick=()=>{document.getElementById('dgSheet').hidden=false;};
+  b.querySelector('#dgX').onclick=()=>{if(tr){endTrain();return;}DG.marks=[];DG.title='';DG.meter=false;DG.pa=null;DG.read='';dgBar();render();};
+}
+function openDiag(tab){
+  const sh=document.getElementById('dgSheet');sh.hidden=false;tab=tab||DG.tab||'sym';DG.tab=tab;
+  const B=document.getElementById('dgBody');
+  document.querySelectorAll('#dgTabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===tab));
+  if(tab==='sym'){
+    B.innerHTML='<div class="dgIn"><input id="dgTxt" placeholder="Gõ lỗi gặp phải… VD: bấm ON không hút, motor kêu ù"><button class="btn run" id="dgGo">Dò</button></div>'+
+      '<div class="dgS">'+SYMS.map(x=>'<button data-s="'+x[0]+'">'+x[1]+'</button>').join('')+'</div><div id="dgRes"></div>';
+    const show=sid=>{const x=SYMS.find(s=>s[0]===sid);const zs=sympZones(sid);
+      B.querySelectorAll('.dgS button').forEach(b=>b.classList.toggle('on',b.dataset.s===sid));
+      document.getElementById('dgRes').innerHTML='<h3>'+esc(x[1])+'</h3><p class="mut">Kiểm tra theo thứ tự vùng 1 → '+zs.length+' (vùng 1 hay gặp nhất). Trên bảng sẽ khoanh màu tương ứng.</p>'+zonesHTML(zs)+
+        '<div class="row" style="margin:6px 0 30px"><button class="btn run big" id="dgSee">👁 Xem khoanh vùng trên bảng</button></div>';
+      document.getElementById('dgSee').onclick=()=>{setMarks(zs.filter(z=>z.devs.length||z.wires.length),x[1]);DG.meter=true;sh.hidden=true;dgBar();};};
+    B.querySelectorAll('.dgS button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+    const go=()=>{const t=document.getElementById('dgTxt').value;const sid=sympFromText(t);
+      if(sid)show(sid);else document.getElementById('dgRes').innerHTML='<p class="mut">Chưa nhận ra lỗi này – anh chọn mục gần giống nhất ở trên nhé.</p>';};
+    document.getElementById('dgGo').onclick=go;document.getElementById('dgTxt').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  }else if(tab==='scan'){
+    const R=scanCircuit(),ic={e:'❌',w:'⚠️',i:'ℹ️'},col={e:'#ef4444',w:'#f59e0b',i:'#38bdf8'};
+    const ne=R.filter(r=>r.lvl==='e').length,nw=R.filter(r=>r.lvl==='w').length;
+    B.innerHTML='<h3>'+(ne?'❌ Phát hiện '+ne+' lỗi'+(nw?', '+nw+' cảnh báo':''):nw?'⚠️ '+nw+' cảnh báo':S.wires.length?'✅ Không thấy lỗi đấu dây':'Chưa có dây nào để soi')+'</h3><p class="mut">App tự soi mạch đang đấu (không cần chạy thử): thử đóng CB, cho từng contactor hút, kiểm tra cuộn hút, động cơ, tải 220V, tiếp địa.</p>'+
+      R.map((r,i)=>'<div class="dgZ" style="border-left-color:'+col[r.lvl]+'"><div class="dgZh"><span class="dgN" style="background:'+col[r.lvl]+'">'+(i+1)+'</span>'+ic[r.lvl]+' '+esc(r.txt)+'</div></div>').join('')+
+      (R.length?'<div class="row" style="margin:6px 0 30px"><button class="btn run big" id="dgSee">👁 Khoanh vùng trên bảng</button></div>':'');
+    const s=document.getElementById('dgSee');if(s)s.onclick=()=>{DG.title='Tự soi: '+ne+' lỗi, '+nw+' cảnh báo';DG.marks=R.map((r,i)=>({n:i+1,col:col[r.lvl],devs:r.devs,wires:r.wires}));sh.hidden=true;render();dgBar();};
+  }else{
+    B.innerHTML='<h3>🎓 Tập dò lỗi</h3><p>App sẽ <b>gài ngẫu nhiên 1 lỗi ẩn</b> vào mạch đang có trên bảng: đứt dây, lỏng ốc, cháy cuộn hút, tiếp điểm rỗ / dính, nút hỏng, CB hỏng 1 cực, đứt cuộn motor…</p>'+
+      '<ol class="dgOl"><li>Bấm <b>▶ Chạy thử</b>, vận hành (bấm ON, OFF…) để thấy triệu chứng.</li><li>Bấm <b>📏 Đo</b>, chạm 2 chân bất kỳ: đang chạy thì đo <b>điện áp</b>, đã dừng thì đo <b>điện trở / thông mạch</b>.</li><li>Tìm ra rồi bấm <b>🎯 Chỗ hỏng</b> và chạm vào thiết bị hoặc dây bị lỗi.</li><li>Đo càng ít, đoán sai càng ít → điểm càng cao. Bí quá bấm 🏳 xem đáp án.</li></ol>'+
+      '<p class="mut">'+(S.wires.length?'Mạch hiện có '+S.devs.length+' thiết bị, '+S.wires.length+' dây.':'Bảng đang trống – vào tab Mạch mẫu chọn 1 mạch trước.')+'</p>'+
+      '<div class="row" style="margin:6px 0 30px"><button class="btn run big" id="dgStart">🎲 Gài lỗi & bắt đầu</button></div>';
+    document.getElementById('dgStart').onclick=startTrain;
+  }
+}
+document.getElementById('dgClose').onclick=()=>{document.getElementById('dgSheet').hidden=true;};
+document.querySelectorAll('#dgTabs button').forEach(b=>b.onclick=()=>openDiag(b.dataset.t));
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
