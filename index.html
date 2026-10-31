@@ -140,6 +140,19 @@ h1{font-size:16px;margin:0}
 .ldC.pw{background:#14532d;border-color:#22c55e}.ldC.pw i{color:#4ade80}.ldO.pw{background:#3b0764;border-color:#c084fc}
 .ldAct{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px}.ldAct button{flex:1;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;white-space:nowrap}
 #ldTxt{width:100%;background:#0b121a;border:1px solid var(--line);color:#e2e8f0;border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,Menlo,monospace}
+#aiSheet{display:flex;flex-direction:column}#aiSheet[hidden]{display:none}
+#aiList{flex:1;overflow:auto;padding:10px 10px 6px;display:flex;flex-direction:column;gap:8px}
+.aiM{max-width:92%;padding:8px 11px;border-radius:14px;font-size:14px;line-height:1.5;word-wrap:break-word}
+.aiM.u{align-self:flex-end;background:#1d4ed8;color:#fff;border-bottom-right-radius:4px}.aiM.a{align-self:flex-start;background:#17212c;border:1px solid var(--line);border-bottom-left-radius:4px}
+.aiM img{max-width:100%;border-radius:8px;display:block;margin-bottom:6px}
+.aiCode{margin:6px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}.aiCode pre{margin:0;padding:8px;background:#0b121a;font:12px/1.45 ui-monospace,Menlo,monospace;overflow:auto;max-height:260px;white-space:pre}
+.aiCb{display:flex;gap:4px;padding:4px;background:#0f1720}.aiCb button{flex:1;background:#17212c;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:7px;font-size:12.5px;font-weight:700;cursor:pointer}.aiCb button[data-build]{background:#14532d;border-color:#22c55e}
+.aiHi{color:#cbd5e1;font-size:14px;line-height:1.5;padding:10px}.aiSug{display:flex;flex-direction:column;gap:6px;margin-top:6px}.aiSug button{text-align:left;background:#17212c;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 11px;font-size:13px;cursor:pointer}
+.aiBar{border-top:1px solid var(--line);padding:6px 8px 10px;background:#0f1720}.aiRow{display:flex;gap:6px;align-items:flex-end}
+.aiRow textarea{flex:1;min-width:0;font-family:inherit;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:9px;font-size:15px;resize:none}
+.aiChk{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mut);margin-bottom:5px}
+#aiImgPv{position:relative;display:inline-block}#aiImgPv img{max-height:70px;border-radius:8px;margin-bottom:5px}#aiImgPv button{position:absolute;top:-6px;right:-6px;border-radius:50%;width:22px;height:22px;border:0;background:#7f1d1d;color:#fff;cursor:pointer}
+.aiDots i{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:#94a3b8;animation:aid 1s infinite}.aiDots i:nth-child(2){animation-delay:.2s}.aiDots i:nth-child(3){animation-delay:.4s}@keyframes aid{50%{opacity:.2}}
 #dgBar{position:fixed;left:8px;right:8px;bottom:8px;z-index:30;background:#0b121aee;border:1px solid #facc15;border-radius:14px;padding:8px 10px;box-shadow:0 8px 30px #000a;backdrop-filter:blur(6px)}
 #dgBar[hidden]{display:none}.dgBt{font-size:13px;margin-bottom:4px}.dgRd{font-size:13px;color:#fde68a;margin-bottom:6px;line-height:1.35}
 .dgBb{display:flex;gap:6px}.dgBb .btn{flex:1;padding:8px 4px;font-size:13px}.dgBb .btn.del{flex:0 0 44px}
@@ -257,6 +270,13 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div class="shMeta"><input id="mPrj" placeholder="Tên công trình"><input id="mBy" placeholder="Người vẽ"></div>
   <div id="sheetSvg"></div>
   <div id="sheetCalc"></div>
+</div>
+<div id="aiSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="aiClose">✕</button><b style="font-size:15px">🤖 Trợ lý AI</b><span id="aiNet" style="font-size:12px;margin-left:6px"></span><span style="flex:1"></span><button class="btn" id="aiSet">🔑</button></div>
+  <div id="aiList"></div>
+  <div class="aiBar"><div id="aiImgPv"></div><label class="aiChk"><input type="checkbox" id="aiCtx" checked> Gửi kèm mạch đang có trên bảng</label>
+    <div class="aiRow"><button class="btn" id="aiCam" title="Chụp / chọn ảnh bản vẽ">📷</button><textarea id="aiIn" rows="2" placeholder="Hỏi về điện công nghiệp, dán lỗi, hoặc gửi ảnh bản vẽ…"></textarea><button class="btn run" id="aiSend">➤</button></div>
+    <input type="file" id="aiFile" accept="image/*" hidden></div>
 </div>
 <div id="plcSheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="plcClose">✕</button><b style="font-size:14px" id="plcTitle">💻 PLC</b><span style="flex:1"></span><span id="plcSt"></span></div>
@@ -397,7 +417,7 @@ TYPES.relay24=Object.assign({},TYPES.relay,{cat:'plc',name:'Rơ-le trung gian MY
 const isPLC=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='plc');
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
-const CATS=[['lap','🧩 Lập mạch'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
+const CATS=[['ai','🤖 Trợ lý AI'],['lap','🧩 Lập mạch'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
 let pending=null,selected=null,running=false,result=null,curCat='mau',lastFault='';
@@ -499,7 +519,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}if(c==='ai'){openAI();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -2990,6 +3010,92 @@ function plcSheetRows(d){const io=ioMap(d),A=plcAddrs(d);return A.I.concat(A.Q).
 function plcSheetHTML(){const L=S.devs.filter(isPLC);if(!L.length)return'';
   return L.map(d=>'<h3>💻 '+esc(tagOf(d))+' – '+esc(typeName(d))+'</h3><table><tr><th>Địa chỉ</th><th>Loại</th><th>Đấu với</th></tr>'+plcSheetRows(d).map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+esc(r[2])+'</td></tr>').join('')+'</table>'+
     ((d.prog||[]).length?'<p class="mut" style="margin:8px 0 4px">Chương trình ('+d.prog.length+' network):</p><pre class="plcPre">'+d.prog.map((n,i)=>'N'+(i+1)+': '+esc(netTxt(n))).join('\n')+'</pre>':'<p class="mut">Chưa có chương trình.</p>')).join('');}
+/* ================= 🤖 TRỢ LÝ AI CLAUDE (điện công nghiệp) – gọi Claude API khi có mạng ================= */
+const AI={msgs:[],busy:false,img:null};
+try{AI.msgs=JSON.parse(localStorage.getItem('md_ai_msgs')||'[]');}catch(e){}
+const aiCfg=()=>{try{return JSON.parse(localStorage.getItem('md_ai_cfg')||'{}');}catch(e){return{};}};
+const aiSaveCfg=c=>{try{localStorage.setItem('md_ai_cfg',JSON.stringify(c));}catch(e){}};
+const aiSaveMsgs=()=>{try{localStorage.setItem('md_ai_msgs',JSON.stringify(AI.msgs.slice(-30).map(m=>({r:m.r,t:m.t}))));}catch(e){}};
+const AI_MODELS=[['claude-sonnet-5-5','Sonnet 5.5 – nhanh, cân bằng'],['claude-opus-5-5','Opus 5.5 – giỏi nhất, chậm hơn'],['claude-haiku-5-5','Haiku 5.5 – rẻ, nhanh nhất']];
+function aiSystem(){
+  const types=Object.keys(IO_ALIAS).filter(k=>!/^plc\d/.test(k)).map(k=>IO_ALIAS[k].split(' ')[0]+' ('+(TYPES[k]?TYPES[k].name:k==='pump'?'Bơm chìm 3 pha':k)+')').join(', ');
+  const pins=Object.keys(TYPES).filter(k=>!/^plc\d/.test(k)||k==='plc1214ar').map(k=>k+': '+TYPES[k].terms.map(t=>t.id).join(' ')).join('\n');
+  return `Bạn là trợ lý kỹ thuật chuyên về ĐIỆN CÔNG NGHIỆP (tủ điện, động cơ, contactor, rơ-le, biến tần ABB, PLC Siemens S7-1200, HVAC/lạnh công nghiệp) bên trong app "Bảng điện mô phỏng" của anh Võ Thái Anh. Trả lời bằng tiếng Việt, ngắn gọn, thực tế như thợ điện lành nghề, dùng thuật ngữ thợ Việt quen dùng (dây 2.5 chấm, CB, khởi động từ, rơ-le nhiệt…). Luôn nhắc an toàn khi cần (cắt điện, đo kiểm, tiếp địa). Khi tính toán ghi rõ công thức và kết quả.
+
+KHI CẦN DỰNG MẠCH LÊN APP: viết mã mạch trong khối \`\`\`mach … \`\`\` (app có nút dựng thẳng lên bảng). Cú pháp:
+- Khai báo: TÊN = loại [tham số], vd: K1 = contactor · M1 = motor kw=7.5 len=20 · T1 = timer sec=8 · LP1 = congtac on=1 (on=1: tiếp điểm đang đóng)
+- Đấu dây: A.chân - B.chân · nhiều dây: CB1.2,4,6 - K1.1,3,5 · chuỗi: OFF1.2 - ON1.3 - K1.13
+- PLC: PLC1 = plc1214ar (CPU 1211/1212/1214 + ar=AC/DC/RLY, dr=DC/DC/RLY, dd=DC/DC/DC); nguồn tổ ong: PS1 = nguon24v; rơ-le 24VDC: R1 = relay24
+- Chương trình PLC: PLC1.prog: (I0.0 | Q0.0) & I0.1 -> Q0.0 · ! = thường đóng · ngõ ra: Q/M (cuộn), S x, R x, TON T0 5 (giây), CTU C0 3. Mỗi dòng 1 network; dạng: khối & khối, khối có thể là (a & b | c).
+- Dòng # đầu = tên công trình. Tên thiết bị giữ theo bản vẽ (KM1, LP1…).
+Loại thiết bị: ${types}, plc1211ar…plc1214dd.
+Chân từng loại:
+${pins}
+Lưu ý app: AC/DC/RLY có SL+/SM là nguồn 24VDC cấp nút/cảm biến, 1M nối SM; ngõ ra rơ-le có chung 1L/2L; DC/DC/DC ngõ ra transistor (3L+/3M) không đóng thẳng cuộn 220V, phải qua relay24. Cuộn contactor 220V: A1 pha, A2 N. Nút ON chân 3-4 (NO), OFF chân 1-2 (NC). Rơ-le nhiệt: 1-3-5 vào, 2-4-6 ra, 95-96 NC, 97-98 NO.
+Nếu ảnh bản vẽ có thiết bị app chưa có, quy đổi gần nhất và nói rõ.`;
+}
+function aiMd(t){
+  const parts=String(t).split(/```(\w*)\n?([\s\S]*?)```/);let h='';
+  for(let i=0;i<parts.length;i+=3){
+    let x=esc(parts[i]).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^#{1,4}\s*(.+)$/gm,'<b>$1</b>').replace(/^\s*[-*] /gm,'• ').replace(/\n/g,'<br>');
+    h+=x;
+    if(i+2<parts.length){const lang=parts[i+1],code=parts[i+2];const id='c'+Math.random().toString(36).slice(2,8);
+      h+='<div class="aiCode"><pre id="'+id+'">'+esc(code)+'</pre><div class="aiCb">'+(lang==='mach'||/=\s*(contactor|nguon3p|nguon1p|cb3|plc)/.test(code)?'<button data-build="'+id+'">⚡ Dựng lên bảng</button>':'')+'<button data-copy="'+id+'">📋 Chép</button></div></div>';}}
+  return h;
+}
+function aiRender(){
+  const L=document.getElementById('aiList');
+  L.innerHTML=AI.msgs.length?AI.msgs.map(m=>'<div class="aiM '+(m.r==='user'?'u':'a')+'">'+(m.img?'<img src="'+m.img+'">':'')+(m.r==='user'?esc(m.t).replace(/\n/g,'<br>'):aiMd(m.t))+'</div>').join(''):
+    '<div class="aiHi">🤖 <b>Trợ lý điện công nghiệp</b><br>Hỏi bất cứ gì: chọn CB/dây, đọc bản vẽ, dò lỗi, viết ladder S7-1200, cài biến tần ABB…<br><br><b>Thử:</b><div class="aiSug">'+
+    ['Mạch đang có trên bảng bị lỗi gì?','Vẽ mạch đảo chiều có dừng khẩn và đèn báo','Viết ladder S7-1200: 3 băng tải chạy nối tiếp cách nhau 5s','Máy nén 15kW 380V chọn CB, contactor, dây bao nhiêu?','📷 Chụp bản vẽ để AI dựng mạch'].map(s=>'<button>'+s+'</button>').join('')+'</div></div>';
+  if(AI.busy)L.innerHTML+='<div class="aiM a"><span class="aiDots"><i></i><i></i><i></i></span> đang suy nghĩ…</div>';
+  L.scrollTop=L.scrollHeight;
+  L.querySelectorAll('.aiSug button').forEach(b=>b.onclick=()=>{if(b.textContent.startsWith('📷')){document.getElementById('aiFile').click();return;}document.getElementById('aiIn').value=b.textContent;aiSend();});
+  L.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const t=document.getElementById(b.dataset.copy).textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='✓ Đã chép';},()=>{});});
+  L.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>{const t=document.getElementById(b.dataset.build).textContent;const r=parseCircuit(t);
+    if(!r.devs.length){b.textContent='⚠️ Mã không có thiết bị';return;}
+    confirmReplace(()=>{r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});ioLayout(r.devs);applyBoard(r.devs,r.wires,r.nid);if(r.title){S.meta=S.meta||{};S.meta.prj=r.title;save();}
+      document.getElementById('aiSheet').hidden=true;hint('🤖 Đã dựng '+r.devs.length+' thiết bị, '+r.wires.length+' dây từ AI'+(r.errs.length?' (bỏ qua '+r.errs.length+' dòng lỗi)':'')+'. Bấm 🩺 Tự soi hoặc ▶ Chạy thử.');});});
+  const on=navigator.onLine,c=aiCfg();
+  document.getElementById('aiNet').innerHTML=on?(c.key?'<span style="color:#4ade80">● Trực tuyến</span>':'<span style="color:#fbbf24">● Chưa có khóa API</span>'):'<span style="color:#f87171">● Mất mạng</span>';
+  document.getElementById('aiSend').disabled=AI.busy;
+  const pv=document.getElementById('aiImgPv');pv.innerHTML=AI.img?'<img src="'+AI.img+'"><button id="aiImgX">✕</button>':'';if(AI.img)document.getElementById('aiImgX').onclick=()=>{AI.img=null;aiRender();};
+}
+function aiSettings(){const c=aiCfg();
+  const m=showModal('<div class="ic">🔑</div><h2>Kết nối Claude AI</h2><p style="text-align:left;font-size:13px">Cần <b>khóa API Anthropic</b> (tạo tại console.anthropic.com → API Keys, nạp tiền theo lượt dùng). Khóa chỉ lưu <b>trong máy này</b>, không gửi đi đâu ngoài Anthropic.</p>'+
+    '<div class="form"><label>Khóa API<input id="aiK" type="password" placeholder="sk-ant-…" value="'+esc(c.key||'')+'"></label><label>Model<select id="aiMo">'+AI_MODELS.map(x=>'<option value="'+x[0]+'" '+((c.model||AI_MODELS[0][0])===x[0]?'selected':'')+'>'+x[1]+'</option>').join('')+'</select></label></div>'+
+    '<div class="row"><button class="btn del" id="aiClr">Xóa chat</button><button class="btn" id="aiNo">Đóng</button><button class="btn run" id="aiOk">Lưu</button></div>');
+  m.querySelector('#aiNo').onclick=closeModal;m.querySelector('#aiClr').onclick=()=>{AI.msgs=[];aiSaveMsgs();closeModal();aiRender();};
+  m.querySelector('#aiOk').onclick=()=>{aiSaveCfg({key:m.querySelector('#aiK').value.trim(),model:m.querySelector('#aiMo').value});closeModal();aiRender();};}
+function aiCtx(){if(!S.devs.length)return'(Bảng đang trống.)';let s='MẠCH ĐANG CÓ TRÊN BẢNG:\n```mach\n'+exportCircuit()+'\n```';
+  try{const R=scanCircuit();if(R.length)s+='\nKết quả tự soi: '+R.map(r=>r.lvl+': '+r.txt).join(' | ');}catch(e){}
+  if(running&&result)s+='\nĐang chạy thử: '+result.msgs.map(m=>m[0]+' '+m[1]).join(' | ');return s;}
+async function aiSend(){
+  const inp=document.getElementById('aiIn');const t=inp.value.trim();if((!t&&!AI.img)||AI.busy)return;
+  const c=aiCfg();if(!c.key){aiSettings();return;}if(!navigator.onLine){hint('🤖 Cần kết nối mạng để dùng trợ lý AI.');aiRender();return;}
+  const withC=document.getElementById('aiCtx').checked;
+  const um={r:'user',t:t||'Đọc bản vẽ này và viết mã mạch để dựng lên app.',img:AI.img};AI.msgs.push(um);inp.value='';AI.img=null;AI.busy=true;aiRender();
+  const hist=AI.msgs.slice(-12).map((m,i,a)=>{const last=i===a.length-1;const content=[];
+    if(m.img&&last)content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:m.img.split(',')[1]}});
+    content.push({type:'text',text:(last&&withC?aiCtx()+'\n\n':'')+m.t});return{role:m.r,content};});
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:c.model||AI_MODELS[0][0],max_tokens:8000,system:aiSystem(),messages:hist})});
+    const j=await res.json();
+    if(!res.ok)throw new Error(res.status===401?'Khóa API sai hoặc hết hạn – bấm 🔑 để sửa.':res.status===429?'Đang quá giới hạn lượt gọi, thử lại sau ít phút.':res.status===400&&/credit/i.test(JSON.stringify(j))?'Tài khoản API hết tiền – nạp thêm tại console.anthropic.com.':((j.error&&j.error.message)||('Lỗi '+res.status)));
+    AI.msgs.push({r:'assistant',t:(j.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('\n')||'(không có trả lời)'});
+  }catch(e){AI.msgs.push({r:'assistant',t:'⚠️ '+(e.message==='Failed to fetch'?'Không kết nối được tới Claude – kiểm tra mạng.':e.message)});}
+  AI.busy=false;delete um.img;aiSaveMsgs();aiRender();
+}
+function aiPickImg(file){if(!file)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1568/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);AI.img=c.toDataURL('image/jpeg',0.85);aiRender();};im.src=r.result;};r.readAsDataURL(file);}
+function openAI(){document.getElementById('aiSheet').hidden=false;aiRender();if(!aiCfg().key)setTimeout(aiSettings,200);}
+document.getElementById('aiClose').onclick=()=>{document.getElementById('aiSheet').hidden=true;};
+document.getElementById('aiSet').onclick=aiSettings;document.getElementById('aiSend').onclick=aiSend;
+document.getElementById('aiCam').onclick=()=>document.getElementById('aiFile').click();
+document.getElementById('aiFile').onchange=e=>{aiPickImg(e.target.files[0]);e.target.value='';};
+document.getElementById('aiIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(pointer:fine)').matches){e.preventDefault();aiSend();}});
+window.addEventListener('online',()=>{if(!document.getElementById('aiSheet').hidden)aiRender();});window.addEventListener('offline',()=>{if(!document.getElementById('aiSheet').hidden)aiRender();});
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
