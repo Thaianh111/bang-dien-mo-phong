@@ -120,6 +120,26 @@ h1{font-size:16px;margin:0}
 .lcd.warn{background:#fca5a5;animation:blk .5s steps(2) infinite}@keyframes blk{50%{background:#fecaca}}
 .iSub{font-size:10.5px;font-weight:600;line-height:1.3;min-height:27px}
 #dgX{position:absolute;top:-14px;right:-6px;width:30px;height:30px;border-radius:50%;border:2px solid #facc15;background:#7f1d1d;color:#fff;font-weight:900;font-size:13px;cursor:pointer;padding:0}
+.bdSel{display:flex;gap:4px;margin-top:4px}.bdSel select{flex:1;min-width:0;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px;font-size:12px}
+#ioTxt{width:100%;background:#0b121a;border:1px solid var(--line);color:#e2e8f0;border-radius:10px;padding:10px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.ioBtns{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.ioBtns .btn{flex:1;font-size:12.5px;padding:8px 6px}
+#ioChk ul{margin:4px 0 0;padding-left:18px;color:#fca5a5}code{background:#0b121a;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:#fde68a}
+.plcPre{background:#0b121a;border:1px solid var(--line);border-radius:8px;padding:8px;font:12px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:#e2e8f0}
+.ioTbl{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:12px;padding:4px 0 8px}.ioTbl span{color:var(--mut)}.ioTbl span.on{color:#e2e8f0}.ioTbl b{color:#5eead4;display:inline-block;min-width:40px}
+.ldN{background:#17212c;border:1px solid var(--line);border-radius:10px;margin:10px 0;overflow:hidden}
+.ldH{display:flex;gap:8px;align-items:center;padding:6px 8px;font-size:12.5px;border-bottom:1px solid var(--line)}.ldH .mut{flex:1;min-width:0;font:11px ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldDel{background:none;border:0;font-size:15px;cursor:pointer}
+.ldR{display:flex;align-items:center;padding:10px 4px;overflow-x:auto;background:#0b121a}
+.ldRail{flex:0 0 4px;align-self:stretch;background:#60a5fa;border-radius:2px;min-height:44px}
+.ldW{flex:0 0 10px;height:2px;background:#60a5fa}.ldW.fill{flex:1 1 10px}
+.ldBl{display:flex;flex-direction:column;gap:6px;border-left:2px solid #60a5fa;border-right:2px solid #60a5fa;padding:0}.ldBl:has(.ldBr:only-child){border:0}
+.ldBr{display:flex;align-items:center}
+.ldC,.ldO{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:54px;padding:3px 4px;border-radius:7px;border:1.5px solid #334155;background:#17212c;cursor:pointer;line-height:1.1}
+.ldC i{font-style:normal;font:800 14px ui-monospace,Menlo,monospace;color:#93c5fd}.ldC b,.ldO{font-size:12px;color:#fff}.ldC small,.ldO small{font-size:9.5px;color:#fbbf24;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldO{border-color:#a855f7;font-weight:800;min-width:72px}.ldC.sel,.ldO.sel{border-color:#facc15;box-shadow:0 0 0 2px #facc1566}
+.ldC.pw{background:#14532d;border-color:#22c55e}.ldC.pw i{color:#4ade80}.ldO.pw{background:#3b0764;border-color:#c084fc}
+.ldAct{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px}.ldAct button{flex:1;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;white-space:nowrap}
+#ldTxt{width:100%;background:#0b121a;border:1px solid var(--line);color:#e2e8f0;border-radius:10px;padding:10px;font:13px/1.5 ui-monospace,Menlo,monospace}
 #dgBar{position:fixed;left:8px;right:8px;bottom:8px;z-index:30;background:#0b121aee;border:1px solid #facc15;border-radius:14px;padding:8px 10px;box-shadow:0 8px 30px #000a;backdrop-filter:blur(6px)}
 #dgBar[hidden]{display:none}.dgBt{font-size:13px;margin-bottom:4px}.dgRd{font-size:13px;color:#fde68a;margin-bottom:6px;line-height:1.35}
 .dgBb{display:flex;gap:6px}.dgBb .btn{flex:1;padding:8px 4px;font-size:13px}.dgBb .btn.del{flex:0 0 44px}
@@ -213,7 +233,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
     <span><i style="background:#dc2626"></i>L1</span><span><i style="background:#eab308"></i>L2</span><span><i style="background:#2563eb"></i>L3</span>
     <span><i style="background:#111827;outline:1px solid #64748b"></i>N</span><span><i style="background:repeating-linear-gradient(90deg,#16a34a 0 4px,#facc15 4px 8px)"></i>PE</span><span><i style="background:#94a3b8"></i>chưa có điện</span>
   </div>
-<div id="hint">Chọn thiết bị ở trên để gắn vào bảng.</div>
+<div id="hint">Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.</div>
 <div id="boardWrap">
   <svg id="board" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -238,6 +258,25 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div id="sheetSvg"></div>
   <div id="sheetCalc"></div>
 </div>
+<div id="plcSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="plcClose">✕</button><b style="font-size:14px" id="plcTitle">💻 PLC</b><span style="flex:1"></span><span id="plcSt"></span></div>
+  <div id="plcBody" style="padding:6px 10px 20px"></div>
+</div>
+<div id="ioSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="ioClose">✕</button><b style="font-size:15px">📥 Nhập / 📤 Xuất mạch</b><span style="flex:1"></span></div>
+  <p class="mut" style="padding:6px 12px 0;margin:0">Chụp bản vẽ gửi cho Claude trong chat → nhận <b>mã mạch</b> → dán vào đây → <b>Dựng mạch</b>. Thiết bị tự xếp lên bảng và đấu dây sẵn.</p>
+  <div style="padding:8px 12px"><textarea id="ioTxt" rows="14" spellcheck="false" placeholder="Dán mã mạch vào đây…"></textarea>
+  <div class="ioBtns"><button class="btn" id="ioEx">📄 Ví dụ</button><button class="btn" id="ioOut">📤 Xuất mạch đang có</button><button class="btn" id="ioCopy">📋 Sao chép</button></div>
+  <div id="ioChk" class="calcbox" style="margin-top:8px"></div>
+  <button class="btn run big" id="ioGo" style="width:100%">⚡ Dựng mạch lên bảng</button>
+  <details class="mcAdv" style="margin-top:12px"><summary>Cách viết mã mạch</summary><div class="mut" style="line-height:1.6">
+  • Khai báo thiết bị: <code>K1 = contactor</code>, <code>M1 = motor kw=7.5 len=20</code>, <code>T1 = timer sec=8</code><br>
+  • Đấu dây: <code>CB1.2 - K1.1</code> · nhiều dây 1 lần: <code>CB1.2,4,6 - K1.1,3,5</code> · nối tiếp chuỗi: <code>OFF1.2 - ON1.3 - K1.13</code><br>
+  • Loại thiết bị: nguon3p, nguon1p, cb3, cb2, congtac, on, off, dungkhan, contactor, ol (rơ-le nhiệt), relay (MY2), timer, denbaoxanh/do/vang, den, quat, ocam, motor, motor6, bomchim, chietap, bientan / acs150 / acs310 / acs355 / acs380 / acs480 / acs880<br>
+  • PLC: <code>PLC1 = plc1214ar</code> (CPU 1211/1212/1214 + ar = AC/DC/RLY, dr = DC/DC/RLY, dd = DC/DC/DC), <code>PS1 = nguon24v</code>, <code>R1 = relay24</code><br>
+  • Chương trình: <code>PLC1.prog: (I0.0 | Q0.0) & I0.1 -> Q0.0</code>, <code>PLC1.prog: Q0.0 -> TON T0 5</code><br>
+  • Dòng bắt đầu bằng # là ghi chú (dòng # đầu tiên = tên công trình).</div></details></div>
+</div>
 <div id="dgSheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="dgClose">✕</button><b style="font-size:15px">🩺 Dò lỗi</b><span style="flex:1"></span></div>
   <div id="dgTabs" class="mcSeg" style="margin:8px 12px"><button data-t="sym">Nhập lỗi</button><button data-t="scan">Tự soi mạch</button><button data-t="train">🎓 Tập dò lỗi</button></div>
@@ -259,7 +298,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
     <div class="chips" id="bdChips"><button>đảo chiều</button><button>sao tam giác 8s</button><button>tự tắt sau 30s</button><button>trễ 10s mới chạy</button><button>đóng 10s ngắt 5s</button><button>dừng khẩn</button><button>đèn báo</button><button>đèn cầu thang 60s</button><button>biến tần</button></div>
     <div id="bdParse" class="calcbox"></div>
   </div>
-  <div class="bdAct"><button class="btn big" id="bdManual">✋ Tự đấu mạch<small>Đặt thiết bị lên bảng, mình tự nối dây</small></button><button class="btn run big" id="bdAuto">⚡ Đấu tự động<small>Hệ thống tự đấu hoàn chỉnh</small></button></div>
+  <div class="bdAct"><button class="btn big" id="bdAdd">➕ Thêm vào bảng<small>Giữ mạch đang có, thêm thiết bị</small></button><button class="btn big" id="bdManual">✋ Tự đấu mạch<small>Đặt thiết bị lên bảng, mình tự nối dây</small></button><button class="btn run big" id="bdAuto">⚡ Đấu tự động<small>Hệ thống tự đấu hoàn chỉnh</small></button></div>
 </div>
 <div id="modal" class="modal" hidden></div>
 <div id="dog" aria-hidden="true"><svg id="dogArrow" viewBox="0 0 14 20"><path d="M1 1v15.5l4-3.6 2.6 5.8 2.6-1.2-2.6-5.6h5.4z" fill="#fff" stroke="#111" stroke-width="1.3" stroke-linejoin="round"/></svg><div id="dogIn"><div id="dogSpr"></div><span class="dg-ha a">HA</span><span class="dg-ha b">HA</span></div><div id="dogBub"></div></div>
@@ -338,12 +377,30 @@ Object.keys(VFD_MODELS).forEach(id=>{
   TYPES[id]={cat:'t3',name:'Biến tần ABB '+M.m+' ('+M.kw+')',tag:'VFD',model:M.m,col:M.col,ro:M.ro,sto:!!M.sto,
     w:Math.max(x,bx-8),h:140,ctl:'vfd',terms:top.concat(bot),contacts};
 });
+/* ---- PLC Siemens S7-1200 (CPU 1211C/1212C/1214C × AC/DC/RLY, DC/DC/RLY, DC/DC/DC), nguồn 24VDC, rơ-le 24VDC ---- */
+const PLC_CPU={'1211':{di:6,dq:4,g:[4]},'1212':{di:8,dq:6,g:[3,3]},'1214':{di:14,dq:10,g:[5,5]}};
+const PLC_VAR={ar:{nm:'AC/DC/RLY',ac:1,rly:1},dr:{nm:'DC/DC/RLY',ac:0,rly:1},dd:{nm:'DC/DC/DC',ac:0,rly:0}};
+const plcA=(k,i)=>k+Math.floor(i/8)+'.'+(i%8);
+Object.keys(PLC_CPU).forEach(cpu=>Object.keys(PLC_VAR).forEach(v=>{
+  const C=PLC_CPU[cpu],V=PLC_VAR[v];const top=[],bot=[],contacts=[];let x=16;
+  (V.ac?[['L1','L1'],['N','N'],['PE','PE'],['SL+','L+'],['SM','M']]:[['L+','L+'],['M','M'],['PE','PE']]).forEach(([id,p])=>{top.push(P_(id,x,0,p));x+=24;});
+  x+=6;top.push(P_('1M',x,0,'1M'));x+=24;
+  for(let i=0;i<C.di;i++){top.push(P_(plcA('I',i),x,0,'.'+(i%8)));x+=22;}
+  let bx=16,q=0;
+  if(V.rly)C.g.forEach((n,gi)=>{const L=(gi+1)+'L';bot.push(P_(L,bx,120,L));bx+=26;for(let j=0;j<n;j++,q++){const a=plcA('Q',q);bot.push(P_(a,bx,120,'.'+(q%8)));contacts.push([L,a,'NO',q]);bx+=22;}bx+=6;});
+  else{bot.push(P_('3L+',bx,120,'3L+'));bx+=26;bot.push(P_('3M',bx,120,'3M'));bx+=26;for(;q<C.dq;q++){const a=plcA('Q',q);bot.push(P_(a,bx,120,'.'+(q%8)));contacts.push(['3L+',a,'NO',q]);bx+=22;}}
+  TYPES['plc'+cpu+v]={cat:'plc',name:'PLC S7-1200 CPU '+cpu+'C '+V.nm,tag:'PLC',w:Math.max(x,bx,230)+4,h:120,ctl:'plc',plc:{cpu,v,di:C.di,dq:C.dq,ac:V.ac,rly:V.rly,nm:V.nm},terms:top.concat(bot),contacts,hideBd:true};
+}));
+TYPES.psu={cat:'plc',name:'Nguồn tổ ong 24VDC',tag:'PS',w:130,h:76,terms:[P_('L',18,0,'L'),P_('N',44,0,'N'),P_('PE',70,0,'PE'),P_('V+',40,76,'+V'),P_('V-',90,76,'−V')]};
+TYPES.relay24=Object.assign({},TYPES.relay,{cat:'plc',name:'Rơ-le trung gian MY2 24VDC',cv:24,
+  terms:TYPES.relay.terms.map(t=>t.id==='13'?P_('13',t.x,t.y,'13(+)'):t.id==='14'?P_('14',t.x,t.y,'14(−)'):t)});
+const isPLC=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='plc');
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
-const CATS=[['lap','🧩 Lập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['src','Nguồn'],['prot','Đóng cắt'],['ctrl','Điều khiển'],['t1','Tải 1 pha'],['t3','Tải 3 pha'],['mau','Mạch mẫu']];
+const CATS=[['lap','🧩 Lập mạch'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
-let pending=null,selected=null,running=false,result=null,curCat='src',lastFault='';
+let pending=null,selected=null,running=false,result=null,curCat='mau',lastFault='';
 let view={x:0,y:0,w:420};
 let exportMode=false,askedRun=false;
 const timers={};let tmTO=null;const tmEls={};const devEls={};
@@ -442,7 +499,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -493,7 +550,7 @@ function stop(){
   running=false;askedRun=false;result=null;lastFault='';runBtn.textContent='▶ Chạy thử';runBtn.className='btn run';
   Object.keys(timers).forEach(k=>{clearTimeout(timers[k]);delete timers[k];});clearTimeout(tmTO);
   let fixed=false;
-  S.devs.forEach(d=>{if(d.burned)fixed=true;d.burned=false;d.en=false;d.t0=null;d.pressed=false;d.fo=0;d.ro=null;d.vs=null;d.burnWhy=null;if(d.trip){d.trip=false;}});
+  S.devs.forEach(d=>{if(d.burned)fixed=true;d.pw=false;d.di=null;d.qo=null;d.mem=null;(d.prog||[]).forEach(n=>delete n.live);d.burned=false;d.en=false;d.t0=null;d.pressed=false;d.fo=0;d.ro=null;d.vs=null;d.burnWhy=null;if(d.trip){d.trip=false;}});
   S.wires.forEach(w=>{if(w.burned)fixed=true;w.burned=false;});
   document.getElementById('result').style.display='none';
   if(fixed)hint('Đã thay thiết bị/dây bị cháy. Sửa lại đấu dây rồi chạy thử nhé.');
@@ -503,7 +560,7 @@ function changed(){if(running)evaluate();save();snap();render();if(DG.pa&&DG.pb)
 
 /* ================= hoàn tác / làm lại ================= */
 /* bỏ trạng thái tạm thời của lúc chạy thử khỏi lịch sử */
-const RUNTIME_KEYS=new Set(['en','t0','pressed','fo','ro','vs','burnWhy','burned','trip']);
+const RUNTIME_KEYS=new Set(['en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem']);
 const hist={u:[],r:[],last:null};
 function snapJson(){return JSON.stringify(S,(k,v)=>RUNTIME_KEYS.has(k)?undefined:v);}
 function snap(){
@@ -617,6 +674,7 @@ function act(d){
 }
 function conducts(d,c,mode){
   if(FAULT&&FAULT.k==='c'&&FAULT.d===d.id&&FAULT.a===c[0]&&FAULT.b===c[1])return FAULT.closed;
+  if(TYPES[d.t].ctl==='plc')return mode==='closed'||!!(d.pw&&!d.burned&&d.run!==false&&d.qo&&d.qo[c[3]]);
   if(c[2]==='M')return true;if(mode==='closed')return true;
   if(mode==='open'&&TYPES[d.t].ctl==='sw')return false;
   const a=TYPES[d.t].ctl==='vfd'?!!(d.ro&&d.ro[c[3]]&&!d.burned):act(d);return c[2]==='NO'?a:!a;
@@ -673,10 +731,12 @@ function nets(mode){
   S.devs.forEach(d=>{const T=TYPES[d.t];if(T.contacts)T.contacts.forEach(c=>{if(conducts(d,c,mode))u(key(d.id,c[0]),key(d.id,c[1]));});});
   return f;
 }
-function pots(f){const P={};S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(t.src){const r=f(key(d.id,t.id));(P[r]=P[r]||new Set()).add(t.src);}}));return P;}
-function isShort(s){return s.size>1&&!(s.size===2&&s.has('N')&&s.has('PE'));}
-function pot1(f,P,k){const s=P[f(k)];if(!s||!s.size)return null;if(isShort(s))return'X';return s.has('N')||s.has('PE')?'N':[...s][0];}
-function volt(p,q){if(p==='PE')p='N';if(q==='PE')q='N';if(!p||!q||p==='X'||q==='X'||p===q)return 0;return(p==='N'||q==='N')?220:380;}
+function pots(f){const P={};const add=(k,x)=>{const r=f(k);(P[r]=P[r]||new Set()).add(x);};
+  S.devs.forEach(d=>{TYPES[d.t].terms.forEach(t=>{if(t.src)add(key(d.id,t.id),t.src);});
+    if(d.pw&&!d.burned){if(d.t==='psu'){add(key(d.id,'V+'),'P24');add(key(d.id,'V-'),'M24');}else if(isPLC(d)&&TYPES[d.t].plc.ac){add(key(d.id,'SL+'),'P24');add(key(d.id,'SM'),'M24');}}});return P;}
+function isShort(s){return[...s].filter(x=>x!=='PE').length>1;}
+function pot1(f,P,k){const s=P[f(k)];if(!s||!s.size)return null;if(isShort(s))return'X';if(s.has('N'))return'N';if(s.has('M24'))return'M24';if(s.has('PE'))return'N';return[...s][0];}
+function volt(p,q){if(p==='PE')p='N';if(q==='PE')q='N';if(!p||!q||p==='X'||q==='X'||p===q)return 0;const dc=x=>x==='P24'||x==='M24';if(dc(p)||dc(q))return dc(p)&&dc(q)?24:0;return(p==='N'||q==='N')?220:380;}
 function pn(p){if(p==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return p;}
 function connected(d,tid){return S.wires.some(w=>(w.a.d===d.id&&w.a.t===tid)||(w.b.d===d.id&&w.b.t===tid));}
 function shortNets(f,P){return Object.keys(P).filter(r=>isShort(P[r]));}
@@ -689,10 +749,21 @@ function settle(newBurn){
       const ok=!vs.fault&&vs.pw===3;/* model 1 rơ-le: mặc định ABB là “lỗi (-1)” */
       const ro=TYPES[d.t].ro===1?[ok]:[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),ok];
       if(JSON.stringify(ro)!==JSON.stringify(d.ro||[])){d.ro=ro;ch=true;}});
+    S.devs.forEach(d=>{const T=TYPES[d.t];const g=t=>pot1(f,P,key(d.id,t));
+      if(d.t==='psu'){const v=volt(g('L'),g('N'));if(v===380&&!d.burned){d.burned=true;d.burnWhy='bị cấp 380V (2 pha) vào ngõ 220V';newBurn.push(d);}const pw=!d.burned&&v===220;if(pw!==!!d.pw){d.pw=pw;ch=true;}return;}
+      if(!isPLC(d))return;const Pp=T.plc;const v=Pp.ac?volt(g('L1'),g('N')):volt(g('L+'),g('M'));let why=null;
+      if(Pp.ac&&v===380)why='bị cấp 380V vào L1-N (chỉ chịu 220V)';
+      if(!Pp.ac){const a=g('L+');if(a&&a[0]==='L'||v>=220)why='điện AC lọt vào nguồn 24VDC (L+ / M)';}
+      const v1M=g('1M');if(v1M&&v1M[0]==='L')why='điện AC lọt vào chân chung 1M';
+      for(let i=0;i<Pp.di&&!why;i++){const pi=g(plcA('I',i));if(pi&&pi[0]==='L')why='điện 220V AC lọt vào ngõ vào '+plcA('I',i)+' (chỉ chịu 24VDC)';}
+      if(!Pp.rly&&!why){const a=g('3L+'),b=g('3M');if((a&&a[0]==='L')||(b&&b[0]==='L'))why='điện AC lọt vào 3L+/3M của ngõ ra transistor';for(let i=0;i<Pp.dq&&!why;i++){const q=g(plcA('Q',i));if(q&&q[0]==='L')why='điện AC lọt vào ngõ ra transistor '+plcA('Q',i)+' (chỉ dùng 24VDC)';}}
+      if(why&&!d.burned){d.burned=true;d.burnWhy=why;newBurn.push(d);}
+      const pw=!d.burned&&v===(Pp.ac?220:24);if(pw!==!!d.pw){d.pw=pw;ch=true;}
+      const di=[];for(let i=0;i<Pp.di;i++)di.push(pw&&volt(g(plcA('I',i)),v1M)===24);if(di.join()!==(d.di||[]).join()){d.di=di;ch=true;}});
     S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil)return;
       const v=volt(pot1(f,P,key(d.id,T.coil[0])),pot1(f,P,key(d.id,T.coil[1])));
-      if(v===380&&!d.burned){d.burned=true;newBurn.push(d);}
-      const en=!d.burned&&v===220&&!(FAULT&&FAULT.k==='coil'&&FAULT.d===d.id);
+      if((v===380||(T.cv===24&&v>=220))&&!d.burned){d.burned=true;newBurn.push(d);}
+      const en=!d.burned&&v===(T.cv||220)&&!(FAULT&&FAULT.k==='coil'&&FAULT.d===d.id);
       if(en!==!!d.en){d.en=en;if(d.t==='timer')d.t0=en?Date.now():null;sfxQ.add(d.t==='timer'?'tick':'clack');ch=true;}});
     if(!ch)break;
   }
@@ -746,10 +817,12 @@ function reachSets(){
   const par={};const f=x=>{if(par[x]===undefined)par[x]=x;while(par[x]!==x){par[x]=par[par[x]];x=par[x];}return x;};
   S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>f(key(d.id,t.id))));
   S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
-  const adj={};S.devs.forEach(d=>(TYPES[d.t].contacts||[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}}));
+  const adj={};S.devs.forEach(d=>{if(isPLC(d)&&!TYPES[d.t].plc.rly)return;(TYPES[d.t].contacts||[]).forEach(c=>{const a=f(key(d.id,c[0])),b=f(key(d.id,c[1]));if(a!==b){(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);}});});
   const lab={};
   S.devs.forEach(d=>TYPES[d.t].terms.forEach(t=>{if(!t.src)return;const L=t.src==='PE'?'N':t.src;const st=[f(key(d.id,t.id))];const seen=new Set(st);
     while(st.length){const n=st.pop();(lab[n]=lab[n]||new Set()).add(L);(adj[n]||[]).forEach(m=>{if(!seen.has(m)){seen.add(m);st.push(m);}});}}));
+  S.devs.forEach(d=>{const seeds=d.t==='psu'?[['V+','P24'],['V-','M24']]:isPLC(d)?(TYPES[d.t].plc.ac?[['SL+','P24'],['SM','M24']]:[]).concat(TYPES[d.t].plc.rly?[]:TYPES[d.t].contacts.map(c=>[c[1],'P24'])):[];
+    seeds.forEach(([t,L])=>{const st=[f(key(d.id,t))];const seen=new Set(st);while(st.length){const n=st.pop();(lab[n]=lab[n]||new Set()).add(L);(adj[n]||[]).forEach(m=>{if(!seen.has(m)){seen.add(m);st.push(m);}});}});});
   return k=>lab[f(k)]||new Set();
 }
 function feas(A,B,v){for(const p of A)for(const q of B)if(volt(p,q)===v)return true;return false;}
@@ -861,16 +934,25 @@ function evaluate(){
         else{errors++;msgs.push(['❌',nm+': không chạy – '+(m.n?'mới có '+m.n+' pha tới cuộn dây.':'chưa có pha nào tới cuộn dây.')]);}
       }
       if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối dây tiếp địa PE (xanh-vàng) vào vỏ động cơ.']);
+    }else if(isPLC(d)||d.t==='psu'){
+      if(T.terms.every(t=>!connected(d,t.id))){warns++;msgs.push(['⚠️',nm+': đang để thừa, chưa đấu.']);return;}
+      if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY! '+(d.burnWhy||'')+'.']);return;}
+      if(!d.pw){errors++;msgs.push(['❌',nm+': chưa có nguồn '+(d.t==='psu'||T.plc.ac?'220VAC (L – N)':'24VDC (L+ / M) – cấp từ nguồn tổ ong 24VDC')+'.']);return;}
+      if(d.t==='psu'){msgs.push(['✅',nm+': đang ra 24VDC (+V / −V).']);return;}
+      const on=[],qo=[];(d.di||[]).forEach((v,i)=>{if(v)on.push(plcA('I',i));});(d.qo||[]).forEach((v,i)=>{if(v)qo.push(plcA('Q',i));});
+      if(!(d.prog||[]).length){warns++;msgs.push(['⚠️',nm+': chưa có chương trình – chọn PLC rồi bấm ⚙ để lập trình.']);}
+      else msgs.push([d.run===false?'⏸️':'💻',nm+': '+(d.run===false?'STOP (chạm PLC lần nữa để RUN)':'RUN')+' · vào ON: '+(on.join(', ')||'—')+' · ra ON: '+(qo.join(', ')||'—')+'.']);
+      if(!connected(d,'1M'))msgs.push(['ℹ️',nm+': chưa nối 1M (chung ngõ vào) về M 0V – ngõ vào sẽ không nhận.']);
     }else if(T.coil){
-      const c0=connected(d,T.coil[0]),c1=connected(d,T.coil[1]);const cn=T.coil.join('-');
-      if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY cuộn hút – bị cấp 380V vào cuộn 220V ('+cn+' phải là 1 pha + N).']);}
+      const c0=connected(d,T.coil[0]),c1=connected(d,T.coil[1]);const cn=T.coil.join('-'),cvT=T.cv?'24VDC':'220V';
+      if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY cuộn hút – '+(T.cv?'bị cấp điện AC vào cuộn 24VDC ('+cn+' phải là +24V / 0V).':'bị cấp 380V vào cuộn 220V ('+cn+' phải là 1 pha + N).')]);}
       else if(!c0&&!c1){warns++;msgs.push(['⚠️',nm+': chưa đấu cuộn '+cn+' nên không bao giờ tác động.']);}
       else if(d.en){
         if(d.t==='timer')msgs.push(['⏱️',nm+': có điện ('+cn+'). '+(act(d)?'Đã hết '+tsec(d)+'s → tiếp điểm ĐÃ CHUYỂN (1-3, 8-6 đóng; 1-4, 8-5 mở).':'Đang đếm '+tsec(d)+'s…')]);
-        else msgs.push(['🧲',nm+': cuộn '+cn+' có điện 220V – tiếp điểm ĐÃ TÁC ĐỘNG.']);
-      }else{const vc=feas(RK(d,T.coil[0]),RK(d,T.coil[1]),220);
+        else msgs.push(['🧲',nm+': cuộn '+cn+' có điện '+cvT+' – tiếp điểm ĐÃ TÁC ĐỘNG.']);
+      }else{const vc=feas(RK(d,T.coil[0]),RK(d,T.coil[1]),T.cv||220);
         if(vc)msgs.push(['⏸️',nm+': cuộn chưa có điện – tiếp điểm ở trạng thái thường.']);
-        else{errors++;msgs.push(['❌',nm+': cuộn '+cn+' đấu sai, không thể có 220V (cần 1 pha + N).']);}}
+        else{errors++;msgs.push(['❌',nm+': cuộn '+cn+' đấu sai, không thể có '+cvT+(T.cv?' (cần +24V và 0V).':' (cần 1 pha + N).')]);}}
     }else if(d.t==='ol'){
       if(d.trip){warns++;msgs.push(['🛑',nm+': ĐÃ TÁC ĐỘNG – 95-96 mở, 97-98 đóng. Chạm vào rơ-le nhiệt để RESET.']);}
       else if(S.devs.some(x=>x.t.startsWith('motor'))&&!connected(d,'95')&&(connected(d,'2')||connected(d,'1')))msgs.push(['ℹ️',nm+': chưa đấu 95-96 nối tiếp mạch điều khiển – nhảy rồi contactor vẫn không nhả.']);
@@ -1226,6 +1308,7 @@ function drawContact(g,x,y1,y2,closed,nc){
 }
 function prints(g,d,cls){const T=TYPES[d.t];T.terms.forEach(t=>{if(!t.p)return;const top=t.y===0;txt(g,t.x,top?t.y+13:t.y-6,t.p,{class:cls||'pr'});});}
 function drawBody(g,d,R){
+  if(isPLC(d)){drawPLC(g,d);plcLeds(d);return;}if(d.t==='psu'){drawPSU(g,d);return;}
   const T=TYPES[d.t];const st=R.state&&R.state[d.id];const A=act(d);
   switch(d.t){
   case'src1':case'src3':
@@ -1270,7 +1353,7 @@ function drawBody(g,d,R){
     el('rect',{x:84,y:30,width:12,height:12,rx:6,fill:d.trip?'#f97316':'#3b82f6',class:d.trip?'blink':''},g);
     txt(g,90,52,d.trip?'TRIP':'RESET',{fill:d.trip?'#ea580c':'#1d4ed8','font-size':6,'font-weight':900});
     prints(g,d);break;}
-  case'relay':case'timer':{
+  case'relay':case'relay24':case'timer':{
     el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:d.t==='timer'?'#e0f2fe':'#ecfdf5',stroke:'#64748b'},g);
     T.co.forEach(([cm,nc,no])=>{const c=tdef(d,cm),a=tdef(d,nc),b=tdef(d,no);
       el('path',{d:`M${c.x} 16V32M${a.x} 52V66M${b.x} 52V66`,stroke:'#334155','stroke-width':1.8,fill:'none'},g);
@@ -1279,7 +1362,7 @@ function drawBody(g,d,R){
     el('rect',{x:ci.x-10,y:28,width:20,height:24,rx:2,fill:d.burned?'#1c1917':d.en?'#22c55e':'#e2e8f0',stroke:'#334155'},g);
     el('path',{d:`M${ci.x} 15V28M${ci.x} 52V66`,stroke:'#334155','stroke-width':1.6},g);
     if(d.t==='timer'){const t=txt(g,103,44,timerText(d),{fill:'#0c4a6e','font-size':7.5,'font-weight':900});tmEls[d.id]=t;}
-    else txt(g,103,44,'MY2',{fill:'#065f46','font-size':7.5,'font-weight':900});
+    else txt(g,103,44,d.t==='relay24'?'24VDC':'MY2',{fill:d.t==='relay24'?'#7c2d12':'#065f46','font-size':7.5,'font-weight':900});
     prints(g,d);break;}
   case'pilotG':case'pilotR':case'pilotY':{
     const on=st==='on'||st==='dim';
@@ -1465,11 +1548,12 @@ function tapDev(d){
     if(c==='sw'||c==='cb'){d.on=!d.on;d.trip=false;changed();return;}
     if(c==='estop'){d.latched=!d.latched;changed();return;}
     if(d.t==='timer'){const L=[2,3,5,10,15];d.sec=L[(L.indexOf(tsec(d))+1)%L.length];if(d.en)d.t0=Date.now();changed();hint('Timer '+tagOf(d)+' đặt '+d.sec+' giây.');return;}
+    if(isPLC(d)){d.run=d.run===false;changed();hint(tagOf(d)+(d.run===false?' → STOP':' → RUN'));return;}
     if(c==='ol'&&!running){d.trip=!d.trip;changed();hint(d.trip?'Giả lập rơ-le nhiệt nhảy (TEST).':'Đã reset.');return;}
   }
   selected={kind:'dev',id:d.id};updSel();render();
   if(pending)hint('Chạm vào chân cần nối trên '+nameOf(d)+'.');
-  else hint(nameOf(d)+(T.multi?': đang hiện chân – chạm chân để nối, chạm nền để ẩn.':' đã chọn. 🗑 để gỡ.')+(d.t==='timer'?' Chạm lần nữa để đổi thời gian.':(c==='sw'||c==='cb')?' Chạm lần nữa để bật/tắt.':'')+(PDEF[d.t]?' Bấm ⚙ để nhập thông số.':''));
+  else hint(nameOf(d)+(T.multi?': đang hiện chân – chạm chân để nối, chạm nền để ẩn.':' đã chọn. 🗑 để gỡ.')+(d.t==='timer'?' Chạm lần nữa để đổi thời gian.':(c==='sw'||c==='cb')?' Chạm lần nữa để bật/tắt.':'')+(isPLC(d)?' Bấm ⚙ để LẬP TRÌNH, chạm lần nữa để RUN/STOP.':PDEF[d.t]?' Bấm ⚙ để nhập thông số.':''));
 }
 function tapTerm(did,tid){
   if(DG.guess){guessPick('d',did);return;}
@@ -1610,6 +1694,10 @@ async function buildPages(){
   table(['STT','Từ chân','Đến chân','Dây / pha'],[90,500,500,TW-1090],rowsW,T2,true);
   section('Kết quả kiểm tra mạch',T2);
   (result&&result.msgs?result.msgs:[]).forEach(m=>{x.font='500 22px '+FONT;wrap(m[0]+'  '+m[1],TW-30).forEach(l=>{if(y+34>PH-M-150)newPage(T2+' (tiếp)');x.fillStyle='#1e293b';x.font='500 22px '+FONT;x.fillText(l,M+12,y+26);y+=34;});y+=4;});
+  // ---- PLC
+  S.devs.filter(isPLC).forEach(d=>{const T4='PLC '+tagOf(d)+' – BẢNG I/O & CHƯƠNG TRÌNH';newPage(T4);section(typeName(d),T4);
+    table(['Địa chỉ','Loại','Đấu với'],[200,240,TW-440],plcSheetRows(d),T4);
+    if((d.prog||[]).length){section('Chương trình ladder (dạng chữ)',T4);table(['Network','Điều kiện → Ngõ ra'],[200,TW-200],d.prog.map((n,i)=>['N'+(i+1),netTxt(n)]),T4);}});
   // ---- hướng dẫn đấu dây theo từng thiết bị
   if(S.wires.length){const T3='HƯỚNG DẪN ĐẤU DÂY THEO TỪNG THIẾT BỊ';newPage(T3);
     x.font='italic 500 22px '+FONT;x.fillStyle='#475569';x.fillText('Cùng một số dây xuất hiện ở cả hai đầu – đấu xong đánh dấu ☐ để khỏi đấu trùng.',M,y+6);y+=34;
@@ -1668,6 +1756,7 @@ const PDEF={
   pot:[['pos','Vị trí chiết áp (%)',50]]
 };
 Object.keys(VFD_MODELS).forEach(k=>{PDEF[k]=PDEF.vfd;});
+Object.keys(TYPES).forEach(k=>{if(TYPES[k].ctl==='plc')PDEF[k]=[];});
 function PV(d,k){if(k==='sec')return tsec(d);const def=(PDEF[d.t]||[]).find(x=>x[0]===k);const v=d.p&&d.p[k];return(v===undefined||v===''||isNaN(+v))?(def?def[2]:0):+v;}
 const CB_STD=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250,320,400,500,630,800];
 const K_AC3=[9,12,18,22,25,32,40,50,65,75,85,100,130,150,185,225,265,330,400,500,630];
@@ -1814,7 +1903,7 @@ function calc(ptIn){
   }
   S.devs.forEach(d=>{
     if(R.rec[d.id])return;
-    if(d.t==='contactor'||d.t==='relay')R.rec[d.id]=['Cuộn 220V AC'];
+    if(d.t==='contactor'||d.t==='relay')R.rec[d.id]=['Cuộn 220V AC'];if(d.t==='relay24')R.rec[d.id]=['Cuộn 24VDC'];if(d.t==='psu')R.rec[d.id]=['Vào 220VAC – ra 24VDC'];if(isPLC(d))R.rec[d.id]=[TYPES[d.t].plc.di+' DI 24VDC · '+TYPES[d.t].plc.dq+' DQ '+(TYPES[d.t].plc.rly?'rơ-le':'transistor 24VDC'),'Nguồn '+(TYPES[d.t].plc.ac?'85–264VAC':'24VDC')];
     else if(d.t==='timer')R.rec[d.id]=['On-delay, cuộn 220V','Đặt '+tsec(d)+' s'];
     else if(d.t==='cb2'||d.t==='cb3')R.rec[d.id]=['2P 6A (bảo vệ mạch điều khiển)'];
     else if(d.t.startsWith('pilot'))R.rec[d.id]=['220V AC'];
@@ -1936,8 +2025,8 @@ function buildLadder(pt){
   S.devs.forEach(d=>{const inP=pt.visited.has(d.id);switch(d.t){
     case'contactor':if(!inP){add(d,'1','2','no');add(d,'3','4','no');add(d,'5','6','no');}add(d,'13','14','no');add(d,'21','22','nc');add(d,'A1','A2','coil');break;
     case'ol':add(d,'95','96','olnc');add(d,'97','98','olno');break;
-    default:if(isV(d))TYPES[d.t].contacts.forEach(c=>add(d,c[0],c[1],c[2]==='NC'?'nc':'no'));break;
-    case'relay':add(d,'9','1','nc');add(d,'9','5','no');add(d,'12','4','nc');add(d,'12','8','no');add(d,'13','14','rcoil');break;
+    default:if(isV(d)||isPLC(d))TYPES[d.t].contacts.forEach(c=>add(d,c[0],c[1],c[2]==='NC'?'nc':'no'));break;
+    case'relay24':case'relay':add(d,'9','1','nc');add(d,'9','5','no');add(d,'12','4','nc');add(d,'12','8','no');add(d,'13','14','rcoil');break;
     case'timer':add(d,'1','4','tmnc');add(d,'1','3','tmno');add(d,'8','5','tmnc');add(d,'8','6','tmno');add(d,'2','7','tcoil');break;
     case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
     case'switch':add(d,'1','2','sw');break;
@@ -2123,8 +2212,12 @@ function termLbl(T,tid){const t=T.terms.find(x=>x.id===tid);const p=t&&t.p;retur
 function termRole(d,tid){
   const T=TYPES[d.t],c=T.ctl;
   if(tid==='PE')return'tiếp địa';
+  if(isPLC(d)){const P=T.plc;if(tid==='L1')return'nguồn 220VAC cấp PLC';if(tid==='N')return'trung tính cấp PLC';if(tid==='L+')return'+24VDC cấp PLC';if(tid==='M')return'0V cấp PLC';
+    if(tid==='SL+')return'ra +24VDC (cấp nút/cảm biến)';if(tid==='SM')return'ra 0V (M)';if(tid==='1M')return'chung ngõ vào (nối 0V)';if(/^\dL$/.test(tid))return'chung ngõ ra rơ-le nhóm '+tid[0];
+    if(tid==='3L+')return'+24VDC cho ngõ ra transistor';if(tid==='3M')return'0V ngõ ra transistor';if(tid[0]==='I')return'ngõ vào số';if(tid[0]==='Q')return'ngõ ra '+(P.rly?'rơ-le':'transistor');return'';}
+  if(d.t==='psu')return({L:'vào 220VAC – pha',N:'vào 220VAC – trung tính','V+':'ra +24VDC','V-':'ra 0V'})[tid]||'';
   if(T.cat==='src')return tid==='N'?'dây trung tính':'dây pha '+pn(tid);
-  if(T.coil&&T.coil.includes(tid))return d.t==='relay'?(tid==='13'?'cuộn hút (+)':'cuộn hút (−)'):'đầu cuộn hút';
+  if(T.coil&&T.coil.includes(tid))return(d.t==='relay'||d.t==='relay24')?(tid==='13'?'cuộn hút (+)':'cuộn hút (−)'):'đầu cuộn hút';
   if(isV(d)){const lb=({L1:'nguồn vào',L2:'nguồn vào',L3:'nguồn vào',U:'ra động cơ',V:'ra động cơ',W:'ra động cơ',
       '2':'ngõ vào analog (tốc độ)','3':'mass analog','4':'nguồn +10V cho chiết áp','10':'nguồn +24V','11':'mass 24V','12':'chung các ngõ DI',
       '13':'DI1 – lệnh chạy','14':'DI2 – đảo chiều','15':'DI3','16':'DI4'})[tid];
@@ -2335,6 +2428,11 @@ function sympZones(sid){
   case'sock':return[
     Z('CB nhánh ổ cắm',cb,['Kiểm tra CB có nhảy không, đo ra 220V.']),
     Z('Dây L – N tới ổ cắm',sk,['Đo L-N tại ổ: 220V. Đo L-PE: 220V, N-PE ≈ 0V.'],wOf(ids(sk)))];
+  case'plc':{const L=S.devs.filter(isPLC),PS=byT('psu'),R24=byT('relay24'),p1=L[0]?tagOf(L[0]):'PLC';return[
+    Z('Nguồn cấp PLC',[...cb,...PS,...L],['Đèn RUN/STOP trên '+p1+' tắt → mất nguồn: loại AC/DC/RLY đo L1-N 220VAC; loại DC đo L+ / M 24VDC.','Đèn ERROR đỏ → PLC hỏng / cháy (điện AC lọt vào chân 24V).'],wOf(ids([...L,...PS]),['L1','N','L+','M','L','V+','V-'])),
+    Z('Ngõ vào I: nút, cảm biến, chung 1M',[...on,...off,...em,...ol,...L],['Nhấn nút, đèn LED I tương ứng trên PLC phải sáng. Không sáng → đo giữa chân I và 1M phải 24VDC.','1M phải nối về M (0V); dây chung +24V (L+) tới nút.'],wOf(ids(L),['1M','SL+','SM'])),
+    Z('Chương trình / RUN',L,['Chạm PLC 2 lần để chuyển STOP ↔ RUN. Bấm ⚙ mở ladder, chạy thử để xem tiếp điểm nào đang thông (xanh).']),
+    Z('Ngõ ra Q: chung 1L/2L, tải',[...L,...R24,...K],['LED Q sáng mà tải không chạy → ngõ ra rơ-le: kiểm tra 1L/2L đã cấp pha chưa; transistor: 3L+ / 3M phải có 24VDC.','Ngõ ra transistor 24VDC không đóng thẳng contactor 220V → phải qua rơ-le trung gian 24VDC.'],wOf(ids(L),['1L','2L','3L+','3M']))];}
   case'leak':return[
     Z('Thiếu dây tiếp địa PE',S.devs.filter(d=>TYPES[d.t].terms.some(t=>t.id==='PE')&&TYPES[d.t].cat!=='src'&&!connected(d,'PE')),['Thiết bị khoanh vùng chưa có dây PE (xanh-vàng). Bắt PE vào vỏ ngay.']),
     Z('Motor / thiết bị rò ra vỏ',[...M,...sk,...V],['Đo cách điện từng pha với vỏ: phải > 1 MΩ. Thấp → cuộn dây ẩm/hỏng cách điện.']),
@@ -2348,7 +2446,7 @@ const SYMS=[['cbtrip','⚡ Đóng CB là nhảy ngay','cb nhay|nhay cb|aptomat n
   ['rev','🔄 Motor quay ngược chiều','nguoc|dao chieu sai|quay nguoc'],['oltrip','🌡️ Rơ-le nhiệt hay nhảy','nhiet nhay|ro le nhiet|relay nhiet|ol nhay|qua tai'],
   ['nostop','🛑 Bấm OFF không dừng','off khong|khong dung|khong tat|dinh'],['yd','⭐ Sao không chuyển sang tam giác','sao|tam giac|y/d|timer'],
   ['vfd','🎛️ Biến tần không chạy / báo lỗi','bien tan|vfd|acs|inverter|sto'],['lamp','💡 Đèn / quạt không chạy','den|quat|bong'],
-  ['sock','🔌 Ổ cắm không có điện','o cam'],['leak','⚠️ Rò điện, chạm vỏ giật tay','ro dien|giat|cham vo|ro ri']];
+  ['sock','🔌 Ổ cắm không có điện','o cam'],['plc','💻 PLC không chạy / ngõ ra không lên','plc|s7|ngo ra|ngo vao|q0|i0|run|stop|24v'],['leak','⚠️ Rò điện, chạm vỏ giật tay','ro dien|giat|cham vo|ro ri']];
 function sympFromText(t){const s=normVN(t);let best=null,bs=0;SYMS.forEach(x=>{let sc=0;x[2].split('|').forEach(k=>{if(s.includes(k))sc+=k.length;});if(sc>bs){bs=sc;best=x[0];}});return best;}
 const ZCOL=['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#a855f7'];
 function setMarks(zs,title){DG.title=title;DG.marks=zs.map((z,i)=>({n:i+1,col:ZCOL[i%ZCOL.length],devs:z.devs||[],wires:z.wires||[]}));render();dgBar();}
@@ -2389,11 +2487,21 @@ function scanCircuit(){
     if(!a&&!b){if(T.terms.some(t=>connected(d,t.id)))add('w',tagOf(d)+': chưa đấu cuộn '+cn+' – không bao giờ tác động.',[d.id]);return;}
     if(!a||!b){add('e',tagOf(d)+': cuộn '+cn+' mới đấu 1 đầu ('+(a?c[1]:c[0])+' còn trống).',[d.id],wOf([d.id],c));return;}
     const A=RK(d,c[0]),B=RK(d,c[1]);
-    if(feas(A,B,380)&&!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' bị cấp 2 pha (380V) – cháy cuộn 220V. Một đầu phải về N.',[d.id],wOf([d.id],c));
-    else if(!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' không thể có 220V (thiếu pha hoặc thiếu N).',[d.id],wOf([d.id],c));
+    if(T.cv===24){if(feas(A,B,220)||feas(A,B,380))add('e',tagOf(d)+': cuộn 24VDC '+cn+' có thể dính điện AC – cháy cuộn.',[d.id],wOf([d.id],c));else if(!feas(A,B,24))add('e',tagOf(d)+': cuộn 24VDC '+cn+' không thể có 24V (cần +24V và 0V).',[d.id],wOf([d.id],c));}
+    else if(feas(A,B,380)&&!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' bị cấp 2 pha (380V) – cháy cuộn 220V. Một đầu phải về N.',[d.id],wOf([d.id],c));
+    else if(!feas(A,B,220))add('e',tagOf(d)+': cuộn '+cn+' không thể có 220V'+([...A,...B].some(x=>x==='P24')?' – đang lấy 24VDC, cuộn này là 220V AC (dùng rơ-le trung gian 24VDC).':' (thiếu pha hoặc thiếu N).'),[d.id],wOf([d.id],c));
     if(d.t==='contactor'){const pb=S.devs.find(o=>o.t==='pbno'&&wOf([o.id]).some(id=>wOf([d.id],['A1','A2']).includes(id)));
       if(pb&&!connected(d,'13')&&!connected(d,'14'))add('w',tagOf(d)+': chưa đấu duy trì 13-14 song song nút '+tagOf(pb)+' – buông tay là dừng.',[d.id,pb.id]);}
   });
+  S.devs.filter(isPLC).forEach(d=>{const P=TYPES[d.t].plc;if(TYPES[d.t].terms.every(t=>!connected(d,t.id)))return;const RK2=t=>[...RK(d,t)];
+    if(P.ac){if(feas(RK(d,'L1'),RK(d,'N'),380)&&!feas(RK(d,'L1'),RK(d,'N'),220))add('e',tagOf(d)+': nguồn L1-N bị cấp 380V – cháy PLC.',[d.id],wOf([d.id],['L1','N']));else if(!feas(RK(d,'L1'),RK(d,'N'),220))add('e',tagOf(d)+': chưa có nguồn 220VAC vào L1-N.',[d.id],wOf([d.id],['L1','N']));}
+    else{if(RK2('L+').some(p=>p[0]==='L'))add('e',tagOf(d)+': L+ dính điện AC – PLC DC chỉ nhận 24VDC.',[d.id],wOf([d.id],['L+','M']));else if(!feas(RK(d,'L+'),RK(d,'M'),24))add('e',tagOf(d)+': chưa có nguồn 24VDC vào L+ / M (cần bộ nguồn tổ ong).',[d.id],wOf([d.id],['L+','M']));}
+    for(let i=0;i<P.di;i++){const a=plcA('I',i);if(RK2(a).some(p=>p[0]==='L'))add('e',tagOf(d)+': ngõ vào '+a+' có thể dính điện AC 220V – cháy ngõ vào (chỉ chịu 24VDC).',[d.id],wOf([d.id],[a]));}
+    if(!connected(d,'1M')&&TYPES[d.t].terms.some(t=>t.id[0]==='I'&&connected(d,t.id)))add('w',tagOf(d)+': chưa nối 1M về 0V (M) – ngõ vào không nhận.',[d.id]);
+    if(!P.rly){const f1=wireUF();for(let i=0;i<P.dq;i++){const a=plcA('Q',i);if(!connected(d,a))continue;const n=f1(key(d.id,a));
+      S.devs.forEach(o=>{const T2=TYPES[o.t];if(T2.coil&&!T2.cv&&T2.coil.some(t=>f1(key(o.id,t))===n))add('e',tagOf(d)+': '+a+' là ngõ ra TRANSISTOR 24VDC – không đóng thẳng cuộn 220V của '+tagOf(o)+'. Dùng rơ-le trung gian 24VDC.',[d.id,o.id],wOf([d.id],[a]));});
+      if(RK2(a).some(p=>p[0]==='L'))add('e',tagOf(d)+': ngõ ra transistor '+a+' có thể dính điện AC – cháy ngõ ra.',[d.id],wOf([d.id],[a]));}}
+    if(!(d.prog||[]).length)add('i',tagOf(d)+': chưa có chương trình – chọn PLC, bấm ⚙.',[d.id]);});
   byT('ol').forEach(o=>{if((connected(o,'1')||connected(o,'2'))&&!connected(o,'95'))add('w',tagOf(o)+': 95-96 chưa nối tiếp vào mạch cuộn hút – nhảy rồi contactor vẫn không nhả.',[o.id]);});
   /* motor */
   motors().forEach(m=>{const tt=m.t==='motor'?['U','V','W']:['U1','V1','W1'];if(tt.every(t=>!connected(m,t))){add('w',tagOf(m)+': chưa đấu dây.',[m.id]);return;}
@@ -2469,6 +2577,7 @@ function wireCurrents(){
     if(T.coil&&d.en&&!d.burned)load1(d,T.coil[0],T.coil[1],{contactor:0.08,relay:0.03,timer:0.015}[d.t]||0.05,60);
     if(T.load&&result.state&&result.state[d.id]==='on'){const w=PV(d,'w')||(d.t.startsWith('pilot')?4:40),cos=d.t==='fan'?(PV(d,'cos')||0.9):1;load1(d,T.lp[0],T.lp[1],d.t.startsWith('pilot')?0.02:w/(220*cos),Math.acos(cos)*180/Math.PI);}
     if(d.t==='socket'&&result.sock&&result.sock[d.id]==='on')load1(d,'L','N',PV(d,'w')/220,10);
+    if(d.t==='psu'&&d.pw)load1(d,'L','N',0.22,35);if(isPLC(d)&&d.pw&&T.plc.ac)load1(d,'L1','N',0.08,40);
     if(isV(d)&&d.vs&&d.vs.pw===3&&!d.burned){const m=(result.vmot&&result.vmot[d.id]||[])[0];const mi=m?motIn(m):{I:1,phi:30};const fr=Math.max(0.05,(d.fo||0)/(PV(d,'fmax')||50));
       const Iin=Math.max(0.3,mi.I*fr*0.95);['L1','L2','L3'].forEach(t=>{const a=ang(key(d.id,t));if(a!==null)inj(key(d.id,t),cx(Iin,a-5));});
       if(m&&(d.fo||0)>0.05){const Io=mi.I*(0.35+0.65*fr);const mt=['U','V','W'];mt.forEach((t,i)=>{const mk=TYPES[m.t].terms.find(x=>x.id===t);if(mk)inj(key(m.id,t),cx(Io,-120*i-mi.phi),key(d.id,t));});}}
@@ -2621,6 +2730,264 @@ document.getElementById('vomBtn').innerHTML=VOM_SVG+'<span>VOM</span>';document.
 document.getElementById('vomBtn').onclick=toggleVom;document.getElementById('clampBtn').onclick=toggleClamp;
 document.getElementById('dgClose').onclick=()=>{document.getElementById('dgSheet').hidden=true;};
 document.querySelectorAll('#dgTabs button').forEach(b=>b.onclick=()=>openDiag(b.dataset.t));
+/* ================= 📥 NHẬP / 📤 XUẤT MÃ MẠCH ================= */
+const IO_ALIAS={src3:'nguon3p nguon3pha nguon3 3p 3pha src3',src1:'nguon1p nguon1pha nguon1 1p 1pha src1 nguon',cb3:'cb3 cb3p aptomat3p aptomat3 mccb3p cb',cb2:'cb2 cb2p aptomat2p aptomat2 mcb cb1p',
+  switch:'congtac switch sw',pbno:'pbno on nuton nutnhanon start nutstart nutno',pbnc:'pbnc off nutoff nutnhanoff stop nutstop nutnc',estop:'estop dungkhan dungkhancap emergency nutdungkhan em',
+  contactor:'contactor khoidongtu contacter kmtu k km',ol:'ol rolenhiet relaynhiet thermal ot',relay:'relay roletrunggian my2 rtg rơle',timer:'timer rolethoigian rtime t',
+  pilotG:'pilotg denbaoxanh denxanh hg',pilotR:'pilotr denbaodo dendo hr',pilotY:'piloty denbaovang denvang hy',lamp:'lamp den bongden',fan:'fan quat',socket:'socket ocam',
+  motor:'motor dongco motor3 dongco3pha dongco3dau m',motor6:'motor6 dongco6dau motor6dau motoryd',pump:'pump bomchim bom',pot:'pot chietap',
+  vfd:'vfd bientan acs580',vfd150:'vfd150 acs150',vfd310:'vfd310 acs310',vfd355:'vfd355 acs355',vfd380:'vfd380 acs380',vfd480:'vfd480 acs480',vfd880:'vfd880 acs880'};
+IO_ALIAS.psu='psu nguon24v nguon24vdc toong nguontoong nguondc 24vdc';IO_ALIAS.relay24='relay24 my2dc my224v roletrunggian24v rtg24 relay24vdc';
+Object.keys(PLC_CPU).forEach(c=>Object.keys(PLC_VAR).forEach(v=>{const vf=PLC_VAR[v].nm.toLowerCase().replace(/[^a-z]/g,'');IO_ALIAS['plc'+c+v]=['plc'+c+v,'s7'+c+'c'+vf,c+'c'+vf,'cpu'+c+'c'+vf,'s71200'+c+'c'+vf].join(' ')+(c==='1214'&&v==='ar'?' plc s71200 s7':'');}));
+const IO_MAP={};Object.keys(IO_ALIAS).forEach(k=>IO_ALIAS[k].split(' ').forEach(a=>IO_MAP[normVN(a).replace(/[^a-z0-9]/g,'')]=k));
+const IO_EX=`# Khởi động từ có rơ-le nhiệt, đèn báo
+NGUON = nguon3p
+CB1 = cb3
+K1 = contactor
+OL1 = ol
+M1 = motor kw=7.5 len=20
+OFF1 = off
+ON1 = on
+H1 = denbaoxanh
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+CB1.2 - OL1.95
+OL1.96 - OFF1.1
+OFF1.2 - ON1.3 - K1.13
+ON1.4 - K1.14 - K1.A1
+K1.A2 - NGUON.N
+K1.A1 - H1.X1
+H1.X2 - K1.A2`;
+function ioTerm(T,raw){
+  const r=raw.trim();const n=normVN(r).replace(/\s+/g,'');
+  let t=T.terms.find(x=>normVN(x.id)===n);if(t)return t.id;
+  t=T.terms.find(x=>x.p&&normVN(x.p).replace(/\s+/g,'')===n);if(t)return t.id;
+  const m=n.match(/^(\d+)(no|nc)?$/);if(m){t=T.terms.find(x=>x.id===m[1]);if(t)return t.id;}
+  t=T.terms.find(x=>x.p&&normVN(x.p).split(/[\/ ]/).includes(n));if(t)return t.id;
+  if(n==='l'){t=T.terms.find(x=>x.id==='L1'||x.id==='L');if(t)return t.id;}
+  return null;
+}
+function parseCircuit(txt){
+  const devs=[],wires=[],errs=[],tagMap={};let title='',nid=1;
+  const lines=String(txt||'').split(/\r?\n/);
+  const isWire=l=>/\S\s*[.:]\s*\S+.*\s[-–—>]+\s|\S[.:]\S+\s*[-–—]+>?\s*\S+[.:]/.test(l);
+  lines.forEach((ln,i)=>{const L=i+1;let l=ln.replace(/\/\/.*$/,'').trim();if(!l)return;
+    if(l[0]==='#'){if(!title)title=l.replace(/^#+\s*/,'');return;}
+    if(/^(ten|tên|title)\s*:/i.test(l)){title=l.split(':').slice(1).join(':').trim();return;}
+    if(/^\S+\.prog\s*:/i.test(l))return;
+    if(isWire(l))return;
+    const m=l.match(/^([^=:\s]+)\s*[=:]\s*(\S+)(.*)$/);if(!m){errs.push('Dòng '+L+': không hiểu "'+ln.trim()+'"');return;}
+    const tag=m[1],nz=x=>normVN(x).replace(/[^a-z0-9]/g,''),w2=(m[3]||'').trim().split(/\s+/)[0]||'';let tk=IO_MAP[nz(m[2])];if(!tk&&w2&&IO_MAP[nz(m[2]+w2)]){tk=IO_MAP[nz(m[2]+w2)];m[3]=m[3].trim().slice(w2.length);}
+    if(!tk){errs.push('Dòng '+L+': không biết thiết bị "'+m[2]+'"');return;}
+    if(tagMap[normVN(tag)]){errs.push('Dòng '+L+': trùng tên '+tag);return;}
+    const sub=tk==='pump'?'pump':null,t=sub?SUBS.pump.t:tk;
+    if(TYPES[t].max&&devs.some(d=>d.t===t)){errs.push('Dòng '+L+': chỉ được 1 '+TYPES[t].name);return;}
+    const d={id:'d'+(nid++),t,x:0,y:0};if(sub){d.sub=sub;d.p=Object.assign({},SUBS.pump.p);}if(t==='timer')d.sec=5;
+    (m[3]||'').trim().split(/[\s,;]+/).forEach(kv=>{const q=kv.match(/^([a-z]+)\s*=\s*([\d.,]+)$/i);if(!q)return;const k=q[1].toLowerCase(),v=+q[2].replace(',','.');
+      if(k==='sec'||k==='s'||k==='giay'){d.sec=v;return;}d.p=d.p||{};d.p[k]=v;});
+    devs.push(d);tagMap[normVN(tag)]=d;});
+  const ep=s=>{const m=s.trim().match(/^([^.:\s]+)\s*[.:]\s*(.+)$/);if(!m)return{err:'thiếu dấu chấm (VD: K1.A1)'};const d=tagMap[normVN(m[1])];if(!d)return{err:'chưa khai báo '+m[1]};
+    return{d,ts:m[2].split(',').map(x=>x.trim()).filter(Boolean)};};
+  const progs={};
+  lines.forEach((ln,i)=>{const L=i+1;const l=ln.replace(/\/\/.*$/,'').trim();const pm=l.match(/^(\S+)\.prog\s*:\s*(.*)$/i);if(pm){const d=tagMap[normVN(pm[1])];if(!d||!isPLC(d))errs.push('Dòng '+L+': '+pm[1]+' không phải PLC');else(progs[d.id]=progs[d.id]||[]).push([L,pm[2]]);return;}if(!l||l[0]==='#'||!isWire(l))return;
+    const parts=(/\s[-–—]+>?\s/.test(l)?l.split(/\s+[-–—]+>?\s+/):l.split(/->|–|—|-(?=[^\d\s,+\-][^.:\s]*[.:])/)).map(x=>x.trim()).filter(Boolean);
+    if(parts.length<2){errs.push('Dòng '+L+': dây cần 2 đầu "A.x - B.y"');return;}
+    const E=parts.map(ep);const bad=E.find(e=>e.err);if(bad){errs.push('Dòng '+L+': '+bad.err);return;}
+    for(let k=0;k<E.length-1;k++){const a=E[k],b=E[k+1];
+      if(a.ts.length!==b.ts.length){errs.push('Dòng '+L+': số chân 2 bên không bằng nhau');return;}
+      a.ts.forEach((ta,j)=>{const A=ioTerm(TYPES[a.d.t],ta),B=ioTerm(TYPES[b.d.t],b.ts[j]);
+        if(!A){errs.push('Dòng '+L+': '+typeName(a.d)+' không có chân "'+ta+'"');return;}if(!B){errs.push('Dòng '+L+': '+typeName(b.d)+' không có chân "'+b.ts[j]+'"');return;}
+        if(a.d===b.d&&A===B)return;
+        const dup=wires.some(w=>(w.a.d===a.d.id&&w.a.t===A&&w.b.d===b.d.id&&w.b.t===B)||(w.b.d===a.d.id&&w.b.t===A&&w.a.d===b.d.id&&w.a.t===B));
+        if(!dup)wires.push({id:'w'+(nid++),a:{d:a.d.id,t:A},b:{d:b.d.id,t:B}});});}});
+  devs.forEach(d=>{const ls=progs[d.id];if(!ls)return;d.prog=[];ls.forEach(([L,t])=>{const r=parseNet(t.replace(/^N\d+\s*:\s*/i,''));if(r.err)errs.push('Dòng '+L+': '+r.err);else d.prog.push(r.n);});});
+  return{devs,wires,errs,title,nid};
+}
+function ioLayout(devs){
+  const P={src:[],cb:[],k:[],ol:[],m:[]},C={plc:[],btn:[],aux:[],pil:[],l1:[]};
+  devs.forEach(d=>{const T=TYPES[d.t];
+    if(isPLC(d)||d.t==='psu')C.plc.push(d);else if(T.cat==='src')P.src.push(d);else if(T.ctl==='cb')P.cb.push(d);else if(d.t==='contactor'||isV(d))P.k.push(d);else if(d.t==='ol')P.ol.push(d);
+    else if(T.cat==='t3')P.m.push(d);else if(['pbno','pbnc','estop','switch','pot'].includes(d.t))C.btn.push(d);else if(d.t==='relay'||d.t==='relay24'||d.t==='timer')C.aux.push(d);
+    else if(d.t.startsWith('pilot'))C.pil.push(d);else C.l1.push(d);});
+  let y=24,maxX=0;
+  ['src','cb','k','ol','m'].forEach(r=>{if(!P[r].length)return;let x=20,h=0;P[r].forEach(d=>{const T=TYPES[d.t];d.x=x;d.y=y;x+=T.w+50;h=Math.max(h,T.h);});maxX=Math.max(maxX,x);y+=h+90;});
+  const pBottom=y;let cx=Math.max(maxX+40,260),cy=24;
+  const col=(arr,dx)=>{let x=cx,h=0;arr.forEach(d=>{const T=TYPES[d.t];if(x+T.w>WW-20){x=cx;cy+=h+70;h=0;}d.x=x;d.y=cy;x+=T.w+(dx||40);h=Math.max(h,T.h);});if(arr.length)cy+=h+80;};
+  C.btn.sort((a,b)=>({estop:0,pbnc:1,pbno:2,switch:3,pot:4}[a.t]-{estop:0,pbnc:1,pbno:2,switch:3,pot:4}[b.t]));
+  C.plc.sort((a,b)=>(a.t==='psu')-(b.t==='psu'));col(C.plc,60);col(C.btn);col(C.aux);col(C.pil);
+  let lx=20,ly=Math.max(pBottom,cy),lh=0;C.l1.forEach(d=>{const T=TYPES[d.t];if(lx+T.w>WW-20){lx=20;ly+=lh+80;lh=0;}d.x=lx;d.y=ly;lx+=T.w+50;lh=Math.max(lh,T.h);});
+  devs.forEach(d=>{d.x=Math.round(Math.min(d.x,WW-TYPES[d.t].w)/GRID)*GRID;d.y=Math.round(Math.min(d.y,WH-TYPES[d.t].h-20)/GRID)*GRID;});
+}
+function exportCircuit(){
+  const tg=d=>tagOf(d).replace(/\s+/g,'');const tk=d=>d.sub||d.t;
+  let s='# '+((S.meta&&S.meta.prj)||'Mạch điện')+'\n';
+  S.devs.forEach(d=>{const ps=[];if(d.t==='timer')ps.push('sec='+tsec(d));Object.keys(d.p||{}).forEach(k=>{const v=d.p[k];if(v!==''&&v!==undefined&&!isNaN(+v))ps.push(k+'='+v);});
+    s+=tg(d)+' = '+tk(d)+(ps.length?' '+ps.join(' '):'')+'\n';});
+  const groups=[];S.wires.forEach(w=>{const g=groups[groups.length-1];if(g&&g.a===w.a.d&&g.b===w.b.d&&g.n<3){g.ta.push(w.a.t);g.tb.push(w.b.t);g.n++;}else groups.push({a:w.a.d,b:w.b.d,ta:[w.a.t],tb:[w.b.t],n:1});});
+  groups.forEach(g=>{s+=tg(dev(g.a))+'.'+g.ta.join(',')+' - '+tg(dev(g.b))+'.'+g.tb.join(',')+'\n';});
+  S.devs.filter(isPLC).forEach(d=>(d.prog||[]).forEach(n=>{s+=tg(d)+'.prog: '+netTxt(n)+'\n';}));
+  return s.trim();
+}
+function openIO(){
+  const sh=document.getElementById('ioSheet');sh.hidden=false;const ta=document.getElementById('ioTxt');
+  const chk=()=>{const r=parseCircuit(ta.value);const box=document.getElementById('ioChk');
+    if(!ta.value.trim()){box.innerHTML='<span class="mut">Dán mã mạch vào ô trên (em gửi trong chat), hoặc bấm “Ví dụ” để xem cách viết.</span>';return r;}
+    box.innerHTML='<b>'+(r.errs.length?'⚠️':'✅')+' Nhận được '+r.devs.length+' thiết bị, '+r.wires.length+' dây'+(r.errs.length?', '+r.errs.length+' dòng lỗi':'')+'</b>'+
+      (r.errs.length?'<ul>'+r.errs.slice(0,12).map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul>':'');return r;};
+  ta.oninput=chk;chk();
+  document.getElementById('ioEx').onclick=()=>{ta.value=IO_EX;chk();};
+  document.getElementById('ioOut').onclick=()=>{if(!S.devs.length){hint('Bảng đang trống – chưa có gì để xuất.');return;}ta.value=exportCircuit();chk();};
+  document.getElementById('ioCopy').onclick=()=>{ta.select();const done=()=>{const b=document.getElementById('ioCopy');b.textContent='✓ Đã chép';setTimeout(()=>b.textContent='📋 Sao chép',1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>{try{document.execCommand('copy');done();}catch(e){}});else{try{document.execCommand('copy');done();}catch(e){}}};
+  document.getElementById('ioGo').onclick=()=>{const r=chk();if(!r.devs.length){hint('Chưa có thiết bị nào trong mã.');return;}
+    confirmReplace(()=>{ioLayout(r.devs);applyBoard(r.devs,r.wires,r.nid);if(r.title){S.meta=S.meta||{};S.meta.prj=r.title;save();}
+      sh.hidden=true;hint('📥 Đã dựng '+r.devs.length+' thiết bị, '+r.wires.length+' dây'+(r.errs.length?' (bỏ qua '+r.errs.length+' dòng lỗi)':'')+'. Kéo thiết bị để sắp lại, bấm ▶ Chạy thử nhé.');});};
+}
+document.getElementById('ioClose').onclick=()=>{document.getElementById('ioSheet').hidden=true;};
+/* ================= PLC: chạy chương trình (scan) ================= */
+/* chương trình: d.prog=[{b:[ [ [ {n:false,a:'I0.0'} ] ] ], o:{k:'=',a:'Q0.0',v:0}}]  b = khối nối tiếp → nhánh song song → tiếp điểm nối tiếp */
+const PLC_MAXM=32,PLC_MAXT=16,PLC_MAXC=16;
+function plcAddrs(d){const P=TYPES[d.t].plc;const I=[],Q=[],M=[],Tm=[],C=[];for(let i=0;i<P.di;i++)I.push(plcA('I',i));for(let i=0;i<P.dq;i++)Q.push(plcA('Q',i));
+  for(let i=0;i<PLC_MAXM;i++)M.push(plcA('M',i));for(let i=0;i<PLC_MAXT;i++)Tm.push('T'+i);for(let i=0;i<PLC_MAXC;i++)C.push('C'+i);return{I,Q,M,T:Tm,C};}
+function plcMem(d){if(!d.mem)d.mem={M:{},T:{},C:{},edge:{}};return d.mem;}
+function plcBit(d,a){const m=plcMem(d),P=TYPES[d.t].plc;
+  if(a[0]==='I'){const i=plcIdx(a);return i<P.di&&!!(d.di&&d.di[i]);}
+  if(a[0]==='Q'){const i=plcIdx(a);return!!(d.qo&&d.qo[i]);}
+  if(a[0]==='M')return!!m.M[a];if(a[0]==='T')return!!(m.T[a]&&m.T[a].q);if(a[0]==='C')return!!(m.C[a]&&m.C[a].q);return false;}
+function plcIdx(a){const m=a.match(/^[IQM](\d+)\.(\d)$/);return m?(+m[1])*8+(+m[2]):-1;}
+function rungVal(d,n){return n.b.every(bl=>bl.some(br=>br.every(c=>plcBit(d,c.a)!==!!c.n)));}
+function plcScan(d){
+  const P=TYPES[d.t].plc,m=plcMem(d),now=Date.now();d.qo=d.qo||new Array(P.dq).fill(false);const q0=d.qo.join();
+  (d.prog||[]).forEach((n,ni)=>{const v=n.b.length?rungVal(d,n):true,o=n.o||{};const a=o.a||'';
+    const setB=(val)=>{if(a[0]==='Q'){const i=plcIdx(a);if(i>=0&&i<P.dq)d.qo[i]=val;}else if(a[0]==='M')m.M[a]=val;else if(a[0]==='C'&&!val){m.C[a]={cv:0,q:false};}};
+    if(o.k==='=')setB(v);else if(o.k==='S'){if(v)setB(true);}else if(o.k==='R'){if(v)setB(false);}
+    else if(o.k==='TON'){const t=m.T[a]=m.T[a]||{t0:null,q:false};if(v){if(t.t0==null)t.t0=now;t.et=(now-t.t0)/1000;t.q=t.et>=(+o.v||0);}else{t.t0=null;t.et=0;t.q=false;}}
+    else if(o.k==='CTU'){const c=m.C[a]=m.C[a]||{cv:0,q:false};const k='n'+ni;if(v&&!m.edge[k])c.cv++;m.edge[k]=v;c.q=c.cv>=(+o.v||1);}
+    n.live=v;});
+  return d.qo.join()!==q0;
+}
+function plcPending(){return S.devs.some(d=>isPLC(d)&&d.pw&&d.run!==false&&!d.burned&&(d.prog||[]).some(n=>n.o&&n.o.k==='TON'));}
+let plcTI=setInterval(()=>{if(!running)return;let ch=false;
+  S.devs.forEach(d=>{if(!isPLC(d))return;if(!d.pw||d.burned||d.run===false){if(d.qo&&d.qo.some(Boolean)){d.qo=d.qo.map(()=>false);ch=true;}return;}if(plcScan(d))ch=true;});
+  if(ch){evaluate();render();save();}else if(S.devs.some(isPLC)){S.devs.forEach(d=>{if(isPLC(d))plcLeds(d);});if(document.getElementById('plcSheet')&&!document.getElementById('plcSheet').hidden)ladLive();}},100);
+/* ---------- văn bản chương trình ---------- */
+const cTxt=c=>(c.n?'!':'')+c.a;
+function netTxt(n){const L=n.b.map(bl=>bl.length===1?bl[0].map(cTxt).join(' & '):'('+bl.map(br=>br.map(cTxt).join(' & ')).join(' | ')+')').join(' & ')||'TRUE';
+  const o=n.o||{};return L+' -> '+(o.k==='='?'':o.k+' ')+o.a+(o.k==='TON'||o.k==='CTU'?' '+o.v:'');}
+function progTxt(d){return(d.prog||[]).map(netTxt).join('\n');}
+function parseNet(line){
+  const m=line.split('->');if(m.length!==2)return{err:'thiếu "->"'};
+  const lhs=m[0].trim(),rhs=m[1].trim().split(/\s+/);let o;
+  const K=rhs[0].toUpperCase();
+  if(['S','R','TON','CTU'].includes(K))o={k:K,a:(rhs[1]||'').toUpperCase(),v:+(rhs[2]||0)};else o={k:'=',a:K.replace(/^=/,'')};
+  if(!/^(Q\d+\.\d|M\d+\.\d|T\d+|C\d+)$/.test(o.a))return{err:'ngõ ra "'+o.a+'" không hợp lệ'};
+  if(o.k==='TON'&&!/^T/.test(o.a))return{err:'TON phải dùng T0, T1…'};if(o.k==='CTU'&&!/^C/.test(o.a))return{err:'CTU phải dùng C0, C1…'};
+  const lit=s=>{s=s.trim();const n=s[0]==='!'||s[0]==='/';const a=(n?s.slice(1):s).trim().toUpperCase();if(!/^(I\d+\.\d|Q\d+\.\d|M\d+\.\d|T\d+|C\d+)$/.test(a))throw new Error('tiếp điểm "'+s+'" không hợp lệ');return{n,a};};
+  const splitTop=(s,ch)=>{const out=[];let dep=0,cur='';for(const x of s){if(x==='(')dep++;if(x===')')dep--;if(x===ch&&dep===0){out.push(cur);cur='';}else cur+=x;}out.push(cur);return out.map(t=>t.trim()).filter(Boolean);};
+  try{let b=[];
+    if(!lhs||/^true$/i.test(lhs))b=[];
+    else if(splitTop(lhs,'|').length>1)b=[splitTop(lhs,'|').map(br=>splitTop(br,'&').map(lit))];
+    else b=splitTop(lhs,'&').map(f=>{f=f.trim();if(f[0]==='('&&f[f.length-1]===')')return splitTop(f.slice(1,-1),'|').map(br=>splitTop(br,'&').map(lit));return[[lit(f)]];});
+    return{n:{b,o}};}catch(e){return{err:e.message};}
+}
+function parseProg(txt){const prog=[],errs=[];String(txt||'').split(/\r?\n/).forEach((l,i)=>{l=l.replace(/\/\/.*$/,'').trim();if(!l||l[0]==='#')return;l=l.replace(/^N\d+\s*:\s*/i,'');const r=parseNet(l);if(r.err)errs.push('Dòng '+(i+1)+': '+r.err);else prog.push(r.n);});return{prog,errs};}
+/* ---------- đèn LED trên PLC ---------- */
+function plcLeds(d){const e=devEls[d.id];if(!e)return;e.querySelectorAll('[data-led]').forEach(l=>{const a=l.getAttribute('data-led');let on=false;
+  if(a==='RUN')on=d.pw&&!d.burned&&d.run!==false;else if(a==='STOP')on=d.pw&&!d.burned&&d.run===false;else if(a==='ERR')on=!!d.burned;else on=d.pw&&plcBit(d,a);
+  l.setAttribute('fill',on?(a==='STOP'?'#f59e0b':a==='ERR'?'#ef4444':'#22c55e'):'#475569');});}
+function drawPLC(g,d){const T=TYPES[d.t],P=T.plc;
+  el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:6,fill:'#cfd6dc',stroke:'#475569','stroke-width':1.5},g);
+  el('rect',{x:0,y:24,width:T.w,height:T.h-48,fill:'#1f3b4d'},g);
+  el('rect',{x:10,y:32,width:96,height:T.h-64,rx:3,fill:'#0f172a'},g);
+  txt(g,58,48,'S7-1200',{fill:'#5eead4','font-size':12,'font-weight':900});
+  txt(g,58,61,'CPU '+P.cpu+'C',{fill:'#e2e8f0','font-size':9.5,'font-weight':800});
+  txt(g,58,73,P.nm,{fill:'#94a3b8','font-size':8,'font-weight':700});
+  [['RUN',0],['STOP',1],['ERR',2]].forEach(([a,i])=>{el('rect',{x:118,y:34+i*12,width:10,height:7,rx:1.5,fill:'#475569','data-led':a},g);txt(g,132,40+i*12,a==='RUN'?'RUN':a==='STOP'?'STOP':'ERROR',{fill:'#cbd5e1','font-size':7,'text-anchor':'start'});});
+  T.terms.forEach(t=>{if(/^[IQ]\d/.test(t.id)){const top=t.y===0;el('rect',{x:t.x-4,y:top?28:T.h-35,width:8,height:5,rx:1,fill:'#475569','data-led':t.id},g);}});
+  txt(g,T.w-8,40,'DI a/b',{fill:'#94a3b8','font-size':7,'text-anchor':'end'});txt(g,T.w-8,T.h-40,P.rly?'DQ rơ-le':'DQ transistor',{fill:'#94a3b8','font-size':7,'text-anchor':'end'});
+  if(!(d.prog||[]).length)txt(g,T.w/2+60,62,'chưa có chương trình – bấm ⚙',{fill:'#fbbf24','font-size':8.5,'font-weight':700});
+  prints(g,d);}
+function drawPSU(g,d){const T=TYPES[d.t];
+  el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:5,fill:'#94a3b8',stroke:'#334155'},g);
+  for(let i=0;i<9;i++)el('circle',{cx:16+i*12,cy:26,r:3.2,fill:'#64748b'},g);for(let i=0;i<8;i++)el('circle',{cx:22+i*12,cy:36,r:3.2,fill:'#64748b'},g);
+  txt(g,T.w/2,54,'24VDC',{fill:'#0f172a','font-size':11,'font-weight':900});
+  el('circle',{cx:T.w-14,cy:52,r:4,fill:d.pw&&!d.burned?'#22c55e':'#475569'},g);prints(g,d);}
+/* ================= 💻 TRÌNH SOẠN LADDER ================= */
+const LD={d:null,sel:null,txt:false};
+function ioMap(d){const m={};S.wires.forEach(w=>[[w.a,w.b],[w.b,w.a]].forEach(([x,y])=>{if(x.d===d.id&&/^[IQ]\d/.test(x.t)){const o=dev(y.d);if(o&&o.id!==d.id)(m[x.t]=m[x.t]||new Set()).add(tagOf(o));}}));return m;}
+function addrOpts(d,kinds,cur){const A=plcAddrs(d),io=ioMap(d),nm={I:'Ngõ vào I',Q:'Ngõ ra Q',M:'Bit nhớ M',T:'Timer T',C:'Counter C'};
+  return kinds.map(k=>'<optgroup label="'+nm[k]+'">'+A[k].map(a=>'<option '+(a===cur?'selected':'')+' value="'+a+'">'+a+(io[a]?' – '+[...io[a]].join(','):'')+'</option>').join('')+'</optgroup>').join('');}
+function openLadder(d){LD.d=d;LD.sel=null;LD.txt=false;document.getElementById('plcSheet').hidden=false;ladRender();}
+function ladRender(){
+  const d=LD.d,P=TYPES[d.t].plc,B=document.getElementById('plcBody');d.prog=d.prog||[];
+  document.getElementById('plcTitle').textContent='💻 '+tagOf(d)+' · CPU '+P.cpu+'C '+P.nm;
+  const io=ioMap(d);const A=plcAddrs(d);
+  let h='<details class="mcAdv"><summary>Bảng I/O ('+P.di+' DI · '+P.dq+' DQ '+(P.rly?'rơ-le':'transistor')+') – đang đấu với…</summary><div class="ioTbl">'+
+    A.I.concat(A.Q).map(a=>'<span class="'+(io[a]?'on':'')+'"><b>'+a+'</b> '+(io[a]?esc([...io[a]].join(', ')):'—')+'</span>').join('')+'</div></details>';
+  if(LD.txt){h+='<p class="mut">Mỗi dòng 1 network. Ví dụ: <code>(I0.0 | Q0.0) & !I0.1 -> Q0.0</code> · <code>Q0.0 -> TON T0 5</code> · <code>I0.2 -> CTU C0 3</code> · <code>T0 -> S M0.0</code> · dấu <code>!</code> = tiếp điểm thường đóng.</p>'+
+    '<textarea id="ldTxt" rows="12" spellcheck="false">'+esc(progTxt(d))+'</textarea><div id="ldErr" class="mut"></div>'+
+    '<div class="ioBtns"><button class="btn" id="ldBack">↩ Về dạng ladder</button><button class="btn run" id="ldApply">✓ Áp dụng</button></div>';}
+  else{
+    h+=d.prog.map((n,ni)=>{const o=n.o||{};
+      const cell=(c,bi,ri,ci)=>{const s=LD.sel,on=s&&s.ni===ni&&s.bi===bi&&s.ri===ri&&s.ci===ci;return'<div class="ldC'+(on?' sel':'')+'" data-p="'+ni+','+bi+','+ri+','+ci+'"><i>'+(c.n?'┤/├':'┤ ├')+'</i><b>'+esc(c.a)+'</b><small>'+esc(io[c.a]?[...io[c.a]].join(','):'')+'</small></div>';};
+      const blocks=n.b.map((bl,bi)=>'<div class="ldBl">'+bl.map((br,ri)=>'<div class="ldBr">'+br.map((c,ci)=>cell(c,bi,ri,ci)).join('<span class="ldW"></span>')+'</div>').join('')+'</div>').join('<span class="ldW"></span>');
+      const os=LD.sel&&LD.sel.ni===ni&&LD.sel.out;
+      const oTxt=o.k==='TON'?'TON '+o.a+'<small>'+o.v+' s</small>':o.k==='CTU'?'CTU '+o.a+'<small>đếm '+o.v+'</small>':'( '+(o.k==='='?'':o.k)+' ) '+o.a+'<small>'+esc(io[o.a]?[...io[o.a]].join(','):'')+'</small>';
+      return'<div class="ldN"><div class="ldH"><b>Network '+(ni+1)+'</b><span class="mut">'+esc(netTxt(n))+'</span><button class="ldDel" data-del="'+ni+'">🗑</button></div>'+
+        '<div class="ldR" data-net="'+ni+'"><span class="ldRail"></span>'+(blocks||'<span class="mut" style="padding:0 6px">luôn đúng</span>')+'<span class="ldW fill"></span><div class="ldO'+(os?' sel':'')+'" data-o="'+ni+'">'+oTxt+'</div><span class="ldRail"></span></div>'+
+        '<div class="ldAct">'+(LD.sel&&LD.sel.ni===ni&&!LD.sel.out?'<button data-a="ser">➕ Nối tiếp</button><button data-a="par">⤵ Song song</button>'+(n.b[LD.sel.bi].length>1?'<button data-a="blk">⇥ Nối tiếp sau cụm</button>':'')+'<button data-a="edit">✏️ Sửa</button><button data-a="rm">✕ Xóa</button>':
+          '<button data-a="add" data-n="'+ni+'">➕ Tiếp điểm</button>'+(os?'<button data-a="oedit" data-n="'+ni+'">✏️ Sửa ngõ ra</button>':''))+'</div></div>';}).join('');
+    h+='<div class="ioBtns" style="margin:10px 0 30px"><button class="btn run" id="ldNew">➕ Thêm network</button><button class="btn" id="ldText">📝 Dạng chữ</button></div>';}
+  B.innerHTML=h;
+  if(LD.txt){const ta=document.getElementById('ldTxt');document.getElementById('ldBack').onclick=()=>{LD.txt=false;ladRender();};
+    document.getElementById('ldApply').onclick=()=>{const r=parseProg(ta.value);if(r.errs.length){document.getElementById('ldErr').innerHTML='<span style="color:#fca5a5">'+r.errs.map(esc).join('<br>')+'</span>';return;}
+      d.prog=r.prog;d.mem=null;save();LD.txt=false;ladRender();render();hint('Đã nạp chương trình '+r.prog.length+' network vào '+tagOf(d)+'.');};return;}
+  B.querySelectorAll('.ldC').forEach(e=>e.onclick=()=>{const[ni,bi,ri,ci]=e.dataset.p.split(',').map(Number);LD.sel={ni,bi,ri,ci};ladRender();});
+  B.querySelectorAll('.ldO').forEach(e=>e.onclick=()=>{const ni=+e.dataset.o;if(LD.sel&&LD.sel.out&&LD.sel.ni===ni){ladOut(ni);return;}LD.sel={ni,out:1};ladRender();});
+  B.querySelectorAll('[data-del]').forEach(e=>e.onclick=()=>{d.prog.splice(+e.dataset.del,1);LD.sel=null;save();ladRender();render();});
+  B.querySelectorAll('.ldAct button').forEach(e=>e.onclick=()=>{const a=e.dataset.a,s=LD.sel;
+    if(a==='add'){const n=d.prog[+e.dataset.n];ladContact(null,c=>{n.b.push([[c]]);LD.sel=null;});return;}
+    if(a==='oedit'){ladOut(+e.dataset.n);return;}
+    const n=d.prog[s.ni],bl=n.b[s.bi],br=bl[s.ri];
+    if(a==='ser')ladContact(null,c=>{br.splice(s.ci+1,0,c);LD.sel={ni:s.ni,bi:s.bi,ri:s.ri,ci:s.ci+1};});
+    else if(a==='par')ladContact(null,c=>{bl.push([c]);LD.sel={ni:s.ni,bi:s.bi,ri:bl.length-1,ci:0};});
+    else if(a==='blk')ladContact(null,c=>{n.b.splice(s.bi+1,0,[[c]]);LD.sel={ni:s.ni,bi:s.bi+1,ri:0,ci:0};});
+    else if(a==='edit')ladContact(br[s.ci],c=>{br[s.ci]=c;});
+    else if(a==='rm'){br.splice(s.ci,1);if(!br.length)bl.splice(s.ri,1);if(!bl.length)n.b.splice(s.bi,1);LD.sel=null;save();ladRender();}});
+  document.getElementById('ldNew').onclick=()=>{const used=new Set(d.prog.map(n=>n.o&&n.o.a));const q=plcAddrs(d).Q.find(a=>!used.has(a))||'Q0.0';
+    ladContact(null,c=>{d.prog.push({b:[[[c]]],o:{k:'=',a:q}});LD.sel=null;},'Network mới – chọn tiếp điểm đầu tiên');};
+  document.getElementById('ldText').onclick=()=>{LD.txt=true;ladRender();};
+  ladLive();
+}
+function ladContact(c,done,title){const d=LD.d;c=c||{n:false,a:'I0.0'};
+  const m=showModal('<h2>'+(title||'Tiếp điểm')+'</h2><div class="mcSeg" id="lcT"><button data-n="0" class="'+(c.n?'':'on')+'">┤ ├ Thường mở</button><button data-n="1" class="'+(c.n?'on':'')+'">┤/├ Thường đóng</button></div>'+
+    '<div class="form"><label>Địa chỉ<select id="lcA">'+addrOpts(d,['I','Q','M','T','C'],c.a)+'</select></label></div><div class="row"><button class="btn" id="lcNo">Hủy</button><button class="btn run" id="lcOk">OK</button></div>');
+  let n=c.n;m.querySelectorAll('#lcT button').forEach(b=>b.onclick=()=>{n=b.dataset.n==='1';m.querySelectorAll('#lcT button').forEach(x=>x.classList.toggle('on',x===b));});
+  m.querySelector('#lcNo').onclick=closeModal;m.querySelector('#lcOk').onclick=()=>{done({n,a:m.querySelector('#lcA').value});closeModal();save();ladRender();};}
+function ladOut(ni){const d=LD.d,n=d.prog[ni],o=Object.assign({k:'=',a:'Q0.0',v:5},n.o);
+  const KS=[['=','( ) Cuộn'],['S','(S) Set'],['R','(R) Reset'],['TON','TON Timer'],['CTU','CTU Đếm']];
+  const m=showModal('<h2>Ngõ ra network '+(ni+1)+'</h2><div class="mcSeg" id="loK">'+KS.map(k=>'<button data-k="'+k[0]+'" class="'+(o.k===k[0]?'on':'')+'">'+k[1]+'</button>').join('')+'</div><div class="form" id="loF"></div><div class="row"><button class="btn" id="loNo">Hủy</button><button class="btn run" id="loOk">OK</button></div>');
+  const F=()=>{const kinds=o.k==='TON'?['T']:o.k==='CTU'?['C']:o.k==='R'?['Q','M','C']:['Q','M'];if(!kinds.includes(o.a[0]))o.a=plcAddrs(d)[kinds[0]][0];
+    m.querySelector('#loF').innerHTML='<label>Địa chỉ<select id="loA">'+addrOpts(d,kinds,o.a)+'</select></label>'+(o.k==='TON'?'<label>Thời gian (giây)<input id="loV" type="number" step="0.1" inputmode="decimal" value="'+(o.v||5)+'"></label>':o.k==='CTU'?'<label>Đếm đủ (lần)<input id="loV" type="number" inputmode="numeric" value="'+(o.v||3)+'"></label>':'');
+    m.querySelector('#loA').onchange=e=>o.a=e.target.value;};
+  m.querySelectorAll('#loK button').forEach(b=>b.onclick=()=>{o.k=b.dataset.k;m.querySelectorAll('#loK button').forEach(x=>x.classList.toggle('on',x===b));F();});F();
+  m.querySelector('#loNo').onclick=closeModal;m.querySelector('#loOk').onclick=()=>{o.a=m.querySelector('#loA').value;const v=m.querySelector('#loV');n.o={k:o.k,a:o.a,v:v?+v.value:0};if(n.o.k!=='TON'&&n.o.k!=='CTU')delete n.o.v;closeModal();d.mem=null;save();LD.sel=null;ladRender();};}
+function ladLive(){const d=LD.d;if(!d)return;const live=running&&d.pw&&!d.burned;
+  document.querySelectorAll('#plcBody .ldC').forEach(e=>{const[ni]=e.dataset.p.split(',').map(Number);const[,bi,ri,ci]=e.dataset.p.split(',').map(Number);const c=d.prog[ni]&&d.prog[ni].b[bi]&&d.prog[ni].b[bi][ri][ci];
+    e.classList.toggle('pw',!!(live&&c&&plcBit(d,c.a)!==!!c.n));});
+  document.querySelectorAll('#plcBody .ldO').forEach(e=>{const n=d.prog[+e.dataset.o];e.classList.toggle('pw',!!(live&&n&&n.live));
+    const o=n&&n.o;if(live&&o&&o.k==='TON'){const t=plcMem(d).T[o.a];const s=e.querySelector('small');if(s)s.textContent=(t&&t.et?t.et.toFixed(1)+' / ':'')+o.v+' s';}
+    if(live&&o&&o.k==='CTU'){const c=plcMem(d).C[o.a];const s=e.querySelector('small');if(s)s.textContent='đếm '+((c&&c.cv)||0)+' / '+o.v;}});
+  const st=document.getElementById('plcSt');if(st)st.innerHTML=!running?'<span class="mut">▶ Chạy thử để xem online</span>':d.burned?'<b style="color:#f87171">ERROR</b>':!d.pw?'<b style="color:#94a3b8">Mất nguồn</b>':d.run===false?'<b style="color:#fbbf24">STOP</b>':'<b style="color:#4ade80">● RUN – online</b>';}
+document.getElementById('plcClose').onclick=()=>{document.getElementById('plcSheet').hidden=true;LD.d=null;};
+/* ---------- PLC: bảng I/O + chương trình cho bản vẽ ---------- */
+function plcSheetRows(d){const io=ioMap(d),A=plcAddrs(d);return A.I.concat(A.Q).filter(a=>io[a]).map(a=>[a,a[0]==='I'?'Ngõ vào':'Ngõ ra',[...io[a]].map(t=>{const o=S.devs.find(x=>tagOf(x)===t);return t+(o?' – '+typeName(o).replace(/ \(.*\)/,''):'');}).join(', ')]);}
+function plcSheetHTML(){const L=S.devs.filter(isPLC);if(!L.length)return'';
+  return L.map(d=>'<h3>💻 '+esc(tagOf(d))+' – '+esc(typeName(d))+'</h3><table><tr><th>Địa chỉ</th><th>Loại</th><th>Đấu với</th></tr>'+plcSheetRows(d).map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+esc(r[2])+'</td></tr>').join('')+'</table>'+
+    ((d.prog||[]).length?'<p class="mut" style="margin:8px 0 4px">Chương trình ('+d.prog.length+' network):</p><pre class="plcPre">'+d.prog.map((n,i)=>'N'+(i+1)+': '+esc(netTxt(n))).join('\n')+'</pre>':'<p class="mut">Chưa có chương trình.</p>')).join('');}
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
@@ -2634,10 +3001,10 @@ function refreshSheet(){
   sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
   const C=r.C;
   const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(typeName(d))}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
-  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+guideHTML()+'<p class="mut" style="text-align:center;margin-top:18px">Bảng điện mô phỏng · © '+AUTHOR+'</p>';
+  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+plcSheetHTML()+guideHTML()+'<p class="mut" style="text-align:center;margin-top:18px">Bảng điện mô phỏng · © '+AUTHOR+'</p>';
 }
 
-document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d)openParams(d);};
+document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d&&isPLC(d)){openLadder(d);return;}if(d)openParams(d);};
 document.getElementById('sheetBtn').onclick=openSheet;
 document.getElementById('shClose').onclick=()=>{document.getElementById('sheet').hidden=true;};
 document.getElementById('shZoom').onclick=()=>{sheetZoom=!sheetZoom;const sv=document.querySelector('#sheetSvg svg');if(sv)sv.style.width=sheetZoom?'260%':'100%';};
@@ -2846,7 +3213,7 @@ function autoBuild(cnt,R){
 }
 
 /* ---------- giao diện bảng Lập mạch ---------- */
-const BD_ORDER=['src','prot','ctrl','t1','t3'];
+const BD_ORDER=['src','prot','ctrl','t1','t3','plc'];
 /* khóa đếm của bảng Lập mạch: tên loại, hoặc 'sub:<biến thể>' (vd bơm chìm) */
 const bdT=k=>k.startsWith('sub:')?SUBS[k.slice(4)].t:k;
 const bdEx=k=>k.startsWith('sub:')?{sub:k.slice(4),p:Object.assign({},SUBS[k.slice(4)].p)}:{};
@@ -2859,10 +3226,19 @@ function openBuilder(){
 }
 function renderBuilder(){
   const st=bdState(),c=st.counts;const list=document.getElementById('bdList');list.innerHTML='';
-  const names={src:'Nguồn',prot:'Đóng cắt',ctrl:'Điều khiển',t1:'Tải 1 pha',t3:'Tải 3 pha'};
+  const names={src:'Nguồn',prot:'Đóng cắt',ctrl:'Điều khiển',t1:'Tải 1 pha',t3:'Tải 3 pha',plc:'PLC Siemens & 24VDC'};
   BD_ORDER.forEach(cat=>{
     const h=document.createElement('div');h.className='bdCat';h.textContent=names[cat];list.appendChild(h);
+    if(cat==='plc'){const sel=st.plcSel||'plc1214ar',n=c[sel]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
+      const cpu=sel.slice(3,7),v=sel.slice(7);
+      row.innerHTML='<div class="bdName" style="flex:1"><b>PLC S7-1200</b><div class="bdSel"><select data-p="cpu">'+Object.keys(PLC_CPU).map(x=>'<option '+(x===cpu?'selected':'')+' value="'+x+'">CPU '+x+'C · '+PLC_CPU[x].di+'DI/'+PLC_CPU[x].dq+'DQ</option>').join('')+'</select><select data-p="v">'+Object.keys(PLC_VAR).map(x=>'<option '+(x===v?'selected':'')+' value="'+x+'">'+PLC_VAR[x].nm+'</option>').join('')+'</select></div>'+
+        (Object.keys(c).filter(k=>k!==sel&&TYPES[k]&&TYPES[k].ctl==='plc'&&c[k]>0).map(k=>'<small class="mut">+ '+c[k]+'× '+TYPES[k].name.replace('PLC S7-1200 ','')+'</small>').join('<br>'))+'</div>';
+      const stp=document.createElement('div');stp.className='step';stp.innerHTML='<button data-d="-1">−</button><b>'+n+'</b><button data-d="1">+</button>';
+      stp.querySelectorAll('button').forEach(b=>b.onclick=()=>{c[sel]=Math.max(0,Math.min(4,(c[sel]|0)+(+b.dataset.d)));save();renderBuilder();});
+      row.querySelectorAll('select').forEach(x=>x.onchange=()=>{const cp=row.querySelector('[data-p=cpu]').value,vv=row.querySelector('[data-p=v]').value;st.plcSel='plc'+cp+vv;save();renderBuilder();});
+      row.appendChild(stp);list.appendChild(row);}
     bdKeys(cat).forEach(k=>{
+      if(TYPES[bdT(k)].hideBd)return;
       const T=TYPES[bdT(k)],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
       row.appendChild(iconSvg(bdT(k),bdEx(k).sub));const nm=document.createElement('div');nm.className='bdName';nm.textContent=bdName(k);row.appendChild(nm);
       const stp=document.createElement('div');stp.className='step';
@@ -2916,6 +3292,9 @@ document.getElementById('bdReset').onclick=()=>{bdState().counts={};save();rende
 document.getElementById('bdNote').addEventListener('input',e=>{bdState().note=e.target.value;save();updParse();});
 document.querySelectorAll('#bdChips button').forEach(b=>b.onclick=()=>{const ta=document.getElementById('bdNote');ta.value=(ta.value.trim()?ta.value.trim()+', ':'')+b.textContent;bdState().note=ta.value;save();updParse();});
 document.getElementById('bdManual').onclick=manualPlace;
+document.getElementById('bdAdd').onclick=()=>{const c=bdState().counts;let n=0;
+  BD_ORDER.forEach(cat=>bdKeys(cat).forEach(k=>{for(let i=0;i<(c[k]|0);i++){addDev(bdT(k),bdEx(k).sub);const d=S.devs[S.devs.length-1];const ex=bdEx(k);Object.keys(ex).forEach(q=>{if(q!=='sub'&&q!=='x'&&q!=='y'&&q!=='id'&&q!=='t')d[q]=JSON.parse(JSON.stringify(ex[q]));});n++;}}));
+  if(!n){hint('Chưa chọn thiết bị nào.');return;}bdState().counts={};save();document.getElementById('builder').hidden=true;changed();hint('➕ Đã thêm '+n+' thiết bị vào bảng – chạm chân ● để nối dây.');};
 document.getElementById('bdAuto').onclick=autoPlace;
 
 content.addEventListener('pointerdown',bgDown);
@@ -2943,8 +3322,87 @@ window.addEventListener('keydown',e=>{
   else if(k==='t'||k==='T'){toggleDeep();}
 });
 
+
+/* ---- mạch mẫu PLC (dựng từ mã mạch) ---- */
+[['PLC S7-1200 AC/DC/RLY – chạy/dừng motor','PLC 1214C nguồn 220V, nút & rơ-le nhiệt vào I, ngõ ra rơ-le đóng contactor, đèn báo, timer 5s',`# PLC S7-1200 – chạy/dừng motor
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+OL1 = ol
+M1 = motor kw=5.5
+PLC1 = plc1214ar
+ON1 = on
+OFF1 = off
+H1 = denbaoxanh
+H2 = denbaovang
+H3 = denbaodo
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2,4 - PLC1.L1,N
+NGUON.PE - PLC1.PE
+PLC1.SL+ - ON1.3
+ON1.4 - PLC1.I0.0
+PLC1.SL+ - OFF1.1
+OFF1.2 - PLC1.I0.1
+PLC1.SL+ - OL1.95
+OL1.96 - PLC1.I0.2
+PLC1.SM - PLC1.1M
+CB2.2 - PLC1.1L
+PLC1.Q0.0 - K1.A1
+K1.A2 - CB2.4
+PLC1.Q0.1 - H1.X1
+PLC1.Q0.2 - H2.X1
+PLC1.Q0.3 - H3.X1
+H1.X2 - CB2.4
+H2.X2 - CB2.4
+H3.X2 - CB2.4
+PLC1.prog: (I0.0 | Q0.0) & I0.1 & I0.2 -> Q0.0
+PLC1.prog: Q0.0 -> Q0.1
+PLC1.prog: Q0.0 -> TON T0 5
+PLC1.prog: T0 -> Q0.2
+PLC1.prog: !I0.2 -> Q0.3`,'Bấm ▶ Chạy thử, nhấn ON: PLC giữ Q0.0 → K1 hút, đèn xanh; sau 5s đèn vàng (T0). Chọn PLC → ⚙ để xem/sửa chương trình ladder.'],
+['PLC S7-1200 DC/DC/DC + nguồn 24V','CPU 1212C ngõ ra transistor 24VDC đóng rơ-le trung gian 24VDC → contactor 220V',`# PLC DC/DC/DC qua rơ-le trung gian
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+PS1 = nguon24v
+K1 = contactor
+OL1 = ol
+M1 = motor kw=3
+PLC1 = plc1212dd
+ON1 = on
+OFF1 = off
+R1 = relay24
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2,4 - PS1.L,N
+NGUON.PE - PS1.PE
+PS1.V+,V- - PLC1.L+,M
+PS1.V+ - ON1.3
+ON1.4 - PLC1.I0.0
+PS1.V+ - OFF1.1
+OFF1.2 - PLC1.I0.1
+PS1.V+ - OL1.95
+OL1.96 - PLC1.I0.2
+PS1.V- - PLC1.1M
+PS1.V+,V- - PLC1.3L+,3M
+PLC1.Q0.0 - R1.13
+R1.14 - PS1.V-
+CB2.2 - R1.9
+R1.5 - K1.A1
+K1.A2 - CB2.4
+PLC1.prog: (I0.0 | Q0.0) & I0.1 & I0.2 -> Q0.0`,'Ngõ ra transistor chỉ ra 24VDC – phải qua rơ-le trung gian 24VDC (R1) mới đóng được contactor 220V. Thử nối thẳng Q0.0 vào A1 xem sao!']].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
-if(!S.devs.length)hint('Chọn thiết bị theo nhóm ở trên, hoặc vào tab “Mạch mẫu”.');
+if(!S.devs.length)hint('Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.');
 })();
 </script>
 </body>
