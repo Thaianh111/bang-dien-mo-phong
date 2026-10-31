@@ -414,7 +414,7 @@ const key=(d,t)=>d+':'+t;
 const SUBS={pump:{t:'motor',name:'Bơm chìm 3 pha',tag:'P',p:{kw:5.5,cos:0.8,eff:82,len:60}}};
 const tagBase=d=>d.sub&&SUBS[d.sub]?SUBS[d.sub].tag:TYPES[d.t].tag;
 function typeName(d){return d.sub&&SUBS[d.sub]?SUBS[d.sub].name:TYPES[d.t].name;}
-function tagOf(d){const T=TYPES[d.t];if(T.max)return T.tag;const tg=tagBase(d);const same=S.devs.filter(x=>tagBase(x)===tg);return tg+(same.indexOf(d)+1);}
+function tagOf(d){const T=TYPES[d.t];if(T.max)return T.tag;if(d.lbl)return d.lbl;const tg=tagBase(d);const same=S.devs.filter(x=>tagBase(x)===tg);return tg+(same.indexOf(d)+1);}
 function nameOf(d){return typeName(d).replace(/ \(.*\)/,'')+' '+tagOf(d);}
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
 function txt(g,x,y,s,attrs){const t=el('text',Object.assign({x,y,'text-anchor':'middle'},attrs||{}),g);t.textContent=s;return t;}
@@ -2787,7 +2787,8 @@ function parseCircuit(txt){
     if(TYPES[t].max&&devs.some(d=>d.t===t)){errs.push('Dòng '+L+': chỉ được 1 '+TYPES[t].name);return;}
     const d={id:'d'+(nid++),t,x:0,y:0};if(sub){d.sub=sub;d.p=Object.assign({},SUBS.pump.p);}if(t==='timer')d.sec=5;
     (m[3]||'').trim().split(/[\s,;]+/).forEach(kv=>{const q=kv.match(/^([a-z]+)\s*=\s*([\d.,]+)$/i);if(!q)return;const k=q[1].toLowerCase(),v=+q[2].replace(',','.');
-      if(k==='sec'||k==='s'||k==='giay'){d.sec=v;return;}d.p=d.p||{};d.p[k]=v;});
+      if(k==='sec'||k==='s'||k==='giay'){d.sec=v;return;}if(k==='on'){d.on=!!v;return;}d.p=d.p||{};d.p[k]=v;});
+    {const base=normVN(sub?SUBS[sub].tag:TYPES[t].tag).replace(/[^a-z0-9]/g,'');if(!TYPES[t].max&&!new RegExp('^'+base+'\\d+$').test(normVN(tag).replace(/[^a-z0-9]/g,'')))d.lbl=tag.slice(0,12);}
     devs.push(d);tagMap[normVN(tag)]=d;});
   const ep=s=>{const m=s.trim().match(/^([^.:\s]+)\s*[.:]\s*(.+)$/);if(!m)return{err:'thiếu dấu chấm (VD: K1.A1)'};const d=tagMap[normVN(m[1])];if(!d)return{err:'chưa khai báo '+m[1]};
     return{d,ts:m[2].split(',').map(x=>x.trim()).filter(Boolean)};};
@@ -2815,10 +2816,11 @@ function ioLayout(devs){
   let y=24,maxX=0;
   ['src','cb','k','ol','m'].forEach(r=>{if(!P[r].length)return;let x=20,h=0;P[r].forEach(d=>{const T=TYPES[d.t];d.x=x;d.y=y;x+=T.w+50;h=Math.max(h,T.h);});maxX=Math.max(maxX,x);y+=h+90;});
   const pBottom=y;let cx=Math.max(maxX+40,260),cy=24;
+  const cw=Math.max(0,...[...C.plc,...C.btn,...C.aux,...C.pil].map(d=>TYPES[d.t].w));if(cx+cw>WW-20){cx=20;cy=pBottom;}
   const col=(arr,dx)=>{let x=cx,h=0;arr.forEach(d=>{const T=TYPES[d.t];if(x+T.w>WW-20){x=cx;cy+=h+70;h=0;}d.x=x;d.y=cy;x+=T.w+(dx||40);h=Math.max(h,T.h);});if(arr.length)cy+=h+80;};
   C.btn.sort((a,b)=>({estop:0,pbnc:1,pbno:2,switch:3,pot:4}[a.t]-{estop:0,pbnc:1,pbno:2,switch:3,pot:4}[b.t]));
   C.plc.sort((a,b)=>(a.t==='psu')-(b.t==='psu'));col(C.plc,60);col(C.btn);col(C.aux);col(C.pil);
-  let lx=20,ly=Math.max(pBottom,cy),lh=0;C.l1.forEach(d=>{const T=TYPES[d.t];if(lx+T.w>WW-20){lx=20;ly+=lh+80;lh=0;}d.x=lx;d.y=ly;lx+=T.w+50;lh=Math.max(lh,T.h);});
+  let lx=20,ly=Math.max(pBottom,cy),lh=0;if(cx===20)ly=cy;C.l1.forEach(d=>{const T=TYPES[d.t];if(lx+T.w>WW-20){lx=20;ly+=lh+80;lh=0;}d.x=lx;d.y=ly;lx+=T.w+50;lh=Math.max(lh,T.h);});
   devs.forEach(d=>{d.x=Math.round(Math.min(d.x,WW-TYPES[d.t].w)/GRID)*GRID;d.y=Math.round(Math.min(d.y,WH-TYPES[d.t].h-20)/GRID)*GRID;});
 }
 function exportCircuit(){
@@ -3469,7 +3471,130 @@ R1.14 - PS1.V-
 CB2.2 - R1.9
 R1.5 - K1.A1
 K1.A2 - CB2.4
-PLC1.prog: (I0.0 | Q0.0) & I0.1 & I0.2 -> Q0.0`,'Ngõ ra transistor chỉ ra 24VDC – phải qua rơ-le trung gian 24VDC (R1) mới đóng được contactor 220V. Thử nối thẳng Q0.0 vào A1 xem sao!']].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
+PLC1.prog: (I0.0 | Q0.0) & I0.1 & I0.2 -> Q0.0`,'Ngõ ra transistor chỉ ra 24VDC – phải qua rơ-le trung gian 24VDC (R1) mới đóng được contactor 220V. Thử nối thẳng Q0.0 vào A1 xem sao!'],
+['Heat pump KMS020D (bo mạch giả lập bằng PLC)','Module heat pump 2 máy nén: bơm KM7, quạt KM3/KM4, máy nén KM1/KM2, van 4 ngả, công tắc áp suất, flow switch',`# Heat pump module KMS020D(R)3-EXT-BIE
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+BOARD = plc1214ar
+KM1 = contactor
+KM2 = contactor
+KM3 = contactor
+KM4 = contactor
+KM7 = contactor
+OLC1 = ol
+OLC2 = ol
+IT1 = ol
+IT2 = ol
+FR7 = ol
+COMP1 = motor kw=10 len=5
+COMP2 = motor kw=10 len=5
+FAN1 = motor kw=0.75 len=5
+FAN2 = motor kw=0.75 len=5
+PUMP = motor kw=2.2 len=15
+RS = congtac
+EXT = congtac on=1
+FL = congtac
+LP1 = congtac on=1
+HP1 = congtac on=1
+LP2 = congtac on=1
+HP2 = congtac on=1
+MODE = congtac
+HL2 = denbaoxanh
+HL3 = denbaodo
+4V1 = denbaovang
+4V2 = denbaovang
+# ---- động lực 380VAC (T S R)
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - KM1.1,3,5
+KM1.2,4,6 - OLC1.1,3,5
+OLC1.2,4,6 - COMP1.U,V,W
+CB1.2,4,6 - KM2.1,3,5
+KM2.2,4,6 - OLC2.1,3,5
+OLC2.2,4,6 - COMP2.U,V,W
+CB1.2,4,6 - KM3.1,3,5
+KM3.2,4,6 - IT1.1,3,5
+IT1.2,4,6 - FAN1.U,V,W
+CB1.2,4,6 - KM4.1,3,5
+KM4.2,4,6 - IT2.1,3,5
+IT2.2,4,6 - FAN2.U,V,W
+CB1.2,4,6 - KM7.1,3,5
+KM7.2,4,6 - FR7.1,3,5
+FR7.2,4,6 - PUMP.U,V,W
+NGUON.PE - COMP1.PE
+NGUON.PE - COMP2.PE
+NGUON.PE - FAN1.PE
+NGUON.PE - FAN2.PE
+NGUON.PE - PUMP.PE
+# ---- nguồn 220VAC cho bo mạch
+NGUON.L1,N - CB2.1,3
+CB2.2,4 - BOARD.L1,N
+NGUON.PE - BOARD.PE
+BOARD.SM - BOARD.1M
+# ---- ngõ vào DIN (tiếp điểm khô)
+BOARD.SL+ - RS.1
+RS.2 - BOARD.I0.0
+BOARD.SL+ - EXT.1
+EXT.2 - BOARD.I0.1
+BOARD.SL+ - FL.1
+FL.2 - BOARD.I0.2
+BOARD.SL+ - FR7.95
+FR7.96 - BOARD.I0.3
+BOARD.SL+ - LP1.1
+LP1.2 - BOARD.I0.4
+BOARD.SL+ - HP1.1
+HP1.2 - BOARD.I0.5
+BOARD.SL+ - OLC1.95
+OLC1.96 - BOARD.I0.6
+BOARD.SL+ - IT1.95
+IT1.96 - BOARD.I0.7
+BOARD.SL+ - LP2.1
+LP2.2 - BOARD.I1.0
+BOARD.SL+ - HP2.1
+HP2.2 - BOARD.I1.1
+BOARD.SL+ - OLC2.95
+OLC2.96 - BOARD.I1.2
+BOARD.SL+ - IT2.95
+IT2.96 - BOARD.I1.3
+BOARD.SL+ - MODE.1
+MODE.2 - BOARD.I1.4
+# ---- ngõ ra DOUT 220VAC
+CB2.2 - BOARD.1L
+CB2.2 - BOARD.2L
+BOARD.Q0.0 - KM7.A1
+BOARD.Q0.1 - HL2.X1
+BOARD.Q0.2 - HL3.X1
+BOARD.Q0.3 - KM1.A1
+BOARD.Q0.4 - 4V1.X1
+BOARD.Q0.5 - KM3.A1
+BOARD.Q0.6 - KM2.A1
+BOARD.Q0.7 - 4V2.X1
+BOARD.Q1.0 - KM4.A1
+KM7.A2 - CB2.4
+HL2.X2 - CB2.4
+HL3.X2 - CB2.4
+KM1.A2 - CB2.4
+4V1.X2 - CB2.4
+KM3.A2 - CB2.4
+KM2.A2 - CB2.4
+4V2.X2 - CB2.4
+KM4.A2 - CB2.4
+# ---- chương trình (mô phỏng logic bo mạch)
+BOARD.prog: I0.0 & I0.1 & I0.3 -> Q0.0
+BOARD.prog: Q0.0 -> Q0.1
+BOARD.prog: Q0.0 & I0.2 -> TON T0 3
+BOARD.prog: T0 & I0.4 & I0.5 & I0.6 & I0.7 -> M0.0
+BOARD.prog: M0.0 -> Q0.5
+BOARD.prog: M0.0 -> TON T1 2
+BOARD.prog: T1 -> Q0.3
+BOARD.prog: T0 & I1.0 & I1.1 & I1.2 & I1.3 -> M0.1
+BOARD.prog: M0.1 -> Q1.0
+BOARD.prog: M0.1 -> TON T2 8
+BOARD.prog: T2 -> Q0.6
+BOARD.prog: I1.4 & Q0.3 -> Q0.4
+BOARD.prog: I1.4 & Q0.6 -> Q0.7
+BOARD.prog: Q0.0 & !I0.2 -> TON T3 10
+BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.']]].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
 if(!S.devs.length)hint('Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.');
 })();
