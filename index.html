@@ -3272,8 +3272,77 @@ function manualPlace(){
   if(!devs.length){hint('Chưa chọn thiết bị nào.');return;}
   confirmReplace(()=>{applyBoard(devs,[],nid);hint('Đã đặt '+devs.length+' thiết bị lên bảng – anh tự nối dây rồi bấm ▶ Chạy thử nhé.');});
 }
+/* ================= ĐẤU TỰ ĐỘNG CÓ PLC: sinh mã mạch + chương trình ladder ================= */
+function autoPLC(cnt,R){
+  const sel=Object.keys(cnt).find(k=>TYPES[k]&&TYPES[k].ctl==='plc'&&cnt[k]>0);if(!sel)return null;
+  const P=TYPES[sel].plc,ac=P.ac,rly=P.rly;
+  if(S.devs&&Object.keys(cnt).some(k=>TYPES[k]&&isV({t:k})&&cnt[k]>0))return{err:'Đấu tự động PLC + biến tần chưa hỗ trợ – bỏ biến tần hoặc dùng 📥 Nhập mạch.'};
+  const nm=(cnt.motor|0)+(cnt['sub:pump']|0)+(cnt.motor6|0),nLd=(cnt.lamp|0)+(cnt.fan|0),yd=!!(R.yd||(cnt.motor6|0)>0)&&!R.rev;
+  const L=[],prog=[],rep=[];let ii=0,qi=0,ti=0,mi=0,ri=0;
+  const I=()=>{if(ii>=P.di)throw new Error('PLC CPU '+P.cpu+'C không đủ ngõ vào ('+P.di+' DI) – chọn CPU lớn hơn hoặc bớt thiết bị.');return plcA('I',ii++);};
+  const Q=()=>{if(qi>=P.dq)throw new Error('PLC CPU '+P.cpu+'C không đủ ngõ ra ('+P.dq+' DQ) – chọn CPU lớn hơn hoặc bớt thiết bị.');return plcA('Q',qi++);};
+  const T=()=>'T'+(ti++),Mb=()=>plcA('M',mi++);
+  const dec=(tag,ty)=>L.push(tag+' = '+ty);const W=(a,b)=>L.push(a+' - '+b);
+  try{
+    dec('NGUON','nguon3p');dec('CB2','cb2');W('NGUON.L1,N','CB2.1,3');
+    if(nm){dec('CB1','cb3');W('NGUON.L1,L2,L3','CB1.1,3,5');}
+    dec('PLC1',sel);
+    let SP,SMn;
+    if(ac){W('CB2.2,4','PLC1.L1,N');W('NGUON.PE','PLC1.PE');SP='PLC1.SL+';SMn='PLC1.SM';}
+    else{dec('PS1','nguon24v');W('CB2.2,4','PS1.L,N');W('NGUON.PE','PS1.PE');W('PS1.V+,V-','PLC1.L+,M');SP='PS1.V+';SMn='PS1.V-';}
+    W(SMn,'PLC1.1M');
+    if(rly){PLC_CPU[P.cpu].g.forEach((_,gi)=>W('CB2.2','PLC1.'+(gi+1)+'L'));}else W('PS1.V+,V-','PLC1.3L+,3M');
+    /* ngõ ra 220V: rơ-le PLC đóng thẳng; transistor qua rơ-le trung gian 24VDC */
+    const out=(q,a1,a2)=>{if(rly){W('PLC1.'+q,a1);}else{const r='R'+(++ri);dec(r,'relay24');W('PLC1.'+q,r+'.13');W(r+'.14','PS1.V-');W('CB2.2',r+'.9');W(r+'.5',a1);}W(a2,'CB2.4');};
+    const inNO=(tag,ty)=>{dec(tag,ty);const a=I();W(SP,tag+'.3');W(tag+'.4','PLC1.'+a);return a;};
+    const inNC=(tag,ty)=>{dec(tag,ty);const a=I();W(SP,tag+'.1');W(tag+'.2','PLC1.'+a);return a;};
+    let iEM=null;if(R.estop){iEM=inNC('EM1','dungkhan');rep.push('Dừng khẩn EM1 → '+iEM+' (NC).');}
+    for(let k=1;k<=nm;k++){
+      const isY=yd&&(cnt.motor6|0)>=k||yd&&!(cnt.motor6|0)&&k===1&&R.yd,pump=!isY&&k>(cnt.motor|0)&&(cnt['sub:pump']|0)>0;
+      const M='M'+k,OL='OL'+k;dec(M,isY?'motor6':pump?'bomchim':'motor');dec(OL,'ol');W('NGUON.PE',M+'.PE');
+      const iOFF=inNC('OFF'+k,'off'),iOL=(()=>{const a=I();W(SP,OL+'.95');W(OL+'.96','PLC1.'+a);return a;})();
+      const C=[iOFF,iOL].concat(iEM?[iEM]:[]).join(' & ');
+      if(R.rev&&!isY){
+        const KT='KT'+k,KN='KN'+k;dec(KT,'contactor');dec(KN,'contactor');
+        W('CB1.2,4,6',KT+'.1,3,5');W('CB1.2,4,6',KN+'.1,3,5');W(KT+'.2,4,6',OL+'.1,3,5');W(KN+'.2,4,6',OL+'.3,1,5');W(OL+'.2,4,6',M+'.U,V,W');
+        const iT=inNO('ONT'+k,'on'),iN=inNO('ONN'+k,'on'),qT=Q(),qN=Q();out(qT,KT+'.A1',KT+'.A2');out(qN,KN+'.A1',KN+'.A2');
+        prog.push('('+iT+' | '+qT+') & '+C+' & !'+iN+' & !'+qN+' -> '+qT,'('+iN+' | '+qN+') & '+C+' & !'+iT+' & !'+qT+' -> '+qN);
+        rep.push(M+': đảo chiều – '+iT+' thuận → '+qT+' ('+KT+'), '+iN+' nghịch → '+qN+' ('+KN+'), khóa chéo trong chương trình.');
+        var runB=qT+' | '+qN;}
+      else if(isY){
+        const KM='KM'+k,KS='KS'+k,KD='KD'+k;[KM,KS,KD].forEach(x=>dec(x,'contactor'));
+        W('CB1.2,4,6',KM+'.1,3,5');W(KM+'.2,4,6',OL+'.1,3,5');W(OL+'.2,4,6',M+'.U1,V1,W1');W(OL+'.2,4,6',KD+'.1,3,5');W(KD+'.2,4,6',M+'.W2,U2,V2');W(KS+'.1,3,5',M+'.U2,V2,W2');W(KS+'.2,4',KS+'.4,6');
+        const iON=inNO('ON'+k,'on'),m0=Mb(),t=T(),qM=Q(),qS=Q(),qD=Q(),ts=R.ydT||8;out(qM,KM+'.A1',KM+'.A2');out(qS,KS+'.A1',KS+'.A2');out(qD,KD+'.A1',KD+'.A2');
+        prog.push('('+iON+' | '+m0+') & '+C+' -> '+m0,m0+' -> TON '+t+' '+ts,m0+' -> '+qM,m0+' & !'+t+' & !'+qD+' -> '+qS,m0+' & '+t+' & !'+qS+' -> '+qD);
+        rep.push(M+': sao – tam giác, '+qM+' KM, '+qS+' KS (sao), '+qD+' KD (tam giác), chuyển sau '+ts+'s (timer '+t+').');var runB=m0;}
+      else{
+        const K='K'+k;dec(K,'contactor');W('CB1.2,4,6',K+'.1,3,5');W(K+'.2,4,6',OL+'.1,3,5');W(OL+'.2,4,6',M+'.U,V,W');
+        const iON=inNO('ON'+k,'on'),qK=Q();out(qK,K+'.A1',K+'.A2');
+        if(R.cyc){const m0=Mb(),t1=T(),t2=T();prog.push('('+iON+' | '+m0+') & '+C+' -> '+m0,m0+' & !'+t2+' -> TON '+t1+' '+R.cyc.on,t1+' -> TON '+t2+' '+R.cyc.off,m0+' & !'+t1+' -> '+qK);rep.push(M+': chạy '+R.cyc.on+'s – nghỉ '+R.cyc.off+'s lặp lại ('+t1+', '+t2+').');var runB=qK;}
+        else if(R.delay){const m0=Mb(),t1=T();prog.push('('+iON+' | '+m0+') & '+C+' -> '+m0,m0+' -> TON '+t1+' '+R.delay,t1+' -> '+qK);rep.push(M+': nhấn ON, trễ '+R.delay+'s mới chạy ('+t1+').');var runB=qK;}
+        else if(R.run){const t1=T();prog.push('('+iON+' | '+qK+') & '+C+' & !'+t1+' -> '+qK,qK+' -> TON '+t1+' '+R.run);rep.push(M+': chạy '+R.run+'s rồi tự tắt ('+t1+').');var runB=qK;}
+        else{prog.push('('+iON+' | '+qK+') & '+C+' -> '+qK);rep.push(M+': ON '+iON+' / OFF '+iOFF+' / rơ-le nhiệt '+iOL+' → '+qK+' ('+K+') tự giữ trong chương trình.');var runB=qK;}}
+      if(R.pilots||(cnt.pilotG|0)+(cnt.pilotR|0)>0){const hg='HG'+k,hr='HR'+k;dec(hg,'denbaoxanh');dec(hr,'denbaodo');const qg=Q(),qr=Q();out(qg,hg+'.X1',hg+'.X2');out(qr,hr+'.X1',hr+'.X2');
+        prog.push((/\|/.test(runB)?'('+runB+')':runB)+' -> '+qg,'!'+iOL+' -> '+qr);rep.push('Đèn xanh '+hg+' báo chạy ('+qg+'), đèn đỏ '+hr+' báo quá tải ('+qr+').');}
+    }
+    /* đèn / quạt 220V: công tắc vào I, tải ra Q */
+    const nSw=Math.max(nLd?1:0,cnt.switch|0);const sw=[];for(let k=1;k<=Math.min(nSw,nLd||nSw);k++){const tg='S'+k;dec(tg,'congtac');const a=I();W(SP,tg+'.1');W(tg+'.2','PLC1.'+a);sw.push(a);}
+    let li=0;[['lamp','D','den'],['fan','Q','quat']].forEach(([t,p,ty])=>{for(let k=1;k<=(cnt[t]|0);k++){const tg=p+'L'+(++li);dec(tg,ty);const q=Q();out(q,tg+'.a',tg+'.b');const a=sw[Math.min(li-1,sw.length-1)];
+      if(R.run&&R.stair){const t1=T();prog.push('('+a+' | '+q+') & !'+t1+' -> '+q,q+' -> TON '+t1+' '+R.run);}else prog.push(a+' -> '+q);}});
+    if(nLd)rep.push(nLd+' đèn/quạt: công tắc vào '+sw.join(', ')+', tải ra qua ngõ ra PLC.');
+    if(!nm&&!nLd)return{err:'Chọn thêm động cơ (hoặc đèn/quạt) để PLC điều khiển.'};
+  }catch(e){return{err:e.message};}
+  const code=L.join('\n')+'\n'+prog.map(p=>'PLC1.prog: '+p).join('\n');
+  const r=parseCircuit(code);if(r.errs.length)return{err:'Lỗi sinh mạch: '+r.errs[0]};
+  ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});
+  const key=d=>d.sub?'sub:'+d.sub:d.t,used={};r.devs.forEach(d=>used[key(d)]=(used[key(d)]|0)+1);
+  const added={},unused={};Object.keys(used).forEach(k=>{const x=used[k]-(cnt[k]|0);if(x>0)added[k]=x;});Object.keys(cnt).forEach(k=>{const x=(cnt[k]|0)-(used[k]|0);if(x>0)unused[k]=x;});
+  rep.unshift('Mạch PLC '+TYPES[sel].name.replace('PLC ','')+(rly?' – ngõ ra rơ-le đóng thẳng contactor':' – ngõ ra transistor qua rơ-le trung gian 24VDC')+(ac?'':', thêm nguồn tổ ong 24VDC')+'.');
+  rep.push('Chương trình ladder '+prog.length+' network đã nạp sẵn – chọn PLC, bấm ⚙ để xem.');
+  return{devs:r.devs,wires:r.wires,nid:r.nid,rep,added,unused};
+}
 function autoPlace(){
-  const st=bdState(),R=parseNotes(st.note);const r=autoBuild(st.counts,R);
+  const st=bdState(),R=parseNotes(st.note);const r=autoPLC(st.counts,R)||autoBuild(st.counts,R);
   if(r.err){const m=showModal('<div class="ic">⚠️</div><h2>Chưa đấu được</h2><p>'+esc(r.err)+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;return;}
   confirmReplace(()=>{
     applyBoard(r.devs,r.wires,r.nid);
