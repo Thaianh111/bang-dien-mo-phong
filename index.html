@@ -159,7 +159,7 @@ h1{font-size:16px;margin:0}
 .calcbox{text-align:left;font-size:13px;background:#0b121a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:12px;line-height:1.5;color:#cbd5e1}
 .bdCat{padding:12px 12px 4px;font-weight:800;color:#facc15;font-size:13px}
 .bdRow{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid #1d2935}
-.bdRow.on{background:#14251c}
+.bdRow.on{background:#14251c}.bdRow.dim{opacity:.3}.bdRow.rel{box-shadow:inset 3px 0 0 #facc15}
 .bdRow svg{width:52px;height:36px;flex:0 0 auto}
 .bdName{flex:1;font-size:14px}
 .step{display:flex;align-items:center;gap:6px}
@@ -3324,8 +3324,23 @@ function openBuilder(){
   const st=bdState();document.getElementById('builder').hidden=false;
   document.getElementById('bdNote').value=st.note||'';renderBuilder();
 }
+/* ---- Lập mạch: chọn thiết bị nào thì thiết bị liên quan sáng, không liên quan tối ---- */
+const BD_REL=(()=>{const V=Object.keys(VFD_MODELS),PL=['pilotG','pilotR','pilotY'],CT=['pbno','pbnc','estop','timer','relay'],M3=['motor','motor6','sub:pump'];
+  const r={src3:['cb3','mccbst','cb2','vprot','contactor','ol',...M3,...V,...CT,...PL,'plc','psu','relay24'],
+    src1:['cb1','cb2','switch','lamp','fan','socket','motor1','contactor','ol',...CT,...PL,'plc','psu','relay24','vprot'],
+    cb3:['src3','contactor','ol',...M3,...V,'vprot','mccbst'],mccbst:['src3','vprot','contactor','ol',...M3,...V,'cb2'],
+    cb2:['src1','src3','switch','lamp','fan','socket','motor1','contactor',...CT,...PL,'plc','psu'],cb1:['src1','src3','switch','lamp','fan','socket','motor1','contactor','pbno','pbnc'],
+    switch:['src1','cb1','cb2','lamp','fan','socket','motor1','plc',...V],contactor:['cb3','cb2','cb1','ol',...M3,'motor1',...CT,...PL,'plc','relay24'],ol:['contactor',...M3,'motor1','cb3',...PL],
+    motor:['src3','cb3','mccbst','contactor','ol',...V,'pbno','pbnc','estop',...PL],motor6:['src3','cb3','contactor','ol','timer','pbno','pbnc','estop',...PL],
+    motor1:['src1','cb1','cb2','contactor','ol','pbno','pbnc','switch'],lamp:['src1','cb1','cb2','switch'],fan:['src1','cb1','cb2','switch'],socket:['src1','cb1','cb2'],
+    pbno:['contactor','pbnc','relay','timer','plc','estop',...PL],pbnc:['contactor','pbno','relay','timer','plc','estop',...PL],estop:['contactor','pbno','pbnc','plc',...V],
+    timer:['contactor','pbno','pbnc','relay','motor6'],relay:['contactor','pbno','pbnc','timer',...PL],relay24:['plc','psu','contactor'],psu:['plc','relay24','cb2','cb1'],
+    vprot:['src3','mccbst','cb3',...PL],pot:[...V],plc:['psu','relay24','pbno','pbnc','estop','switch','contactor','ol',...PL,'cb2','src1','src3',...M3]};
+  V.forEach(k=>r[k]=['src3','cb3','mccbst',...M3,'pot','switch','pbno','pbnc','estop',...PL]);PL.forEach(k=>r[k]=['contactor','relay','plc','pbno','cb2']);r['sub:pump']=r.motor;return r;})();
+const bdRelKey=k=>TYPES[k]&&TYPES[k].ctl==='plc'?'plc':k;
+function bdRelSet(c){const sel=Object.keys(c).filter(k=>(c[k]|0)>0).map(bdRelKey);if(!sel.length)return null;const S2=new Set(sel);sel.forEach(k=>(BD_REL[k]||[]).forEach(x=>S2.add(x)));return S2;}
 function renderBuilder(){
-  const st=bdState(),c=st.counts;const list=document.getElementById('bdList');list.innerHTML='';
+  const st=bdState(),c=st.counts;const list=document.getElementById('bdList');list.innerHTML='';const RS=bdRelSet(c);const mark=(row,k)=>{if(!RS||(c[k]|0)>0)return;row.classList.add(RS.has(bdRelKey(k))?'rel':'dim');};
   const names={src:'Nguồn',prot:'Đóng cắt',ctrl:'Điều khiển',t1:'Tải 1 pha',t3:'Tải 3 pha',plc:'PLC Siemens & 24VDC'};
   BD_ORDER.forEach(cat=>{
     const h=document.createElement('div');h.className='bdCat';h.textContent=names[cat];list.appendChild(h);
@@ -3336,7 +3351,7 @@ function renderBuilder(){
       const stp=document.createElement('div');stp.className='step';stp.innerHTML='<button data-d="-1">−</button><b>'+n+'</b><button data-d="1">+</button>';
       stp.querySelectorAll('button').forEach(b=>b.onclick=()=>{c[sel]=Math.max(0,Math.min(4,(c[sel]|0)+(+b.dataset.d)));save();renderBuilder();});
       row.querySelectorAll('select').forEach(x=>x.onchange=()=>{const cp=row.querySelector('[data-p=cpu]').value,vv=row.querySelector('[data-p=v]').value;st.plcSel='plc'+cp+vv;save();renderBuilder();});
-      row.appendChild(stp);list.appendChild(row);}
+      mark(row,sel);row.appendChild(stp);list.appendChild(row);}
     bdKeys(cat).forEach(k=>{
       if(TYPES[bdT(k)].hideBd)return;
       const T=TYPES[bdT(k)],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
@@ -3345,7 +3360,7 @@ function renderBuilder(){
       const mx=T.max||8;
       stp.innerHTML=`<button data-d="-1">−</button><b>${n}</b><button data-d="1">+</button>`;
       stp.querySelectorAll('button').forEach(b=>b.onclick=()=>{c[k]=Math.max(0,Math.min(mx,(c[k]|0)+(+b.dataset.d)));save();renderBuilder();});
-      row.appendChild(stp);list.appendChild(row);
+      mark(row,k);row.appendChild(stp);list.appendChild(row);
     });
   });
   updParse();
