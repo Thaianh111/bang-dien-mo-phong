@@ -696,12 +696,13 @@ const VFD_CTL=['2','3','4','10','11','12','13','14','15','16','34','35','36','37
 function vfdState(f,P,d){
   const st={pw:0,sto:false,run:false,hz:0,fwd:true,ready:false,fault:!!d.burned};
   const k=t=>f(key(d.id,t));
-  for(const t of VFD_CTL){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'){st.burnCtl=t;return st;}}
+  for(const t of VFD_CTL){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'&&p!=='P24'&&p!=='M24'){st.burnCtl=t;return st;}}
+  const pp=t=>pot1(f,P,key(d.id,t)),ext=pp('12')==='M24';/* nguồn 24VDC ngoài: DCOM (12) nối 0V nguồn ngoài */
   for(const t of['U','V','W']){const p=pot1(f,P,key(d.id,t));if(p&&p!=='X'){st.burnOut=true;return st;}}
   const ph=new Set(['L1','L2','L3'].map(t=>pot1(f,P,key(d.id,t))).filter(p=>p&&p[0]==='L'));st.pw=ph.size;
   const v24=[k('10'),k('34'),k('35')];
-  st.sto=!TYPES[d.t].sto||(v24.includes(k('37'))&&v24.includes(k('38')));/* model không có STO thì luôn cho chạy */
-  const di=n=>v24.includes(k(String(n)));
+  st.sto=!TYPES[d.t].sto||((v24.includes(k('37'))||pp('37')==='P24')&&(v24.includes(k('38'))||pp('38')==='P24'));/* model không có STO thì luôn cho chạy */
+  const di=n=>v24.includes(k(String(n)))||(ext&&pp(String(n))==='P24');
   st.di=[di(13),di(14),di(15),di(16)];
   const fmax=PV(d,'fmax')||50;
   if(st.di[2]||st.di[3])st.hz=st.di[2]&&st.di[3]?PV(d,'f3'):st.di[2]?PV(d,'f1'):PV(d,'f2');
@@ -2586,6 +2587,7 @@ function scanCircuit(){
   byT('ol').forEach(o=>{if((connected(o,'1')||connected(o,'2'))&&!connected(o,'95'))add('w',tagOf(o)+': 95-96 chưa nối tiếp vào mạch cuộn hút – nhảy rồi contactor vẫn không nhả.',[o.id]);});
   /* motor */
   motors().forEach(m=>{const tt=m.t==='motor'?['U','V','W']:['U1','V1','W1'];if(tt.every(t=>!connected(m,t))){add('w',tagOf(m)+': chưa đấu dây.',[m.id]);return;}
+    {const fu=wireUF();if(S.devs.some(v=>isV(v)&&['U','V','W'].some(t=>tt.some(x=>fu(key(v.id,t))===fu(key(m.id,x)))))){if(!connected(m,'PE'))add('i',tagOf(m)+': chưa nối tiếp địa PE vào vỏ.',[m.id]);return;}}
     const ph=tt.map(t=>[...RK(m,t)]);
     if(ph.some(s=>s.includes('N')&&!s.some(p=>p[0]==='L')))add('e',tagOf(m)+': có đầu cuộn dây nối vào N – motor 3 pha chỉ nhận 3 pha L1-L2-L3.',[m.id],wOf([m.id]));
     else if(new Set(ph.flat().filter(p=>p[0]==='L')).size<3||ph.some(s=>!s.length))add('e',tagOf(m)+': không đủ 3 pha tới '+tt.join('-')+' → chạy mất pha.',[m.id],wOf([m.id]));
@@ -3708,6 +3710,34 @@ BOARD.prog: I1.4 & Q0.3 -> Q0.4
 BOARD.prog: I1.4 & Q0.6 -> Q0.7
 BOARD.prog: Q0.0 & !I0.2 -> TON T3 10
 BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.'],
+['Biến tần ACS580 + nguồn 24VDC ngoài','Bộ nguồn tổ ong 24V cấp lệnh chạy DI1, đảo chiều DI2 và mạch an toàn STO; DCOM về 0V nguồn ngoài',`# Biến tần ACS580 điều khiển bằng nguồn 24VDC ngoài
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+PS1 = nguon24v
+VFD1 = acs580
+M1 = motor kw=4 len=20
+RUN = congtac
+REV = congtac
+RV1 = chietap pos=60
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - VFD1.L1,L2,L3
+VFD1.U,V,W - M1.U,V,W
+NGUON.PE - VFD1.PE
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2,4 - PS1.L,N
+NGUON.PE - PS1.PE
+PS1.V- - VFD1.12
+PS1.V+ - RUN.1
+RUN.2 - VFD1.13
+PS1.V+ - REV.1
+REV.2 - VFD1.14
+PS1.V+ - VFD1.37
+PS1.V+ - VFD1.38
+VFD1.36 - PS1.V-
+VFD1.4 - RV1.1
+RV1.2,3 - VFD1.2,3`,'Bấm ▶ Chạy thử, bật RUN → biến tần chạy theo chiết áp; bật REV → đảo chiều. Thử bỏ dây PS1 −V → VFD1.12 (DCOM) xem DI có nhận không.'],
 ['Rơ-le điện áp Mikro MX210 + MCCB shunt trip','MX210 giám sát quá áp, thấp áp, mất pha, ngược pha – sự cố thì tiếp điểm NC cấp điện cuộn shunt trip cắt MCCB',`# Bảo vệ điện áp MX210 + MCCB shunt trip
 NGUON = nguon3p
 CBR = cb3
