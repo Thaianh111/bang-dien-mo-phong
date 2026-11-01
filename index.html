@@ -395,6 +395,14 @@ TYPES.psu={cat:'plc',name:'Nguồn tổ ong 24VDC',tag:'PS',w:130,h:76,terms:[P_
 TYPES.relay24=Object.assign({},TYPES.relay,{cat:'plc',name:'Rơ-le trung gian MY2 24VDC',cv:24,
   terms:TYPES.relay.terms.map(t=>t.id==='13'?P_('13',t.x,t.y,'13(+)'):t.id==='14'?P_('14',t.x,t.y,'14(−)'):t)});
 const isPLC=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='plc');
+/* ---- rơ-le bảo vệ điện áp Mikro MX210 & MCCB có cuộn shunt trip ---- */
+TYPES.vprot={cat:'prot',name:'Rơ-le bảo vệ điện áp Mikro MX210',tag:'VR',w:126,h:84,ctl:'vr',
+  terms:[P_('L1',18,0,'L1'),P_('L2',42,0,'L2'),P_('L3',66,0,'L3'),P_('N',100,0,'N'),P_('11',30,84,'11 C'),P_('12',63,84,'12 NC'),P_('14',96,84,'14 NO')],
+  contacts:[['11','14','NO'],['11','12','NC']]};
+TYPES.mccbst={cat:'prot',name:'MCCB 3P có shunt trip 220V + tiếp điểm phụ',tag:'MCCB',w:168,h:96,ctl:'cb',shunt:1,coil:['C1','C2'],
+  terms:[P_('1',20,0,'1/L1'),P_('3',48,0,'3/L2'),P_('5',76,0,'5/L3'),P_('C1',114,0,'C1'),P_('11',146,0,'11'),P_('2',20,96,'2/T1'),P_('4',48,96,'4/T2'),P_('6',76,96,'6/T3'),P_('C2',114,96,'C2'),P_('14',146,96,'14')],
+  contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO'],['11','14','NO']]};
+
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
 const CATS=[['lap','🧩 Lập mạch'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
@@ -550,7 +558,7 @@ function stop(){
   running=false;askedRun=false;result=null;lastFault='';runBtn.textContent='▶ Chạy thử';runBtn.className='btn run';
   Object.keys(timers).forEach(k=>{clearTimeout(timers[k]);delete timers[k];});clearTimeout(tmTO);
   let fixed=false;
-  S.devs.forEach(d=>{if(d.burned)fixed=true;d.pw=false;d.di=null;d.qo=null;d.mem=null;(d.prog||[]).forEach(n=>delete n.live);d.burned=false;d.en=false;d.t0=null;d.pressed=false;d.fo=0;d.ro=null;d.vs=null;d.burnWhy=null;if(d.trip){d.trip=false;}});
+  S.devs.forEach(d=>{if(d.burned)fixed=true;['vok','vpw','vstat','vt0','vtest','shTrip','shT0'].forEach(k=>delete d[k]);clearTimeout(d.vTO);clearTimeout(d.shTO);delete d.vTO;delete d.shTO;d.pw=false;d.di=null;d.qo=null;d.mem=null;(d.prog||[]).forEach(n=>delete n.live);d.burned=false;d.en=false;d.t0=null;d.pressed=false;d.fo=0;d.ro=null;d.vs=null;d.burnWhy=null;if(d.trip){d.trip=false;}});
   S.wires.forEach(w=>{if(w.burned)fixed=true;w.burned=false;});
   document.getElementById('result').style.display='none';
   if(fixed)hint('Đã thay thiết bị/dây bị cháy. Sửa lại đấu dây rồi chạy thử nhé.');
@@ -560,7 +568,7 @@ function changed(){if(running)evaluate();save();snap();render();if(DG.pa&&DG.pb)
 
 /* ================= hoàn tác / làm lại ================= */
 /* bỏ trạng thái tạm thời của lúc chạy thử khỏi lịch sử */
-const RUNTIME_KEYS=new Set(['en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem']);
+const RUNTIME_KEYS=new Set(['en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem','vok','vpw','vstat','vt0','vTO','vtest','shTrip','shT0','shTO']);
 const hist={u:[],r:[],last:null};
 function snapJson(){return JSON.stringify(S,(k,v)=>RUNTIME_KEYS.has(k)?undefined:v);}
 function snap(){
@@ -668,7 +676,7 @@ function tsec(d){return d.sec||5;}
 function act(d){
   switch(TYPES[d.t].ctl){
     case'cb':case'sw':return!!d.on;case'pb':return!!d.pressed;case'estop':return!!d.latched;
-    case'k':return!!d.en&&!d.burned;case'ol':return!!d.trip;
+    case'k':return!!d.en&&!d.burned;case'ol':return!!d.trip;case'vr':return!!d.vok;
     case'tm':return!!d.en&&!d.burned&&d.t0!=null&&Date.now()-d.t0>=tsec(d)*1000;}
   return false;
 }
@@ -750,6 +758,18 @@ function settle(newBurn){
       const ro=TYPES[d.t].ro===1?[ok]:[vs.ready,!!(vs.run&&(d.fo||0)>0.05||vs.run),ok];
       if(JSON.stringify(ro)!==JSON.stringify(d.ro||[])){d.ro=ro;ch=true;}});
     S.devs.forEach(d=>{const T=TYPES[d.t];const g=t=>pot1(f,P,key(d.id,t));
+      if(d.t==='vprot'){const p=['L1','L2','L3'].map(g),ph=p.map(x=>x&&x[0]==='L'?x:null),n=g('N');const any=ph.some(Boolean);
+        let st='';const u=new Set(ph.filter(Boolean));if(!any)st='OFF';else if(u.size<3)st='PH';else{const ix=ph.map(x=>+x[1]||1);if((ix[1]-ix[0]+3)%3!==1)st='SEQ';}
+        if(!st&&d.vtest)st=d.vtest;const pw=any;const healthy=!st;
+        if(pw!==!!d.vpw){d.vpw=pw;ch=true;}if(st!==(d.vstat||'')){d.vstat=st;ch=true;}
+        if(healthy){if(!d.vt0)d.vt0=Date.now();const dl=(PV(d,'dly')||2)*1000,left=d.vt0+dl-Date.now();
+          if(left<=0){if(!d.vok){d.vok=true;ch=true;}}else if(!d.vTO)d.vTO=setTimeout(()=>{d.vTO=null;if(running){evaluate();render();save();}},left+30);}
+        else{d.vt0=null;if(d.vok){d.vok=false;ch=true;}}return;}
+      if(TYPES[d.t].shunt){const v=volt(g('C1'),g('C2'));if(v===380&&!d.burned){d.burned=true;d.burnWhy='cuộn shunt 220V bị cấp 380V';newBurn.push(d);}
+        const en=!d.burned&&v===220;if(en!==!!d.en){d.en=en;ch=true;}
+        if(en&&d.on){d.on=false;d.trip=true;d.shTrip=true;sfxQ.add('clack');ch=true;}
+        if(en&&!d.on){if(!d.shT0)d.shT0=Date.now();if(Date.now()-d.shT0>4000&&!d.burned){d.burned=true;d.burnWhy='cuộn shunt trip bị cấp điện liên tục sau khi MCCB đã nhảy';newBurn.push(d);}
+          else if(!d.shTO)d.shTO=setTimeout(()=>{d.shTO=null;if(running){evaluate();render();save();}},4100);}else d.shT0=null;return;}
       if(d.t==='psu'){const v=volt(g('L'),g('N'));if(v===380&&!d.burned){d.burned=true;d.burnWhy='bị cấp 380V (2 pha) vào ngõ 220V';newBurn.push(d);}const pw=!d.burned&&v===220;if(pw!==!!d.pw){d.pw=pw;ch=true;}return;}
       if(!isPLC(d))return;const Pp=T.plc;const v=Pp.ac?volt(g('L1'),g('N')):volt(g('L+'),g('M'));let why=null;
       if(Pp.ac&&v===380)why='bị cấp 380V vào L1-N (chỉ chịu 220V)';
@@ -760,7 +780,7 @@ function settle(newBurn){
       if(why&&!d.burned){d.burned=true;d.burnWhy=why;newBurn.push(d);}
       const pw=!d.burned&&v===(Pp.ac?220:24);if(pw!==!!d.pw){d.pw=pw;ch=true;}
       const di=[];for(let i=0;i<Pp.di;i++)di.push(pw&&volt(g(plcA('I',i)),v1M)===24);if(di.join()!==(d.di||[]).join()){d.di=di;ch=true;}});
-    S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil)return;
+    S.devs.forEach(d=>{const T=TYPES[d.t];if(!T.coil||T.shunt)return;
       const v=volt(pot1(f,P,key(d.id,T.coil[0])),pot1(f,P,key(d.id,T.coil[1])));
       if((v===380||(T.cv===24&&v>=220))&&!d.burned){d.burned=true;newBurn.push(d);}
       const en=!d.burned&&v===(T.cv||220)&&!(FAULT&&FAULT.k==='coil'&&FAULT.d===d.id);
@@ -934,6 +954,18 @@ function evaluate(){
         else{errors++;msgs.push(['❌',nm+': không chạy – '+(m.n?'mới có '+m.n+' pha tới cuộn dây.':'chưa có pha nào tới cuộn dây.')]);}
       }
       if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối dây tiếp địa PE (xanh-vàng) vào vỏ động cơ.']);
+    }else if(d.t==='vprot'){
+      if(T.terms.every(t=>!connected(d,t.id))){warns++;msgs.push(['⚠️',nm+': đang để thừa, chưa đấu.']);return;}
+      const st=d.vstat;const nmS={OFF:'chưa có điện áp vào L1-L2-L3',PH:'MẤT PHA',SEQ:'NGƯỢC THỨ TỰ PHA',OV:'QUÁ ÁP (đang TEST)',UV:'THẤP ÁP (đang TEST)'};
+      if(d.vok)msgs.push(['✅',nm+': điện áp bình thường – rơ-le ra ĐÓNG (11-14 đóng, 11-12 mở). Chạm vào để TEST quá áp / thấp áp.']);
+      else if(!st)msgs.push(['⏱️',nm+': điện áp tốt, đang trễ khởi động '+(PV(d,'dly')||2)+'s – 11-12 (NC) còn đóng.']);
+      else{warns++;msgs.push(['🛑',nm+': '+nmS[st]+' – rơ-le ra NHẢ: 11-14 mở, 11-12 (NC) ĐÓNG'+(st==='PH'||st==='OFF'?'.':'.')]);}
+      if(!connected(d,'N'))msgs.push(['ℹ️',nm+': chưa nối N – để chế độ 3 pha 3 dây (cài trên rơ-le).']);
+    }else if(T.shunt){
+      if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY cuộn shunt trip – '+(d.burnWhy||'')+'. Phải nối tiếp tiếp điểm phụ AX (11-14) của MCCB để tự cắt cuộn khi MCCB đã nhảy.']);}
+      else if(d.shTrip&&d.trip)msgs.push(['⚡',nm+': ĐÃ NHẢY do cuộn shunt trip C1-C2 có điện'+(d.en?' – cuộn VẪN đang có điện, đóng lại sẽ nhảy tiếp!':'. Hết sự cố thì chạm để đóng lại.')]);
+      else if(d.on)msgs.push(['✅',nm+': đang đóng.']);else msgs.push(['⏸️',nm+': đang mở – chạm để đóng.']);
+      if(d.en&&!d.on&&!d.burned){warns++;msgs.push(['⚠️',nm+': cuộn shunt trip đang bị cấp điện liên tục – quá vài giây sẽ CHÁY cuộn. Nối tiếp AX 11-14 để tự cắt.']);}
     }else if(isPLC(d)||d.t==='psu'){
       if(T.terms.every(t=>!connected(d,t.id))){warns++;msgs.push(['⚠️',nm+': đang để thừa, chưa đấu.']);return;}
       if(d.burned){errors++;msgs.push(['🔥',nm+': CHÁY! '+(d.burnWhy||'')+'.']);return;}
@@ -1308,7 +1340,7 @@ function drawContact(g,x,y1,y2,closed,nc){
 }
 function prints(g,d,cls){const T=TYPES[d.t];T.terms.forEach(t=>{if(!t.p)return;const top=t.y===0;txt(g,t.x,top?t.y+13:t.y-6,t.p,{class:cls||'pr'});});}
 function drawBody(g,d,R){
-  if(isPLC(d)){drawPLC(g,d);plcLeds(d);return;}if(d.t==='psu'){drawPSU(g,d);return;}
+  if(isPLC(d)){drawPLC(g,d);plcLeds(d);return;}if(d.t==='psu'){drawPSU(g,d);return;}if(d.t==='vprot'){drawVR(g,d);return;}if(d.t==='mccbst'){drawMCCB(g,d);return;}
   const T=TYPES[d.t];const st=R.state&&R.state[d.id];const A=act(d);
   switch(d.t){
   case'src1':case'src3':
@@ -1541,6 +1573,7 @@ function tapDev(d){
   if(d.t==='pot'&&(running||isSel)){sfx('tick');d.p=d.p||{};let v=PV(d,'pos')+10;if(v>100)v=0;d.p.pos=v;changed();hint('Chiết áp '+tagOf(d)+': '+v+'%');return;}
   if(running){
     if(c==='sw'||c==='cb'){unlockAudio();sfx('click');d.on=!d.on;d.trip=false;changed();hint(nameOf(d)+(d.on?' ĐÓNG':' MỞ'));return;}
+    if(c==='vr'){const L=[null,'OV','UV'];d.vtest=L[(L.indexOf(d.vtest||null)+1)%3];sfx('click');changed();hint(tagOf(d)+(d.vtest?' – giả lập '+(d.vtest==='OV'?'QUÁ ÁP':'THẤP ÁP'):' – hết giả lập, điện áp bình thường'));return;}
     if(c==='estop'){sfx('clack');d.latched=!d.latched;changed();hint(nameOf(d)+(d.latched?' đã NHẤN KHẨN':' đã nhả'));return;}
     if(c==='ol'&&d.trip){d.trip=false;changed();hint('Đã RESET rơ-le nhiệt '+tagOf(d)+'.');return;}
   }
@@ -1756,7 +1789,7 @@ const PDEF={
   pot:[['pos','Vị trí chiết áp (%)',50]]
 };
 Object.keys(VFD_MODELS).forEach(k=>{PDEF[k]=PDEF.vfd;});
-Object.keys(TYPES).forEach(k=>{if(TYPES[k].ctl==='plc')PDEF[k]=[];});
+Object.keys(TYPES).forEach(k=>{if(TYPES[k].ctl==='plc')PDEF[k]=[];});PDEF.vprot=[['dly','Thời gian trễ khởi động (s)',2]];
 function PV(d,k){if(k==='sec')return tsec(d);const def=(PDEF[d.t]||[]).find(x=>x[0]===k);const v=d.p&&d.p[k];return(v===undefined||v===''||isNaN(+v))?(def?def[2]:0):+v;}
 const CB_STD=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250,320,400,500,630,800];
 const K_AC3=[9,12,18,22,25,32,40,50,65,75,85,100,130,150,185,225,265,330,400,500,630];
@@ -1782,7 +1815,7 @@ function wireUF(){
   return f;
 }
 const PWR={vfd:{a:['L1','L2','L3'],b:['U','V','W']},cb3:{a:['1','3','5'],b:['2','4','6']},contactor:{a:['1','3','5'],b:['2','4','6']},ol:{a:['1','3','5'],b:['2','4','6']},cb2:{a:['1','3'],b:['2','4']}};
-Object.keys(VFD_MODELS).forEach(k=>{PWR[k]=PWR.vfd;});
+Object.keys(VFD_MODELS).forEach(k=>{PWR[k]=PWR.vfd;});PWR.mccbst=PWR.cb3;
 function powerTree(){
   const src=S.devs.find(d=>TYPES[d.t].cat==='src');if(!src)return null;
   const f=wireUF();
@@ -1877,9 +1910,9 @@ function calc(ptIn){
     }
     (function walk(n){
       if(n.kind==='dev'){const d=n.d,r=nodeI(n);
-        if(d.t==='cb3'||d.t==='cb2'){
+        if(d.t==='cb3'||d.t==='cb2'||d.t==='mccbst'){
           let rt=6;if(r.Imax>0){const fac=r.vfdAny?1.25:r.ydAny?1.3:1.6;rt=upStd(CB_STD,Math.max(1.25*r.Imax,r.Imax-r.imot+fac*r.imot));if(!r.imot)rt=Math.max(rt,10);}
-          R.rec[d.id]=[(rt>63?'MCCB ':'MCB ')+(d.t==='cb3'?'3P ':'2P ')+rt+'A','I tính toán ≈ '+r.Imax.toFixed(1)+' A'];
+          R.rec[d.id]=[(rt>63?'MCCB ':'MCB ')+(d.t!=='cb2'?'3P ':'2P ')+rt+'A'+(d.t==='mccbst'?' + shunt trip 220V':''),'I tính toán ≈ '+r.Imax.toFixed(1)+' A'];
         }else if(d.t==='contactor'){
           const parts=subParts(n,[]);const jn=n.children.find(c=>c.kind==='join');const isFw=(function f(x){return(x.children||[]).some(c=>(c.kind==='join'&&c.tgt===n)||f(c));})(pt.root);
           const role=n.children.some(c=>c.kind==='star')?'KY (sao)':jn?'K nghịch (đảo pha)':isFw?'K thuận':parts.some(p=>p.p==='bot')&&!parts.some(p=>p.p==='top')?'KΔ (tam giác)':'K chính';
@@ -2028,6 +2061,7 @@ function buildLadder(pt){
     default:if(isV(d)||isPLC(d))TYPES[d.t].contacts.forEach(c=>add(d,c[0],c[1],c[2]==='NC'?'nc':'no'));break;
     case'relay24':case'relay':add(d,'9','1','nc');add(d,'9','5','no');add(d,'12','4','nc');add(d,'12','8','no');add(d,'13','14','rcoil');break;
     case'timer':add(d,'1','4','tmnc');add(d,'1','3','tmno');add(d,'8','5','tmnc');add(d,'8','6','tmno');add(d,'2','7','tcoil');break;
+    case'vprot':add(d,'11','14','no');add(d,'11','12','nc');break;case'mccbst':add(d,'C1','C2','coil');add(d,'11','14','no');break;
     case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
     case'switch':add(d,'1','2','sw');break;
     case'cb2':if(!inP){add(d,'1','2','cb');add(d,'3','4','cb');}break;
@@ -2215,6 +2249,8 @@ function termRole(d,tid){
   if(isPLC(d)){const P=T.plc;if(tid==='L1')return'nguồn 220VAC cấp PLC';if(tid==='N')return'trung tính cấp PLC';if(tid==='L+')return'+24VDC cấp PLC';if(tid==='M')return'0V cấp PLC';
     if(tid==='SL+')return'ra +24VDC (cấp nút/cảm biến)';if(tid==='SM')return'ra 0V (M)';if(tid==='1M')return'chung ngõ vào (nối 0V)';if(/^\dL$/.test(tid))return'chung ngõ ra rơ-le nhóm '+tid[0];
     if(tid==='3L+')return'+24VDC cho ngõ ra transistor';if(tid==='3M')return'0V ngõ ra transistor';if(tid[0]==='I')return'ngõ vào số';if(tid[0]==='Q')return'ngõ ra '+(P.rly?'rơ-le':'transistor');return'';}
+  if(d.t==='vprot')return({L1:'đo điện áp pha L1',L2:'đo điện áp pha L2',L3:'đo điện áp pha L3',N:'trung tính (chế độ 3P4W)','11':'chân chung (C) rơ-le ra','12':'thường đóng – đóng khi CÓ SỰ CỐ','14':'thường mở – đóng khi điện áp TỐT'})[tid]||'';
+  if(d.t==='mccbst'){if(tid==='C1'||tid==='C2')return'cuộn shunt trip 220V';if(tid==='11')return'tiếp điểm phụ AX – chung';if(tid==='14')return'tiếp điểm phụ AX – đóng khi MCCB đóng';}
   if(d.t==='psu')return({L:'vào 220VAC – pha',N:'vào 220VAC – trung tính','V+':'ra +24VDC','V-':'ra 0V'})[tid]||'';
   if(T.cat==='src')return tid==='N'?'dây trung tính':'dây pha '+pn(tid);
   if(T.coil&&T.coil.includes(tid))return(d.t==='relay'||d.t==='relay24')?(tid==='13'?'cuộn hút (+)':'cuộn hút (−)'):'đầu cuộn hút';
@@ -2737,7 +2773,7 @@ const IO_ALIAS={src3:'nguon3p nguon3pha nguon3 3p 3pha src3',src1:'nguon1p nguon
   pilotG:'pilotg denbaoxanh denxanh hg',pilotR:'pilotr denbaodo dendo hr',pilotY:'piloty denbaovang denvang hy',lamp:'lamp den bongden',fan:'fan quat',socket:'socket ocam',
   motor:'motor dongco motor3 dongco3pha dongco3dau m',motor6:'motor6 dongco6dau motor6dau motoryd',pump:'pump bomchim bom',pot:'pot chietap',
   vfd:'vfd bientan acs580',vfd150:'vfd150 acs150',vfd310:'vfd310 acs310',vfd355:'vfd355 acs355',vfd380:'vfd380 acs380',vfd480:'vfd480 acs480',vfd880:'vfd880 acs880'};
-IO_ALIAS.psu='psu nguon24v nguon24vdc toong nguontoong nguondc 24vdc';IO_ALIAS.relay24='relay24 my2dc my224v roletrunggian24v rtg24 relay24vdc';
+IO_ALIAS.vprot='vprot mx210 mikromx210 rolebaovedienap relaydienap voltagerelay';IO_ALIAS.mccbst='mccbst mccbshunt mccbshunttrip shunttrip mccbsht mccb';IO_ALIAS.psu='psu nguon24v nguon24vdc toong nguontoong nguondc 24vdc';IO_ALIAS.relay24='relay24 my2dc my224v roletrunggian24v rtg24 relay24vdc';
 Object.keys(PLC_CPU).forEach(c=>Object.keys(PLC_VAR).forEach(v=>{const vf=PLC_VAR[v].nm.toLowerCase().replace(/[^a-z]/g,'');IO_ALIAS['plc'+c+v]=['plc'+c+v,'s7'+c+'c'+vf,c+'c'+vf,'cpu'+c+'c'+vf,'s71200'+c+'c'+vf].join(' ')+(c==='1214'&&v==='ar'?' plc s71200 s7':'');}));
 const IO_MAP={};Object.keys(IO_ALIAS).forEach(k=>IO_ALIAS[k].split(' ').forEach(a=>IO_MAP[normVN(a).replace(/[^a-z0-9]/g,'')]=k));
 const IO_EX=`# Khởi động từ có rơ-le nhiệt, đèn báo
@@ -2811,7 +2847,7 @@ function ioLayout(devs){
   const P={src:[],cb:[],k:[],ol:[],m:[]},C={plc:[],btn:[],aux:[],pil:[],l1:[]};
   devs.forEach(d=>{const T=TYPES[d.t];
     if(isPLC(d)||d.t==='psu')C.plc.push(d);else if(T.cat==='src')P.src.push(d);else if(T.ctl==='cb')P.cb.push(d);else if(d.t==='contactor'||isV(d))P.k.push(d);else if(d.t==='ol')P.ol.push(d);
-    else if(T.cat==='t3')P.m.push(d);else if(['pbno','pbnc','estop','switch','pot'].includes(d.t))C.btn.push(d);else if(d.t==='relay'||d.t==='relay24'||d.t==='timer')C.aux.push(d);
+    else if(T.cat==='t3')P.m.push(d);else if(['pbno','pbnc','estop','switch','pot'].includes(d.t))C.btn.push(d);else if(d.t==='relay'||d.t==='relay24'||d.t==='timer'||d.t==='vprot')C.aux.push(d);
     else if(d.t.startsWith('pilot'))C.pil.push(d);else C.l1.push(d);});
   let y=24,maxX=0;
   ['src','cb','k','ol','m'].forEach(r=>{if(!P[r].length)return;let x=20,h=0;P[r].forEach(d=>{const T=TYPES[d.t];d.x=x;d.y=y;x+=T.w+50;h=Math.max(h,T.h);});maxX=Math.max(maxX,x);y+=h+90;});
@@ -2990,6 +3026,23 @@ function plcSheetRows(d){const io=ioMap(d),A=plcAddrs(d);return A.I.concat(A.Q).
 function plcSheetHTML(){const L=S.devs.filter(isPLC);if(!L.length)return'';
   return L.map(d=>'<h3>💻 '+esc(tagOf(d))+' – '+esc(typeName(d))+'</h3><table><tr><th>Địa chỉ</th><th>Loại</th><th>Đấu với</th></tr>'+plcSheetRows(d).map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+esc(r[2])+'</td></tr>').join('')+'</table>'+
     ((d.prog||[]).length?'<p class="mut" style="margin:8px 0 4px">Chương trình ('+d.prog.length+' network):</p><pre class="plcPre">'+d.prog.map((n,i)=>'N'+(i+1)+': '+esc(netTxt(n))).join('\n')+'</pre>':'<p class="mut">Chưa có chương trình.</p>')).join('');}
+function drawVR(g,d){const T=TYPES[d.t];
+  el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:6,fill:'#f1f5f9',stroke:'#475569'},g);
+  el('rect',{x:8,y:14,width:58,height:22,rx:3,fill:'#0f172a'},g);
+  const s=d.vstat||'';txt(g,37,29,!d.vpw?'----':d.vok?(d.vU||'400')+'V':s||'dLY',{fill:d.vok?'#4ade80':'#f87171','font-size':10,'font-weight':900,'font-family':'ui-monospace,monospace'});
+  txt(g,T.w-10,24,'MIKRO',{fill:'#1e3a8a','font-size':8,'font-weight':900,'text-anchor':'end'});txt(g,T.w-10,34,'MX210',{fill:'#0f172a','font-size':9,'font-weight':900,'text-anchor':'end'});
+  [['PWR',d.vpw,'#22c55e'],['OUT',d.vok,'#22c55e'],['UV',s==='UV','#ef4444'],['OV',s==='OV','#ef4444'],['PH',s==='PH'||s==='SEQ','#ef4444']].forEach(([l,on,c],i)=>{
+    el('circle',{cx:14+i*24,cy:48,r:3.6,fill:on?c:'#94a3b8'},g);txt(g,14+i*24,60,l,{fill:'#334155','font-size':6.5,'font-weight':800});});
+  prints(g,d);}
+function drawMCCB(g,d){const T=TYPES[d.t];
+  el('rect',{x:0,y:4,width:96,height:T.h-8,rx:6,fill:'#334155',stroke:'#0f172a'},g);
+  el('rect',{x:34,y:26,width:28,height:44,rx:4,fill:'#1e293b'},g);
+  const c=d.trip?'#f97316':d.on?'#16a34a':'#94a3b8';el('rect',{x:38,y:d.trip?40:d.on?30:54,width:20,height:14,rx:2,fill:c},g);
+  txt(g,48,82,d.trip?'TRIP':d.on?'ON':'OFF',{fill:c,'font-size':8,'font-weight':900});txt(g,48,20,'MCCB',{fill:'#e2e8f0','font-size':8,'font-weight':900});
+  el('rect',{x:100,y:20,width:28,height:56,rx:4,fill:d.burned?'#1c1917':d.en?'#f59e0b':'#fde68a',stroke:'#78350f'},g);txt(g,114,44,'SHT',{fill:'#78350f','font-size':8,'font-weight':900});txt(g,114,56,'220V',{fill:'#78350f','font-size':6.5});
+  el('rect',{x:132,y:20,width:28,height:56,rx:4,fill:'#e2e8f0',stroke:'#475569'},g);txt(g,146,44,'AX',{fill:'#334155','font-size':8,'font-weight':900});
+  el('path',{d:`M146 16V30M146 66V80M140 ${d.on?52:44}L146 30`,stroke:d.on?'#16a34a':'#334155','stroke-width':1.6,fill:'none'},g);
+  prints(g,d);}
 let sheetZoom=false;
 function openSheet(){
   const sh=document.getElementById('sheet');sh.hidden=false;
@@ -3594,7 +3647,33 @@ BOARD.prog: T2 -> Q0.6
 BOARD.prog: I1.4 & Q0.3 -> Q0.4
 BOARD.prog: I1.4 & Q0.6 -> Q0.7
 BOARD.prog: Q0.0 & !I0.2 -> TON T3 10
-BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.']].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
+BOARD.prog: !I0.3 | !I0.4 | !I0.5 | !I0.6 | !I0.7 | !I1.0 | !I1.1 | !I1.2 | !I1.3 | T3 -> Q0.2`,'Bật RS (remote) → bơm chạy; bật FL (có nước) → sau 3s quạt 1, 5s máy nén 1, 8s quạt 2/máy nén 2. MODE = sưởi (van 4 ngả). Tắt LP/HP để giả lập lỗi áp suất.'],
+['Rơ-le điện áp Mikro MX210 + MCCB shunt trip','MX210 giám sát quá áp, thấp áp, mất pha, ngược pha – sự cố thì tiếp điểm NC cấp điện cuộn shunt trip cắt MCCB',`# Bảo vệ điện áp MX210 + MCCB shunt trip
+NGUON = nguon3p
+CBR = cb3
+MCCB1 = mccbst
+VR1 = mx210 dly=2
+M1 = motor kw=15 len=20
+HG = denbaoxanh
+HR = denbaodo
+# động lực
+NGUON.L1,L2,L3 - MCCB1.1,3,5
+MCCB1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+# rơ-le MX210 đo điện áp phía NGUỒN (trước MCCB)
+NGUON.L1,L2,L3 - CBR.1,3,5
+CBR.2,4,6 - VR1.L1,L2,L3
+NGUON.N - VR1.N
+# mạch cắt: L → 11 → 12 (NC, đóng khi sự cố) → AX 11-14 → cuộn shunt C1-C2 → N
+CBR.2 - VR1.11
+VR1.12 - MCCB1.11
+MCCB1.14 - MCCB1.C1
+MCCB1.C2 - NGUON.N
+# đèn báo
+VR1.14 - HG.X1
+VR1.12 - HR.X1
+HG.X2 - NGUON.N
+HR.X2 - NGUON.N`,'Bấm ▶ Chạy thử, chờ VR1 sáng OUT (trễ 2s) rồi chạm MCCB1 để đóng. Chạm VR1 để giả lập QUÁ ÁP / THẤP ÁP → MCCB nhảy. Thử gỡ dây qua AX 11-14 xem cuộn shunt cháy!']].forEach(([title,desc,code,h])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title});});
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
 if(!S.devs.length)hint('Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.');
 })();
