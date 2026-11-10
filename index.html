@@ -444,9 +444,11 @@ TYPES.tctl={cat:'lanh',name:'Bộ điều khiển nhiệt độ (Dixell XR / STC
 /* ---- điện 1 pha 3 dây 110/220V (Đài Loan, Mỹ, Nhật…): 2 dây nóng A1/A2 lệch 180°, mỗi dây 110V so với N, A1–A2 = 220V ---- */
 TYPES.src1p3={cat:'src',name:'Nguồn 1 pha 3 dây 110/220V (Đài Loan)',tag:'NGUỒN',w:170,h:50,max:1,
   terms:[P_('L1',20,50,'L1','A1'),P_('N',60,50,'N','N'),P_('L2',100,50,'L2','A2'),P_('PE',145,50,'PE','PE')]};
-TYPES.kwh3={cat:'prot',name:'Đồng hồ điện 1P3W 110/220V (單相三線)',tag:'KWH',w:120,h:96,
-  terms:[P_('1',20,0,'L1'),P_('3',60,0,'N'),P_('5',100,0,'L2'),P_('2',20,96,'L1'),P_('4',60,96,'N'),P_('6',100,96,'L2')],
-  contacts:[['1','2','M'],['3','4','M'],['5','6','M']]};
+/* chân đồng hồ 1 pha 3 dây theo chuẩn JIS / Taipower: S = phía nguồn (Source), L = phía tải (Load); 1 = dây nóng L1, 2 = trung tính N, 3 = dây nóng L2 */
+TYPES.kwh3={cat:'prot',name:'Đồng hồ điện 1P3W 110/220V (單相三線)',tag:'KWH',w:150,h:120,
+  terms:[P_('1S',25,0,''),P_('2S',75,0,''),P_('3S',125,0,''),P_('1L',25,120,''),P_('2L',75,120,''),P_('3L',125,120,'')],
+  contacts:[['1S','1L','M'],['2S','2L','M'],['3S','3L','M']]};
+const KWH_ROLE={'1S':'L1 nguồn vào (từ CB tổng)','2S':'N nguồn vào','3S':'L2 nguồn vào (từ CB tổng)','1L':'L1 ra tải','2L':'N ra tải → cầu đấu N','3L':'L2 ra tải'};
 TYPES.barN={cat:'prot',name:'Cầu đấu trung tính N',tag:'TBN',w:120,h:26,bar:'#cbd5e1',
   terms:[P_('1',15,0,''),P_('2',45,0,''),P_('3',75,0,''),P_('4',105,0,'')],contacts:[['1','2','M'],['2','3','M'],['3','4','M']]};
 TYPES.barPE={cat:'prot',name:'Cầu đấu tiếp địa PE',tag:'TBE',w:120,h:26,bar:'#86efac',
@@ -458,7 +460,7 @@ TYPES.socket.sock=1;
 PCOL.A1=PCOL.L1;PCOL.A2=PCOL.L2;
 const isTW=p=>p==='A1'||p==='A2';
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
-Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});
+Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});TYPES.kwh3.multi=false;
 const CATS=[['lap','🧩 Lập mạch'],['lanh','❄️ Ngành lạnh'],['proj','📁 Mạch của tôi'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
@@ -1546,11 +1548,13 @@ function drawBody(g,d,R){
     txt(g,T.w/2,32,'110V / 220V ~ (Đài Loan)',{fill:'#cbd5e1','font-size':10});break;
   case'kwh3':{
     el('rect',{x:0,y:0,width:T.w,height:T.h,rx:9,fill:'#e2e8f0',stroke:'#475569','stroke-width':1.5},g);
-    el('rect',{x:12,y:16,width:96,height:28,rx:3,fill:'#14281f',stroke:'#0f172a'},g);
-    const e=txt(g,60,35,(d.kwh||0).toFixed(3).padStart(8,'0')+' kWh',{fill:'#4ade80','font-size':11,'font-family':'monospace','font-weight':700});
-    const k=txt(g,60,57,running&&d.kw?d.kw.toFixed(2)+' kW':'0.00 kW',{fill:'#0f172a','font-size':10,'font-weight':800});kwhEls[d.id]=[e,k];
-    txt(g,60,73,'1P3W 110/220V',{fill:'#334155','font-size':9,'font-weight':800});
-    txt(g,60,85,'單相三線電度表',{fill:'#64748b','font-size':8});break;}
+    el('rect',{x:4,y:4,width:T.w-8,height:24,rx:5,fill:'#cbd5e1'},g);el('rect',{x:4,y:T.h-28,width:T.w-8,height:24,rx:5,fill:'#cbd5e1'},g);
+    [['1S','L1 vào','#dc2626'],['2S','N vào','#111827'],['3S','L2 vào','#ca8a04']].forEach(([n,r,c],i)=>{const x=25+i*50;txt(g,x,15,n,{fill:c,'font-size':10,'font-weight':900});txt(g,x,25,r,{fill:'#334155','font-size':7.5,'font-weight':700});});
+    [['1L','L1 ra','#dc2626'],['2L','N ra','#111827'],['3L','L2 ra','#ca8a04']].forEach(([n,r,c],i)=>{const x=25+i*50;txt(g,x,T.h-17,r,{fill:'#334155','font-size':7.5,'font-weight':700});txt(g,x,T.h-7,n,{fill:c,'font-size':10,'font-weight':900});});
+    el('rect',{x:27,y:34,width:96,height:24,rx:3,fill:'#14281f',stroke:'#0f172a'},g);
+    const e=txt(g,75,50,(d.kwh||0).toFixed(3).padStart(8,'0')+' kWh',{fill:'#4ade80','font-size':10.5,'font-family':'monospace','font-weight':700});
+    const k=txt(g,75,70,running&&d.kw?d.kw.toFixed(2)+' kW':'0.00 kW',{fill:'#0f172a','font-size':9.5,'font-weight':800});kwhEls[d.id]=[e,k];
+    txt(g,75,82,'1P3W 110/220V · 單相三線',{fill:'#475569','font-size':7.5,'font-weight':700});break;}
   case'barN':case'barPE':
     el('rect',{x:2,y:2,width:T.w-4,height:T.h-6,rx:4,fill:T.bar,stroke:'#475569'},g);
     txt(g,T.w/2,T.h-8,d.t==='barN'?'N':'PE',{fill:'#1f2937','font-size':10,'font-weight':900});break;
@@ -1775,7 +1779,7 @@ const SPEC={src1:'1 pha 220V ~ (L, N, PE)',src3:'3 pha 4 dây 380V/220V + PE',cb
   contactor:'Cuộn 220V AC (A1-A2), 3 tiếp điểm chính, 1NO 13-14, 1NC 21-22',ol:'Rơ-le nhiệt: 95-96 NC, 97-98 NO',
   relay:'Rơ-le MY2, cuộn 220V (13-14), 2 tiếp điểm chuyển',timer:'Timer on-delay, cuộn 220V (2-7)',
   pilotG:'Đèn báo xanh 220V',pilotR:'Đèn báo đỏ 220V',pilotY:'Đèn báo vàng 220V',lamp:'Đèn 220V',fan:'Quạt 220V',socket:'Ổ cắm 220V có tiếp địa',
-  motor:'Động cơ 3 pha 380V (U-V-W)',src1p3:'1 pha 3 dây: L1–N 110V, L2–N 110V, L1–L2 220V + PE',kwh3:'Đồng hồ 1 pha 3 dây 110/220V – đo đúng cả tải 110V và 220V',barN:'Thanh đồng gom dây trung tính',barPE:'Thanh đồng gom dây tiếp địa',lamp110:'Đèn 110V (L1 hoặc L2 với N)',socket110:'Ổ cắm 110V có tiếp địa',ac220:'Máy lạnh 220V: đấu L1 + L2 + PE, không đấu N',motor6:'Động cơ 3 pha 6 đầu dây, khởi động Y/Δ'};
+  motor:'Động cơ 3 pha 380V (U-V-W)',src1p3:'1 pha 3 dây: L1–N 110V, L2–N 110V, L1–L2 220V + PE',kwh3:'Đồng hồ 1 pha 3 dây 110/220V (chuẩn JIS/Taipower). Chân vào: 1S = L1, 2S = N, 3S = L2. Chân ra: 1L = L1, 2L = N, 3L = L2',barN:'Thanh đồng gom dây trung tính',barPE:'Thanh đồng gom dây tiếp địa',lamp110:'Đèn 110V (L1 hoặc L2 với N)',socket110:'Ổ cắm 110V có tiếp địa',ac220:'Máy lạnh 220V: đấu L1 + L2 + PE, không đấu N',motor6:'Động cơ 3 pha 6 đầu dây, khởi động Y/Δ'};
 const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
 function showModal(html){const m=document.getElementById('modal');m.innerHTML='<div class="card">'+html+'</div>';m.hidden=false;return m;}
 function closeModal(){document.getElementById('modal').hidden=true;}
@@ -1805,7 +1809,7 @@ async function makePDF(canvases){
   return new Blob(parts,{type:'application/pdf'});
 }
 function stamp(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'-'+z(d.getHours())+z(d.getMinutes());}
-function wireName(c){if(c==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return c||'—';}
+function wireName(c){if(c==='A1')return'L1 (110V)';if(c==='A2')return'L2 (110V)';if(c==='L1'&&!S.devs.some(d=>d.t==='src3'))return'L';return c||'—';}
 async function diagramImage(){
   const sSel=selected,sPend=pending;selected=null;pending=null;exportMode=true;renderNow();
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
@@ -2424,6 +2428,8 @@ function termRole(d,tid){
   if(isPLC(d)){const P=T.plc;if(tid==='L1')return'nguồn 220VAC cấp PLC';if(tid==='N')return'trung tính cấp PLC';if(tid==='L+')return'+24VDC cấp PLC';if(tid==='M')return'0V cấp PLC';
     if(tid==='SL+')return'ra +24VDC (cấp nút/cảm biến)';if(tid==='SM')return'ra 0V (M)';if(tid==='1M')return'chung ngõ vào (nối 0V)';if(/^\dL$/.test(tid))return'chung ngõ ra rơ-le nhóm '+tid[0];
     if(tid==='3L+')return'+24VDC cho ngõ ra transistor';if(tid==='3M')return'0V ngõ ra transistor';if(tid[0]==='I')return'ngõ vào số';if(tid[0]==='Q')return'ngõ ra '+(P.rly?'rơ-le':'transistor');return'';}
+  if(d.t==='kwh3')return KWH_ROLE[tid]||'';
+  if(d.t==='barN')return'thanh trung tính N';if(d.t==='barPE')return'thanh tiếp địa PE';if(d.t==='src1p3')return({L1:'dây nóng L1 (110V)',N:'trung tính',L2:'dây nóng L2 (110V)'})[tid]||'';
   if(d.t==='vprot')return({L1:'đo điện áp pha L1',L2:'đo điện áp pha L2',L3:'đo điện áp pha L3',N:'trung tính (chế độ 3P4W)','11':'chân chung (C) rơ-le ra','12':'thường đóng – đóng khi CÓ SỰ CỐ','14':'thường mở – đóng khi điện áp TỐT'})[tid]||'';
   if(d.t==='mccbst'){if(tid==='C1'||tid==='C2')return'cuộn shunt trip 220V';if(tid==='11')return'tiếp điểm phụ AX – chung';if(tid==='14')return'tiếp điểm phụ AX – đóng khi MCCB đóng';}
   if(T.ctl==='ps'){if(T.psk==='fl')return({C:'chân chung',NO:'đóng khi CÓ nước chảy',NC:'đóng khi MẤT nước'})[tid]||'';return({'1':'chân chung','2':T.psk==='hp'?'đóng khi áp OK – mở khi áp cao':'đóng khi áp thấp (báo lỗi)','4':T.psk==='hp'?'đóng khi áp cao (báo lỗi)':'đóng khi áp OK – mở khi áp thấp'})[tid]||'';}
@@ -3867,21 +3873,23 @@ function autoTW(cnt){
   const n110=nL+nS,nCb1=n110?Math.max(1,Math.min(cnt.cb1|0||Math.min(2,n110),n110)):0;
   const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true}),km=D('kwh3',62,280);
   W(src,'L1',main,'1');W(src,'N',main,'3');W(src,'L2',main,'5');
-  W(main,'2',km,'1');W(main,'4',km,'3');W(main,'6',km,'5');
-  rep.push('Nguồn L1 · N · L2 → CB tổng 3P (3P2E, cực giữa là N) → đồng hồ 1P3W 110/220V.');
+  W(main,'2',km,'1S');W(main,'4',km,'2S');W(main,'6',km,'3S');
+  rep.push('Nguồn L1 · N · L2 → CB tổng 3P (3P2E): chân 1 = L1, chân 3 = N, chân 5 = L2.');
+  rep.push('CB tổng ra → đồng hồ 1P3W: chân 2 → 1S (L1 vào), chân 4 → 2S (N vào), chân 6 → 3S (L2 vào).');
+  rep.push('Đồng hồ ra: 1L = L1 ra, 2L = N ra, 3L = L2 ra (S = phía nguồn, L = phía tải).');
   const loadY=640,brY=470,cols=Math.max(nAC+nCb1,1);
   const bN=D('barN',40,brY+130),bE=D('barPE',40+Math.max(4,cols)*90+40,brY+130);
-  W(km,'4',bN,'1');W(src,'PE',bE,'1');rep.push('Đồng hồ ra N → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');
+  W(km,'2L',bN,'1');W(src,'PE',bE,'1');rep.push('Đồng hồ 2L (N ra) → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');
   let x=40,ni=1,ei=1;const nT=()=>String((ni++%4)+1),eT=()=>String((ei++%4)+1);
   for(let i=0;i<nAC;i++){const cb=D('cb2',x,brY,{on:true}),ac=D('ac220',x-10,loadY+80+((i%2)*10));
-    W(km,'2',cb,'1');W(km,'6',cb,'3');W(cb,'2',ac,'L1');W(cb,'4',ac,'L2');W(bE,eT(),ac,'PE');x+=170;
-    rep.push(tagOf2('AC',i)+': máy lạnh 220V qua CB 2P – lấy L1 + L2, KHÔNG đấu N.');}
+    W(km,'1L',cb,'1');W(km,'3L',cb,'3');W(cb,'2',ac,'L1');W(cb,'4',ac,'L2');W(bE,eT(),ac,'PE');x+=170;
+    rep.push(tagOf2('AC',i)+': đồng hồ 1L → CB 2P chân 1, đồng hồ 3L → CB 2P chân 3; CB ra chân 2, 4 → máy lạnh L1, L2. KHÔNG đấu N.');}
   const loads=[];for(let i=0;i<nL;i++)loads.push('lamp110');for(let i=0;i<nS;i++)loads.push('socket110');
-  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?'6':'2',cb=D('cb1',x,brY,{on:true});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
+  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?'3L':'1L',cb=D('cb1',x,brY,{on:true});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
   let lx=cbs.length?cbs[0].x-10:x;
   loads.forEach((t,i)=>{const k=cbs[i%cbs.length],dv=D(t,lx,loadY+(t==='socket110'?20:0));lx+=t==='socket110'?92:80;
     if(t==='lamp110'){W(k.cb,'2',dv,'a');W(bN,nT(),dv,'b');}else{W(k.cb,'2',dv,'L');W(bN,nT(),dv,'N');W(bE,eT(),dv,'PE');}});
-  cbs.forEach((k,j)=>rep.push('CB 110V số '+(j+1)+': lấy '+k.leg+' + N từ cầu đấu N → '+loads.filter((_,i)=>i%cbs.length===j).map(t=>t==='lamp110'?'đèn':'ổ cắm').join(', ')+'.'));
+  cbs.forEach((k,j)=>rep.push('CB 110V số '+(j+1)+': đồng hồ '+(k.leg==='L1'?'1L':'3L')+' ('+k.leg+') → CB 1P chân 1, N lấy từ cầu đấu N → '+loads.filter((_,i)=>i%cbs.length===j).map(t=>t==='lamp110'?'đèn':'ổ cắm').join(', ')+'.'));
   if(cbs.length>1)rep.push('Các nhánh 110V được chia xen kẽ L1 / L2 cho cân tải.');
   rep.push('Chạy thử: L1–N = 110V, L2–N = 110V, L1–L2 = 220V (đo bằng 🩺 VOM). Đồng hồ kWh chạy nhanh: 1 giây = 1 phút.');
   const added={},unused={},why={};
