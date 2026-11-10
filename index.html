@@ -3870,10 +3870,11 @@ function autoTW(cnt){
   const W=(a,ta,b,tb)=>wires.push({id:'w'+(nid++),a:{d:a.id,t:ta},b:{d:b.id,t:tb}});
   let nAC=Math.max(0,cnt.ac220|0),nL=Math.max(0,cnt.lamp110|0),nS=Math.max(0,cnt.socket110|0);
   if(!nAC&&!nL&&!nS){nAC=1;nL=1;nS=1;}
-  const n110=nL+nS,nCb1=n110?Math.max(1,Math.min(cnt.cb1|0||Math.min(2,n110),n110)):0;
-  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true}),km=D('kwh3',62,280);
+  const n110=nL+nS,nCb1=n110?Math.max(1,Math.min(cnt.cb1|0||1,n110)):0;
+  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true,lbl:'CB tổng 40A'}),km=D('kwh3',62,280,{lbl:'Đồng hồ'});
   W(src,'L1',main,'1');W(src,'N',main,'3');W(src,'L2',main,'5');
   W(main,'2',km,'1S');W(main,'4',km,'2S');W(main,'6',km,'3S');
+  rep.push('Thiết bị: CB tổng 無熔絲開關 3P2E 40A · đồng hồ 單相三線電度表 1P3W 110/220V · CB máy lạnh 2P 20A · CB sinh hoạt 1P 20A · cầu đấu N + PE.');
   rep.push('Nguồn L1 · N · L2 → CB tổng 3P (3P2E): chân 1 = L1, chân 3 = N, chân 5 = L2.');
   rep.push('CB tổng ra → đồng hồ 1P3W: chân 2 → 1S (L1 vào), chân 4 → 2S (N vào), chân 6 → 3S (L2 vào).');
   rep.push('Đồng hồ ra: 1L = L1 ra, 2L = N ra, 3L = L2 ra (S = phía nguồn, L = phía tải).');
@@ -3881,14 +3882,15 @@ function autoTW(cnt){
   const bN=D('barN',40,brY+130),bE=D('barPE',40+Math.max(4,cols)*90+40,brY+130);
   W(km,'2L',bN,'1');W(src,'PE',bE,'1');rep.push('Đồng hồ 2L (N ra) → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');
   let x=40,ni=1,ei=1;const nT=()=>String((ni++%4)+1),eT=()=>String((ei++%4)+1);
-  for(let i=0;i<nAC;i++){const cb=D('cb2',x,brY,{on:true}),ac=D('ac220',x-10,loadY+80+((i%2)*10));
+  for(let i=0;i<nAC;i++){const cb=D('cb2',x,brY,{on:true,lbl:'CB AC'+(nAC>1?i+1:'')+' 20A'}),ac=D('ac220',x-10,loadY+80+((i%2)*10));
     W(km,'1L',cb,'1');W(km,'3L',cb,'3');W(cb,'2',ac,'L1');W(cb,'4',ac,'L2');W(bE,eT(),ac,'PE');x+=170;
     rep.push(tagOf2('AC',i)+': đồng hồ 1L → CB 2P chân 1, đồng hồ 3L → CB 2P chân 3; CB ra chân 2, 4 → máy lạnh L1, L2. KHÔNG đấu N.');}
   const loads=[];for(let i=0;i<nL;i++)loads.push('lamp110');for(let i=0;i<nS;i++)loads.push('socket110');
-  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?'3L':'1L',cb=D('cb1',x,brY,{on:true});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
+  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?'3L':'1L',cb=D('cb1',x,brY,{on:true,lbl:'CB 110V'+(nCb1>1?' '+(j+1):'')});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
   let lx=cbs.length?cbs[0].x-10:x;
   loads.forEach((t,i)=>{const k=cbs[i%cbs.length],dv=D(t,lx,loadY+(t==='socket110'?20:0));lx+=t==='socket110'?92:80;
     if(t==='lamp110'){W(k.cb,'2',dv,'a');W(bN,nT(),dv,'b');}else{W(k.cb,'2',dv,'L');W(bN,nT(),dv,'N');W(bE,eT(),dv,'PE');}});
+  bN.x=x+10;bN.y=brY+20;bE.x=x+10;bE.y=brY+90;
   cbs.forEach((k,j)=>rep.push('CB 110V số '+(j+1)+': đồng hồ '+(k.leg==='L1'?'1L':'3L')+' ('+k.leg+') → CB 1P chân 1, N lấy từ cầu đấu N → '+loads.filter((_,i)=>i%cbs.length===j).map(t=>t==='lamp110'?'đèn':'ổ cắm').join(', ')+'.'));
   if(cbs.length>1)rep.push('Các nhánh 110V được chia xen kẽ L1 / L2 cho cân tải.');
   rep.push('Chạy thử: L1–N = 110V, L2–N = 110V, L1–L2 = 220V (đo bằng 🩺 VOM). Đồng hồ kWh chạy nhanh: 1 giây = 1 phút.');
@@ -3906,7 +3908,7 @@ setInterval(()=>{const ms=S.devs.filter(d=>d.t==='kwh3');if(!ms.length)return;
   ms.forEach(d=>{d.kw=running?w/1000:0;if(running)d.kwh=(d.kwh||0)+d.kw/60;const e=kwhEls[d.id];
     if(e){e[0].textContent=(d.kwh||0).toFixed(3).padStart(8,'0')+' kWh';e[1].textContent=d.kw.toFixed(2)+' kW';}});},1000);
 (()=>{const r=autoTW({src1p3:1,ac220:1,lamp110:1,socket110:1});
-  SAMPLES.push({title:'🇹🇼 Tủ điện Đài Loan 110/220V',desc:'1 pha 3 dây: CB tổng → đồng hồ 1P3W → máy lạnh 220V (L1–L2) + đèn, ổ cắm 110V',
+  SAMPLES.push({title:'🇹🇼 Tủ điện Đài Loan 110/220V',desc:'CB tổng 3P2E 40A → đồng hồ 1P3W → CB 2P 20A máy lạnh 220V + CB 1P 20A sinh hoạt 110V (đèn, ổ cắm)',
     devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:'Tủ điện 110/220V: bấm ▶ Chạy thử, rồi dùng 🩺 VOM đo L1–N, L1–L2.'});})();
 function autoPlace(){
   const st=bdState(),R=parseNotes(st.note);const r=autoTW(st.counts,R)||autoPLC(st.counts,R)||autoLanh(st.counts,R)||autoBuild(st.counts,R);
