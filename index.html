@@ -88,7 +88,8 @@ h1{font-size:16px;margin:0}
 .cabSvg{background:#fff;border-radius:8px;overflow:auto;margin-top:8px}
 .cabWrap{position:relative;perspective:1800px}.cabSvg [data-cd]{touch-action:none}.cabSvg [data-cw]{cursor:pointer}
 .cabPal{display:flex;gap:6px;overflow-x:auto;padding:6px 0}.cabPal .item{width:78px;font-size:10.5px}.cabPal .item svg{width:56px;height:38px}.cabPalG{margin-top:8px}.cabTools .btn.on{background:#facc15;color:#1a1300;border-color:#facc15}
-.cab3d{position:relative;height:66vh;min-height:380px;border-radius:10px;overflow:hidden;background:#cfd8e3;touch-action:none;margin-top:8px}.cab3d canvas{display:block;width:100%;height:100%}.c3msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#334155;font-weight:700}.c3tip{position:absolute;left:8px;top:8px;right:8px;background:#0f172acc;color:#fff;border-radius:8px;padding:6px 9px;font-size:12.5px;pointer-events:none}.cabDoor{position:absolute;transform-origin:0 50%;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.35,.8,.3,1);z-index:2}
+.cab3d{position:relative;height:66vh;min-height:380px;border-radius:10px;overflow:hidden;background:#cfd8e3;touch-action:none;margin-top:8px}.cab3d canvas{display:block;width:100%;height:100%}.c3msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#334155;font-weight:700}.npcBox{position:absolute;left:8px;right:8px;bottom:8px;background:#0f172af2;border:1.5px solid #facc15;border-radius:12px;padding:8px 10px;color:#fff;font-size:13.5px;line-height:1.45;z-index:3}.npcN{display:flex;align-items:center;gap:6px;font-weight:800;color:#facc15;margin-bottom:4px}.npcN small{color:#cbd5e1;font-weight:600}.npcN .btn{padding:3px 8px;font-size:12px}.npcA{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.npcA .btn{flex:1 1 30%;padding:8px 6px;font-size:13px;white-space:normal}
+.c3tip{position:absolute;left:8px;top:8px;right:8px;background:#0f172acc;color:#fff;border-radius:8px;padding:6px 9px;font-size:12.5px;pointer-events:none}.cabDoor{position:absolute;transform-origin:0 50%;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.35,.8,.3,1);z-index:2}
 .cabDoor.open{transform:rotateY(-103deg);pointer-events:none}.dFace{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(4px 6px 8px #0006)}.dFace svg{width:100%;height:100%;display:block}.dBack{transform:rotateY(180deg)}.cabTop{display:flex;gap:8px;align-items:center;margin:4px 0 8px}.cabTop label{font-size:12.5px;color:var(--mut);font-weight:700}
 .cabTop select,#bdCab select{flex:1;width:100%;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:14px}
 .cabTools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}.cabTools .btn{padding:5px 10px}
@@ -4880,7 +4881,7 @@ function renderCab(){
     '<div class="calcbox" id="cabStat">'+cabStatus(R)+'</div>'+
     '<div class="mcSeg" id="cabSeg"><button data-v="plate" class="'+(cabView==='plate'?'on':'')+'">🗄 Tủ & đấu dây</button><button data-v="3d" class="'+(cabView==='3d'?'on':'')+'">🧊 3D</button><button data-v="bom" class="'+(cabView==='bom'?'on':'')+'">📋 Vật tư</button><button data-v="gia" class="'+(cabView==='gia'?'on':'')+'">💰 Báo giá</button></div>'+
     (cabView!=='bom'&&cabView!=='gia'?'<div class="cabTools"><button class="btn" id="cabDoorBtn">'+(cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh')+'</button><button class="btn '+(running?'stop':'run')+'" id="cabRun">'+(running?'■ Dừng':'▶ Chạy thử')+'</button>'+
-      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
+      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn'+(S.cab.npc!==0?' on':'')+'" id="v3npc">👷 Anh Sáu</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
     pal+
     (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(cabWireBar(L)||'')+(cabSelW&&cabOpen&&S.wires.some(w=>w.id===cabSelW)?'':sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
         '<span class="mut">'+cabHelp()+'</span>')+'</div>':'')+
@@ -4893,6 +4894,7 @@ function renderCab(){
   const db=B.querySelector('#cabDoorBtn');if(db)db.onclick=()=>{if(cabView==='3d'){cabOpen=!cabOpen;db.textContent=cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh';sfx('clack');}else cabToggleDoor();};
   const rb=B.querySelector('#cabRun');if(rb)rb.onclick=()=>{unlockAudio();running?stop():start();rb.textContent=running?'■ Dừng':'▶ Chạy thử';rb.className='btn '+(running?'stop':'run');cabLive(true);};
   [['#v3rt','route3','up','floor'],['#v3q','q3','hi','lo']].forEach(([q,k,a,b])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{S.cab[k]=(S.cab[k]||a)===a?b:a;save();renderCab();};});
+  {const nb=B.querySelector('#v3npc');if(nb)nb.onclick=()=>{S.cab.npc=S.cab.npc===0?1:0;save();nb.classList.toggle('on',S.cab.npc!==0);cabMsg(S.cab.npc!==0?'👷 Anh Sáu Điện sẵn sàng – bấm ▶ Chạy thử là ảnh chạy lại tủ giảng bài và đố vui.':'Đã cho anh Sáu nghỉ.');};}
   {const a=B.querySelector('#v3shot');if(a)a.onclick=c3Photo;const r=B.querySelector('#v3rec');if(r)r.onclick=c3Rec;const gr=B.querySelector('#cabGrade');if(gr)gr.onclick=lessonGrade;}
   [['#v3cab','cab'],['#v3all','all']].forEach(([q,v])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(C3&&C3.view)C3.view(v);};});
   [['#cabUndo',undo],['#cabRedo',redo]].forEach(([q,f])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(running){cabMsg('Bấm ■ Dừng trước khi hoàn tác.');return;}f();cabSel=null;cabPend=null;renderCab();cabMsg(f===undo?'Đã hoàn tác.':'Đã làm lại.');};});
@@ -5029,6 +5031,83 @@ function lessonBar(){let b=document.getElementById('lsBar');const Ls=LESSONS.fin
   if(!Ls){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='lsBar';document.querySelector('.tools').after(b);}b.dataset.k=Ls.k;
   b.innerHTML='<span>🎓 '+esc(Ls.t)+'</span><button class="btn" id="lsHint">💡</button><button class="btn run" id="lsGo">Chấm điểm</button>';
   b.querySelector('#lsGo').onclick=lessonGrade;b.querySelector('#lsHint').onclick=()=>{const m=showModal('<div class="ic">💡</div><h2>Đề bài & gợi ý</h2><p style="text-align:left">'+esc(Ls.d)+'</p><div class="calcbox">'+esc(Ls.hint)+'</div><div class="row"><button class="btn" id="hOk">Đóng</button></div>');m.querySelector('#hOk').onclick=closeModal;};}
+/* ================= 👷 ANH SÁU ĐIỆN: thợ trong xưởng 3D – ngồi bàn, bấm chạy thử thì chạy lại tủ giảng nguyên lý + đố vui theo đúng mạch đang có ================= */
+function npcScript(){const has=t=>S.devs.some(d=>d.t===t),cnt=t=>S.devs.filter(d=>d.t===t).length,isVfd=S.devs.some(d=>TYPES[d.t].ctl==='vfd'),isPlc=S.devs.some(d=>TYPES[d.t].ctl==='plc');
+  const mot=S.devs.find(d=>d.t==='motor'||d.t==='motor6'),kw=mot?PV(mot,'kw')||1:0,In=mot?(CABAMP[mot.id]||kw*2):0,inS=In?In.toFixed(1):'';
+  const L=[],Q=[],q=(t,o,why)=>Q.push({q:t,o,why});/* o[0] luôn là đáp án đúng, lúc hỏi sẽ xáo */
+  if(has('contactor'))L.push('Con contactor này á, cuộn hút A1–A2 có điện là nó "cạch" một cái, kéo 3 tiếp điểm chính 1-2, 3-4, 5-6 đóng lại cho tải ăn điện. Nghe "cạch" mà motor hổng quay thì coi lại mạch động lực, đừng đổ thừa contactor nghen.');
+  if(has('contactor')&&has('pbno')){L.push('Nhấn ON rồi nhả mà motor vẫn chạy là nhờ tiếp điểm 13-14 mắc song song với nút ON, kêu là mạch tự giữ. Hổng có nó thì em đứng đè nút tới chiều, mỏi tay ráng chịu.');
+    q('Tiếp điểm tự giữ 13-14 của contactor mắc sao với nút ON?',['Song song với nút ON','Nối tiếp với nút ON','Khỏi mắc, để đó cho đẹp'],'Mắc song song để khi nhả nút ON, dòng vẫn đi vòng qua 13-14 nuôi cuộn hút.');}
+  if(has('pbnc')||has('estop'))q('Nút OFF / dừng khẩn dùng loại tiếp điểm nào?',['Thường đóng (NC)','Thường mở (NO)','Loại nào cũng được'],'Dùng NC để lỡ đứt dây điều khiển thì mạch tự dừng – hư theo hướng an toàn.');
+  if(has('ol')){L.push('Rơ-le nhiệt chỉnh bằng dòng định mức motor'+(inS?' (con này cỡ '+inS+' A)':'')+'. Quá tải là thanh lưỡng kim cong, 95-96 mở ra cắt cuộn hút, 97-98 đóng lại báo động. Chỉnh cao cho khỏi nhảy là cháy motor, lúc đó đừng kiếm anh.');
+    q('Rơ-le nhiệt nhảy thì cặp tiếp điểm nào MỞ ra để cắt cuộn hút contactor?',['95-96','97-98','13-14'],'95-96 là thường đóng, mắc nối tiếp cuộn hút. 97-98 là thường mở, để kéo đèn / còi báo quá tải.');}
+  if(cnt('contactor')>=2&&mot&&!has('sel3')){L.push('Hai contactor mà đóng cùng lúc là chập pha, nổ banh tủ. Nên phải khóa chéo: cuộn K1 đi qua tiếp điểm thường đóng 21-22 của K2 và ngược lại. Thằng này chạy thì thằng kia nằm im.');
+    q('Khóa chéo giữa 2 contactor dùng tiếp điểm nào của contactor kia?',['Thường đóng 21-22','Thường mở 13-14','Tiếp điểm chính 1-2'],'Lấy NC 21-22 của K2 mắc nối tiếp cuộn K1: K2 hút thì 21-22 mở, K1 hết đường ăn điện.');}
+  if(mot){L.push('Motor '+kw+' kW ở 380V ăn cỡ '+(inS||(kw*2))+' A. Mẹo nè: mỗi kW chừng 2 ampe, tính nhẩm khỏi móc điện thoại.');
+    const I=In||kw*2;q('Đố em: motor '+kw+' kW, 3 pha 380V thì dòng định mức cỡ bao nhiêu?',[I.toFixed(1)+' A',(I/2.6).toFixed(1)+' A',(I*3).toFixed(1)+' A'],'I = P / (√3 × U × cosφ × η). Nhẩm lẹ: 1 kW ≈ 2 A ở 380V.');
+    q('Muốn motor 3 pha quay ngược chiều thì làm sao?',['Đảo 2 trong 3 dây pha','Đảo vòng cả 3 dây pha','Đổi chỗ dây tiếp địa'],'Đảo 2 pha là thứ tự pha đổi, từ trường quay ngược. Đảo vòng cả 3 thì thứ tự y nguyên, quay như cũ.');}
+  if(has('motor6'))q('Khởi động sao – tam giác để chi vậy?',['Giảm dòng khởi động','Cho motor quay nhanh hơn','Tiết kiệm dây đồng'],'Đấu sao thì điện áp mỗi cuộn còn 220V, dòng khởi động giảm còn khoảng 1/3. Lên tốc độ rồi mới chuyển tam giác.');
+  if(isVfd){L.push('Biến tần chỉnh tần số để đổi tốc độ: n = 120f / p. Motor 4 cực ở 50 Hz quay cỡ 1500 vòng, hạ 25 Hz là còn phân nửa. Đừng đóng cắt contactor phía sau biến tần lúc đang chạy nghen, nó dỗi nó báo lỗi.');
+    q('Motor 4 cực chạy biến tần ở 25 Hz thì tốc độ đồng bộ bao nhiêu vòng/phút?',['750','1500','3000'],'n = 120 × f / p = 120 × 25 / 4 = 750 vòng/phút.');}
+  if(has('timer')){L.push('Timer on-delay: cấp điện cho cuộn xong nó đếm đủ giờ mới đổi tiếp điểm. Y như hẹn "5 phút nữa tới" mà 5 phút sau mới bước ra khỏi nhà.');
+    q('Timer on-delay đặt 5 giây: cấp điện xong bao lâu tiếp điểm mới đổi trạng thái?',['Sau 5 giây','Ngay lập tức','Khi mất điện'],'On-delay = trễ đóng: có điện → đếm đủ thời gian đặt → mới tác động.');}
+  if(has('sel3'))L.push('Switch gạt 3 vị trí 1–0–2: gạt bên nào bên đó chạy, giữa là nghỉ. Cái tay gạt có một cái à, nên hổng cách chi cho hai bên chạy một lượt.');
+  if(has('warnL')||has('pilotTR'))L.push('Đèn cảnh báo lấy điện qua 97-98 của rơ-le nhiệt. Nó chớp là có chuyện, đừng lấy băng keo đen dán lại cho đỡ chói mắt nha mấy cha.');
+  if(has('baw2c')||has('src1p3')){L.push('Điện 1 pha 3 dây kiểu Đài Loan: L1–N và L2–N là 110V, L1–L2 là 220V. Đồng hồ BAW-2C chỉ cho 2 dây nóng chui qua, dây trung tính đi thẳng, hổng ghé.');
+    q('Dây trung tính của đồng hồ BAW-2C đấu ở đâu?',['Đi thẳng, không qua đồng hồ','Vào chân 2S','Vào chân 1L'],'BAW-2C chỉ có 1S, 2S (vào) và 2L, 1L (ra) cho 2 dây nóng. Trung tính nối thẳng từ nguồn ra tải.');
+    q('Điện 1 pha 3 dây 110/220V: đo giữa L1 và L2 được bao nhiêu vôn?',['220V','110V','380V'],'L1 và L2 ngược pha nhau so với N nên 110 + 110 = 220V. Máy lạnh 220V lấy L1–L2, khỏi cần N.');}
+  if(isPlc)L.push('PLC là cái đầu của tủ: ngõ vào đọc nút nhấn, cảm biến; chương trình tính; ngõ ra kéo rơ-le, contactor. Nó hổng mỏi hổng quên, chỉ có người lập trình là hay quên.');
+  if(S.devs.some(d=>TYPES[d.t].ctl==='cb')){L.push('Aptomat chọn lớn hơn dòng tải chút đỉnh, mà dây phải chịu nổi dòng của aptomat. Dây nhỏ aptomat bự là dây cháy trước, aptomat đứng coi.');
+    q('Lỡ chập mạch thì thiết bị nào phải cắt trước tiên?',['Aptomat','Rơ-le nhiệt','Nút dừng khẩn'],'Chập mạch dòng lên rất lớn, aptomat cắt từ trong vài phần trăm giây. Rơ-le nhiệt chậm lắm, nó chỉ lo quá tải thôi.');}
+  if(has('src3'))q('Điện 3 pha 380V thì đo giữa 1 dây pha với trung tính được bao nhiêu?',['220V','380V','110V'],'Điện áp pha = điện áp dây / √3 = 380 / 1.732 ≈ 220V.');
+  L.push('Dây tiếp địa xanh sọc vàng là để lỡ rò điện thì nó chạy xuống đất chứ đừng chạy qua người. Tiết kiệm sợi dây đó là tiết kiệm sai chỗ rồi.');
+  q('Dây tiếp địa PE màu gì?',['Xanh lá sọc vàng','Đỏ','Đen'],'Xanh lá sọc vàng là tiếp địa, cả thế giới xài chung quy ước này. Đừng lấy màu đó đi dây pha nha.');
+  L.push('Dây trong tủ đi máng cho gọn, đầu dây bấm cốt, đánh số đàng hoàng. Tủ mà dây như tô hủ tiếu thì mai mốt sửa khóc tiếng Miên.');
+  return{L,Q};}
+const NPC_OK=['Trúng phóc! Coi bộ cũng không phải dạng vừa.','Đúng rồi! Bữa nay anh Sáu khao ly cà phê… muối.','Chuẩn bài! Thợ cứng rồi đó.','Ngon! Trả lời vậy là mai lên làm tổ trưởng.'],NPC_NO=['Trật lất rồi cưng ơi!','Sai bét! Bữa nào anh Sáu dắt đi học lại.','Hổng phải! Suýt nữa là cháy tủ rồi đó.','Trật! Mà thôi, sai trên máy đỡ hơn sai ngoài công trình.'];
+const npcSay=t=>{try{if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();const v=speechSynthesis.getVoices().find(x=>/^vi/i.test(x.lang));if(!v)return;const u=new SpeechSynthesisUtterance(t.replace(/[^\p{L}\p{N}\s.,!?%–\-/×=]/gu,' '));u.voice=v;u.lang='vi-VN';u.rate=1.1;u.pitch=.9;speechSynthesis.speak(u);}catch(e){}};
+function npcBuild(C,T,mat,seat,target,look){
+  const g=new T.Group();C.scene.add(g);const skin=mat('#e0a878',{roughness:.7}),shirt=mat('#1d4ed8',{roughness:.8}),vest=mat('#f97316',{roughness:.7}),pants=mat('#1f2937',{roughness:.85}),hat=mat('#facc15',{roughness:.4}),boot=mat('#111827');
+  const bx=(w,h,d,m,x,y,z,p)=>{const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);p.add(o);return o;};
+  const body=new T.Group();body.position.y=.92;g.add(body);
+  bx(.34,.5,.2,shirt,0,.27,0,body);bx(.36,.34,.215,vest,0,.3,0,body);bx(.37,.03,.22,mat('#e5e7eb'),0,.24,0,body);
+  const head=new T.Group();head.position.y=.62;body.add(head);const hd=new T.Mesh(new T.SphereGeometry(.105,20,14),skin);hd.position.y=.06;head.add(hd);
+  const hm=new T.Mesh(new T.SphereGeometry(.118,20,10,0,Math.PI*2,0,Math.PI/2),hat);hm.position.y=.085;head.add(hm);bx(.2,.014,.1,hat,0,.09,.1,head);
+  [-.035,.035].forEach(x=>{const e=new T.Mesh(new T.SphereGeometry(.012,8,6),boot);e.position.set(x,.07,.098);head.add(e);});bx(.05,.008,.01,mat('#7c2d12'),0,.02,.1,head);
+  const limb=(x,y,len1,len2,m1,m2,par)=>{const a=new T.Group();a.position.set(x,y,0);par.add(a);bx(.1,len1,.1,m1,0,-len1/2,0,a);const k=new T.Group();k.position.y=-len1;a.add(k);bx(.09,len2,.09,m2,0,-len2/2,0,k);return{a,k};};
+  const aL=limb(-.22,.5,.27,.25,shirt,skin,body),aR=limb(.22,.5,.27,.25,shirt,skin,body),lL=limb(-.09,0,.44,.44,pants,pants,body),lR=limb(.09,0,.44,.44,pants,pants,body);
+  [lL,lR].forEach(l=>bx(.1,.06,.18,boot,0,-.44,.04,l.k));
+  g.traverse(o=>{if(o.isMesh)o.userData={kind:'npc'};});
+  const N={g,body,head,aL,aR,lL,lR,st:'sit',t:0,seat,target,look};
+  const pose=()=>{const s=N.st==='sit';body.position.y=s?.52:.92;[lL,lR].forEach(l=>{l.a.rotation.x=s?-Math.PI/2:0;l.k.rotation.x=s?Math.PI/2:0;});[aL,aR].forEach(a=>{a.a.rotation.set(s?-.5:0,0,0);a.k.rotation.x=s?-.9:0;});};
+  g.position.set(seat.x,0,seat.z);g.rotation.y=seat.ry;pose();
+  N.go=(to,then)=>{N.st='walk';N.to=to;N.then=then;pose();};
+  N.tick=(dt,now)=>{N.t+=dt;
+    if(N.st==='walk'){const dx=N.to.x-g.position.x,dz=N.to.z-g.position.z,d=Math.hypot(dx,dz),sp=2.6;g.rotation.y=Math.atan2(dx,dz);
+      if(d<sp*dt+.02){g.position.x=N.to.x;g.position.z=N.to.z;const f=N.then;N.then=null;N.st='idle';pose();if(f)f();return;}
+      g.position.x+=dx/d*sp*dt;g.position.z+=dz/d*sp*dt;const w=Math.sin(N.t*13);lL.a.rotation.x=w*.9;lR.a.rotation.x=-w*.9;lL.k.rotation.x=Math.max(0,-w)*1.1;lR.k.rotation.x=Math.max(0,w)*1.1;aL.a.rotation.x=-w*.8;aR.a.rotation.x=w*.8;aL.k.rotation.x=aR.k.rotation.x=-.8;body.position.y=.92+Math.abs(Math.cos(N.t*13))*.03;body.rotation.x=.12;}
+    else if(N.st==='talk'){body.rotation.x=0;const w=Math.sin(N.t*5);aR.a.rotation.set(-1.9+w*.25,0,-.35);aR.k.rotation.x=-.5+w*.3;aL.a.rotation.set(-.3,0,.15);aL.k.rotation.x=-1.2;head.rotation.y=Math.sin(N.t*1.7)*.35;head.rotation.x=Math.sin(N.t*3.1)*.08;body.position.y=.92+Math.sin(N.t*5)*.006;}
+    else if(N.st==='sit'){body.rotation.x=0;head.rotation.x=.25+Math.sin(N.t*.8)*.05;head.rotation.y=Math.sin(N.t*.5)*.15;aR.k.rotation.x=-.9+Math.sin(N.t*6)*.06;}
+    else{body.rotation.x=0;}};
+  N.face=p=>{g.rotation.y=Math.atan2(p.x-g.position.x,p.z-g.position.z);};
+  return N;}
+/* hộp thoại + kịch bản */
+function npcStart(C){const N=C.npc,box=C.box;let ui=box.querySelector('.npcBox');if(!ui){ui=document.createElement('div');ui.className='npcBox';box.appendChild(ui);}ui.style.display='none';
+  const D={q:[],score:0,asked:0,timer:null,cur:null};C.npcD=D;
+  const show=(text,opts,cb)=>{clearTimeout(D.timer);ui.style.display='block';
+    ui.innerHTML='<div class="npcN">👷 Anh Sáu Điện'+(D.asked?' <small>· đúng '+D.score+'/'+D.asked+' câu</small>':'')+'<span style="flex:1"></span><button class="btn" data-n="x">🤐 Im đi</button></div><div class="npcT">'+esc(text)+'</div><div class="npcA">'+
+      (opts?opts.map((o,i)=>'<button class="btn" data-o="'+i+'">'+esc(o)+'</button>').join(''):'<button class="btn run" data-n="n">Nói tiếp ▶</button>')+'</div>';
+    ui.querySelector('[data-n=x]').onclick=()=>{S.cab.npc=0;save();clearTimeout(D.timer);ui.style.display='none';try{speechSynthesis.cancel();}catch(e){}N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;});cabMsg('Anh Sáu về bàn ngồi rồi. Muốn kêu lại thì bấm 👷 trên thanh công cụ.');const b=document.getElementById('v3npc');if(b)b.classList.remove('on');};
+    const nb=ui.querySelector('[data-n=n]');if(nb)nb.onclick=next;ui.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>cb(+b.dataset.o));npcSay(text);if(!opts)D.timer=setTimeout(next,Math.max(7000,text.length*85));};
+  const fill=()=>{const sc=npcScript(),L=sc.L.sort(()=>Math.random()-.5),Q=sc.Q.sort(()=>Math.random()-.5);D.q=[];while(L.length||Q.length){if(L.length)D.q.push({t:L.shift()});if(Q.length)D.q.push({quiz:Q.shift()});}};
+  const next=()=>{if(!C.alive||N.st!=='talk')return;if(!D.q.length)fill();const it=D.q.shift();
+    if(it.t){show(it.t);return;}const z=it.quiz,ord=z.o.map((o,i)=>i).sort(()=>Math.random()-.5);
+    show('Đố nè: '+z.q,ord.map(i=>z.o[i]),k=>{const ok=ord[k]===0;D.asked++;if(ok)D.score++;sfx(ok?'click':'clack');show((ok?NPC_OK:NPC_NO)[Math.random()*4|0]+' '+(ok?'':'Đáp án là "'+z.o[0]+'". ')+z.why);});};
+  D.say=k=>{if(N.st!=='talk')return;show(k==='short'?'Trời đất quỷ thần ơi, CHẬP rồi cha nội! Pha chạm pha là dòng vọt lên cả ngàn ampe, aptomat cắt hổng kịp là tiêu cái tủ. Bấm ■ Dừng, gỡ sợi dây đấu bậy ra giùm anh cái!':'Khét lẹt rồi đó! Có món đồ vừa cháy. Thiết bị ăn sai điện áp hoặc bị quá dòng thì nó "đi" lẹ lắm. Bấm ■ Dừng, coi lại sợi nào vô chân đó.');};
+  D.arrive=()=>{N.st='talk';N.face(N.look);fill();const nd=S.devs.length,nw=S.wires.length,bad=result&&result.short;
+    if(bad){D.say('short');return;}show('Ê ê khoan, để anh Sáu coi cái tủ này cái đã… '+nd+' món đồ, '+nw+' sợi dây. Đấu vậy cũng có nghề đó, để coi chạy có êm hông. Anh nói sơ nguyên lý, lát anh đố vài câu, trả lời trật là anh cười ráng chịu nghen.');};
+  D.leave=()=>{clearTimeout(D.timer);try{speechSynthesis.cancel();}catch(e){}if(N.st==='sit')return;ui.style.display='block';ui.innerHTML='<div class="npcN">👷 Anh Sáu Điện</div><div class="npcT">Thôi nghỉ, anh về bàn làm ly trà đá.'+(D.asked?' Bữa nay em trả lời đúng '+D.score+'/'+D.asked+' câu.':'')+'</div>';D.timer=setTimeout(()=>ui.style.display='none',3500);N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;N.go;const s=N.st;N.st='sit';N.body.position.y=.52;[N.lL,N.lR].forEach(l=>{l.a.rotation.x=-Math.PI/2;l.k.rotation.x=Math.PI/2;});[N.aL,N.aR].forEach(a=>{a.a.rotation.set(-.5,0,0);a.k.rotation.x=-.9;});});};
+}
 /* ================= 🧊 MÔ PHỎNG 3D: nhà xưởng, tủ điện kích thước thật, motor đúng cỡ khung IEC theo kW, ống luồn dây, dòng điện chạy, chập nổ ================= */
 let T3=null,P3=null,C3=null,G3=null;const M3={};
 /* vận hành 1 thiết bị trên cánh: trả về hàm nhả (nút nhấn giữ) hoặc null */
@@ -5055,7 +5134,7 @@ async function open3D(box){
   const T=T3,[{RoomEnvironment},{EffectComposer},{RenderPass},{UnrealBloomPass},{OutputPass}]=P3,L=cabL;if(!L||!box.isConnected)return;
   const E=L.E,W=E[1]/1000,H=E[0]/1000,D=E[2]/1000,mm=v=>v/1000,stand=E[0]>=1600;
   const ren=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});ren.setPixelRatio(Math.min(hi?2:1.5,devicePixelRatio||1));
-  ren.shadowMap.enabled=hi;ren.shadowMap.type=T.PCFSoftShadowMap;ren.outputColorSpace=T.SRGBColorSpace;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=.95;
+  ren.shadowMap.enabled=false;ren.shadowMap.type=T.PCFSoftShadowMap;ren.outputColorSpace=T.SRGBColorSpace;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=.95;
   box.innerHTML='';box.appendChild(ren.domElement);const tip=document.createElement('div');tip.className='c3tip';tip.style.display='none';box.appendChild(tip);
   const scene=new T.Scene();scene.background=new T.Color('#c9d3dc');scene.fog=new T.Fog('#c9d3dc',30,60);
   const pm=new T.PMREMGenerator(ren),env=pm.fromScene(new RoomEnvironment(),0.04).texture;scene.environment=env;pm.dispose();
@@ -5105,7 +5184,7 @@ async function open3D(box){
     if(hi||z<3){const sp=new T.SpotLight('#fff4dc',hi?5:7,9,.95,.6,1.6);sp.position.set(x,4.1,z);sp.target.position.set(x,0,z);scene.add(sp,sp.target);}}
   /* nắng qua cửa sổ: đèn mặt trời phía sau tường + vệt sáng */
   const sun=new T.DirectionalLight('#fff1d6',hi?2.2:1.6);sun.position.set(CX-3,9,-6);sun.target.position.set(CX,0,3);scene.add(sun,sun.target);
-  if(hi){sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-LX/2-1,right:LX/2+1,top:7,bottom:-4,near:1,far:30});sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;
+  if(hi){sun.castShadow=false;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-LX/2-1,right:LX/2+1,top:7,bottom:-4,near:1,far:30});sun.shadow.bias=-.0004;sun.shadow.normalBias=.02;
     const beamT=cTex(canv(16,128,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#fff6dd14');g.addColorStop(1,'#fff6dd00');x.fillStyle=g;x.fillRect(0,0,w,h);}));
     for(let x=X0+.6;x<X1;x+=2.4){const b=new T.Mesh(new T.PlaneGeometry(1,4.2),new T.MeshBasicMaterial({map:beamT,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide}));b.position.set(x+.25,2.1,1.25);b.rotation.set(-.5,0,.18);scene.add(b);}}
   scene.add(new T.AmbientLight('#ffffff',.06));
@@ -5302,6 +5381,10 @@ async function open3D(box){
     for(let i=0;i<3;i++)put('cardboard_box_01',X0+3.6+i*.45,0,ZL-.5-(i%2)*.3,i*.7,1.1);
     C.outs.filter(o=>o.kind==='ac').forEach(o=>{const s=Math.cbrt((PV(o.d,'w')||1800)/1800);put('exterior_aircon_unit',0,.12,0,0,s,null,o.grp).then(m=>{if(!m)return;o.grp.children.forEach(c=>{if(c!==m&&c.position.y>.1)c.visible=false;});m.traverse(q=>{if(q.isMesh)q.userData={dev:o.d.id,kind:'out'};});o.spin=null;});});
   })();
+  /* ---- anh Sáu Điện ---- */
+  {const seat={x:X0+1.6,z:ZL-1.5,ry:0},target={x:x0+W+.8,z:D+1.05},look=new T.Vector3(x0+W*.4,0,D+2.6);
+    const st=cyl(.16,.14,.5,mat('#475569',{metalness:.5}),16);st.position.set(seat.x,.25,seat.z);scene.add(st);
+    C.npc=npcBuild(C,T,mat,seat,target,look);npcStart(C);C.npcRun=false;}
   /* ---- camera ---- */
   const tgt=new T.Vector3(),sph={r:3,th:.2,ph:1.18};C.tgt=tgt;C.sph=sph;
   const place=()=>{sph.ph=Math.max(.22,Math.min(1.55,sph.ph));sph.r=Math.max(.5,Math.min(20,sph.r));cam.position.set(tgt.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),tgt.y+sph.r*Math.cos(sph.ph),tgt.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));cam.lookAt(tgt);};C.place=place;
@@ -5353,6 +5436,7 @@ async function open3D(box){
   let last=performance.now(),acc=0,sAcc=0;
   const loop=now=>{if(!C.alive)return;if(!box.isConnected){dispose3D();return;}C.raf=requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;
     if(C.fan)C.fan.rotation.z+=dt*7;
+    if(C.npc){const on=running&&S.cab.npc!==0;if(on!==C.npcRun){C.npcRun=on;if(on)C.npc.go(C.npc.target,C.npcD.arrive);else C.npcD.leave();}C.npc.tick(dt,now);}
     const want=cabOpen?-1.95:0;C.doorA+=(want-C.doorA)*Math.min(1,dt*3.2);pv.rotation.y=C.doorA;
     const R=running&&result&&!result.short?result:null,blink=(now/300|0)%2;
     C.outs.forEach(o=>{const d=o.d,m=R&&R.motor&&R.motor[d.id],on=m?m.st==='on':!!(R&&(R.state&&R.state[d.id]==='on'||R.sock&&R.sock[d.id]==='on'));o.on=on;
@@ -5371,7 +5455,9 @@ async function open3D(box){
     if(C.shake>0){C.shake=Math.max(0,C.shake-dt);const k=C.shake*.04;cam.position.x+=(Math.random()-.5)*k;cam.position.y+=(Math.random()-.5)*k;}
     acc+=dt;if(acc>.15){acc=0;const sg=doorSig(L);if(sg!==C.sig){C.sig=sg;redrawDoor();}
       const nb=S.devs.filter(d=>d.burned&&!C.burned.has(d.id)),sh2=!!(result&&result.short),wb=S.wires.filter(w=>w.burned).length;
+      if(nb.length&&C.npcD)C.npcD.say('burn');
       nb.forEach(d=>{C.burned.add(d.id);boom3(worldOf(d),true);const it=L.seq.find(i=>i.d===d);if(it)devBox(it);});
+      if(sh2&&!C.short&&C.npcD)C.npcD.say('short');
       if(sh2&&!C.short&&!nb.length){const fd=L.seq.find(i=>i.d)||null;C.shortP=fd?worldOf(fd.d):new T.Vector3(x0+W/2,y0+H*.7,D);boom3(C.shortP,true);}if(!sh2)C.shortP=null;
       if(sh2!==C.short||wb!==C.wb){drawPlate();C.flows.forEach(f=>f.f.material.color.set(sh2?'#ff4d4d':'#ffffff'));}
       S.devs.forEach(d=>{if(!d.burned)C.burned.delete(d.id);});C.short=sh2;C.wb=wb;
