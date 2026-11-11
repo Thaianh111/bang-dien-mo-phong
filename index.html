@@ -674,7 +674,7 @@ function changed(){if(running)evaluate();save();snap();render();if(DG.meter&&DG.
 /* bỏ trạng thái tạm thời của lúc chạy thử khỏi lịch sử */
 const RUNTIME_KEYS=new Set(['kw','mpw','rev','merr','burnV','ptrip','tpw','tcOn','temp','tT','latch','en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem','vok','vpw','vstat','vt0','vTO','vtest','shTrip','shT0','shTO']);
 const hist={u:[],r:[],last:null};
-function snapJson(){return JSON.stringify(S,(k,v)=>RUNTIME_KEYS.has(k)?undefined:v);}
+function snapJson(){return JSON.stringify(S,function(k,v){return RUNTIME_KEYS.has(k)&&this&&this.id&&this.t?undefined:v;});}
 function snap(){
   if(running)return;const j=snapJson();if(j===hist.last)return;
   if(hist.last!==null){hist.u.push(hist.last);if(hist.u.length>100)hist.u.shift();hist.r.length=0;}
@@ -2155,7 +2155,7 @@ function powerTree(){
 function subParts(n,acc,dep){dep=dep||0;if(dep>30)return acc;(n.children||[]).forEach(c=>{if(c.kind==='motor')acc.push({d:c.d,p:'top'});else if(c.kind==='ref')acc.push({d:c.d,p:'bot'});else if(c.kind==='star')acc.push({d:c.m,p:'star'});else if(c.kind==='join'){if(c.tgt)subParts(c.tgt,acc,dep+1);}else subParts(c,acc,dep+1);});return acc;}
 
 function calc(ptIn){
-  const pt=ptIn||powerTree();const R={rec:{},rows:[],mot:{},notes:[],cables:[]};
+  const pt=ptIn||powerTree();const R={rec:{},rows:[],mot:{},notes:[],cables:[],sz:{}};
   const f=pt?pt.f:wireUF();
   // động cơ
   S.devs.filter(d=>d.t==='motor'||d.t==='motor6').forEach(d=>{
@@ -2199,16 +2199,16 @@ function calc(ptIn){
       if(n.kind==='dev'){const d=n.d,r=nodeI(n);
         if(d.t==='cb3'||d.t==='cb2'||d.t==='mccbst'){
           let rt=6;if(r.Imax>0){const fac=r.vfdAny?1.25:r.ydAny?1.3:1.6;rt=upStd(CB_STD,Math.max(1.25*r.Imax,r.Imax-r.imot+fac*r.imot));if(!r.imot)rt=Math.max(rt,10);}
-          R.rec[d.id]=[(rt>63?'MCCB ':'MCB ')+(d.t!=='cb2'?'3P ':'2P ')+rt+'A'+(d.t==='mccbst'?' + shunt trip 220V':''),'I tính toán ≈ '+r.Imax.toFixed(1)+' A'];
+          R.sz[d.id]={a:rt};R.rec[d.id]=[(rt>63?'MCCB ':'MCB ')+(d.t!=='cb2'?'3P ':'2P ')+rt+'A'+(d.t==='mccbst'?' + shunt trip 220V':''),'I tính toán ≈ '+r.Imax.toFixed(1)+' A'];
         }else if(d.t==='contactor'){
           const parts=subParts(n,[]);const jn=n.children.find(c=>c.kind==='join');const isFw=(function f(x){return(x.children||[]).some(c=>(c.kind==='join'&&c.tgt===n)||f(c));})(pt.root);
           const role=n.children.some(c=>c.kind==='star')?'KY (sao)':jn?'K nghịch (đảo pha)':isFw?'K thuận':parts.some(p=>p.p==='bot')&&!parts.some(p=>p.p==='top')?'KΔ (tam giác)':'K chính';
           const sz=upStd(K_AC3,Math.max(r.Imax,1));
-          R.rec[d.id]=['AC3 '+sz+'A · cuộn 220V AC',role+' · I ≈ '+r.Imax.toFixed(1)+' A'];
+          R.sz[d.id]={a:sz};R.rec[d.id]=['AC3 '+sz+'A · cuộn 220V AC',role+' · I ≈ '+r.Imax.toFixed(1)+' A'];
         }else if(isV(d)){const ms=subParts(n,[]).map(p=>p.d&&R.mot[p.d.id]).filter(Boolean);const kw=ms.reduce((a,m)=>a+m.kw,0);
           const KW=[0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,160,200,250];const sel=upStd(KW,kw||0.75);
-          R.rec[d.id]=['ABB ACS580 – '+sel+' kW (380V)','I ra ≈ '+r.Imax.toFixed(1)+' A · 0–'+PV(d,'fmax')+' Hz','Tăng/giảm tốc '+PV(d,'acc')+'/'+PV(d,'dec')+' s'];
-        }else if(d.t==='ol'){const rg=olRange(Math.max(r.Imax,0.7));R.rec[d.id]=['Dải '+rg[0]+'–'+rg[1]+' A','Chỉnh '+r.Imax.toFixed(1)+' A'];}
+          R.sz[d.id]={kw:sel};R.rec[d.id]=['ABB ACS580 – '+sel+' kW (380V)','I ra ≈ '+r.Imax.toFixed(1)+' A · 0–'+PV(d,'fmax')+' Hz','Tăng/giảm tốc '+PV(d,'acc')+'/'+PV(d,'dec')+' s'];
+        }else if(d.t==='ol'){const rg=olRange(Math.max(r.Imax,0.7));R.sz[d.id]={a:r.Imax};R.rec[d.id]=['Dải '+rg[0]+'–'+rg[1]+' A','Chỉnh '+r.Imax.toFixed(1)+' A'];}
       }
       (n.children||[]).forEach(walk);
     })(pt.root);
@@ -4040,7 +4040,7 @@ function autoPlace(){
   const st=bdState(),R=parseNotes(st.note);const r=autoTW(st.counts,R)||autoPLC(st.counts,R)||autoLanh(st.counts,R)||autoBuild(st.counts,R);
   if(r.err){const m=showModal('<div class="ic">⚠️</div><h2>Chưa đấu được</h2><p>'+esc(r.err)+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;return;}
   confirmReplace(()=>{
-    applyBoard(r.devs,r.wires,r.nid);
+    applyBoard(r.devs,r.wires,r.nid);S.devs.forEach(d=>{if(TYPES[d.t].cat!=='src'&&!S.wires.some(w=>w.a.d===d.id||w.b.d===d.id))d.spare=1;});
     const cn=cabAfterBuild();if(cn)r.rep.push(cn);
     const nm=t=>bdName(t).replace(/ \(.*\)/,'');
     const ad=Object.keys(r.added).map(t=>r.added[t]+' '+nm(t)),un=Object.keys(r.unused).map(t=>r.unused[t]+' '+nm(t));
@@ -4482,8 +4482,8 @@ const DIM={
   relay:{w:22,h:73,dp:66,m:'din',ref:'Omron MY2N + đế PYF08A-N'},
   timer:{w:50,h:74,dp:88,m:'din',ref:'Omron H3CR-A8 + đế P2CF-08'},
   psu:{w:99,h:82,dp:30,m:'plate',ref:'Mean Well LRS-50-24'},
-  barN:{w:60,h:36,dp:30,m:'din',ref:'Thanh đồng N 4 lỗ trên đế cách điện (tham khảo)'},
-  barPE:{w:60,h:36,dp:30,m:'din',ref:'Thanh đồng PE 4 lỗ (tham khảo)'},
+  barN:{w:67.5,h:35,dp:15,m:'din',ref:'Thanh trung tính 4 lỗ 7×10, vít M5, đế nhựa xanh dương (kiểu VIOX)'},
+  barPE:{w:67.5,h:35,dp:15,m:'din',ref:'Thanh tiếp địa 4 lỗ 7×10, vít M5, đế nhựa xanh lá (kiểu VIOX)'},
   baw2c:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'巧力 CIC BAW-2C · lỗ dây Φ9'},
   kwh3:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'Đồng hồ 1P3W điện tử (tham khảo cỡ BAW)'},
   pbno:PB22('Nút nhấn Schneider XB7 Ø22'),pbnc:PB22('Nút nhấn Schneider XB7 Ø22'),
@@ -4498,7 +4498,23 @@ DIM.relay24=DIM.relay;
 /* biến tần ABB – khung nhỏ nhất của mỗi dòng: [rộng, cao, sâu, chừa trên, chừa dưới, khung] */
 const VFD_DIM={ACS150:[70,169,142,75,75,'R0/R1'],ACS310:[70,169,161,75,75,'R0/R1'],ACS355:[70,169,161,75,75,'R0/R1'],
   ACS380:[70,205,174,75,75,'R0/R1'],ACS480:[73,223,207,75,75,'R1'],ACS580:[125,331,223,150,86,'R1'],ACS880:[155,405,226,150,200,'R1']};
+/* cỡ thiết bị theo dòng / công suất tính được từ mạch (CABSZ = calc().sz) */
+let CABSZ={};
+const K_DIM=[[18,45,77,86,'din','LC1D09…D18'],[38,45,85,92,'din','LC1D25…D38'],[65,55,122,120,'din','LC1D40A…D65A'],[95,85,127,125,'din','LC1D80…D95'],[150,120,158,132,'plate','LC1D115…D150'],[1e9,168,197,181,'plate','LC1F185+ (tham khảo)']];
+const MCCB_DIM=[[250,105,161,86,'Schneider EasyPact CVS100…250 (tham khảo)'],[630,140,255,110,'Schneider EasyPact CVS400…630 (tham khảo)'],[1e9,210,327,147,'Schneider ComPact NS800+ (tham khảo)']];
+/* ABB ACS580-01 400V: [kW tối đa, rộng, cao, sâu, khung] */
+const V580=[[5.5,125,331,223,'R1'],[11,125,432,229,'R2'],[22,203,490,229,'R3'],[45,203,636,257,'R4'],[55,203,732,295,'R5'],[75,252,726,369,'R6'],[110,284,880,370,'R7'],[160,300,965,393,'R8'],[1e9,380,955,418,'R9']];
+const VSM={ACS380:[[4,70,205,174,'R1'],[7.5,95,205,174,'R2'],[15,169,205,174,'R3'],[1e9,260,205,174,'R4']],ACS480:[[4,73,223,207,'R1'],[7.5,97,223,207,'R2'],[15,172,223,207,'R3'],[1e9,260,240,212,'R4']],
+  def:[[1.5,70,169,161,'R1'],[4,105,169,165,'R2'],[7.5,169,169,169,'R3'],[1e9,260,181,169,'R4']]};
+function dimSized(d){const z=d&&d.id&&CABSZ[d.id],T=TYPES[d.t];if(!z||!T)return null;
+  if(d.t==='contactor'){const k=K_DIM.find(x=>z.a<=x[0]);if(z.a<=18)return null;return{w:k[1],h:k[2],dp:k[3],m:k[4],ref:'Schneider TeSys D '+k[5]+' · AC3 '+z.a+'A'};}
+  if(d.t==='ol'){if(z.a<=38)return null;const big=z.a>104;return z.a<=65?{w:55,h:70,dp:120,m:'din',ref:'Schneider LRD3●● (cho D40A…D65A, tham khảo)'}:{w:big?120:75,h:big?120:105,dp:big?130:110,m:big?'plate':'din',ref:(big?'Schneider LR9D':'Schneider LRD33●●')+' (tham khảo)'};}
+  if(d.t==='cb2'||d.t==='cb3'||d.t==='mccbst'){if(z.a<=63)return d.t==='mccbst'?null:Object.assign({},DIM[d.t],{ref:DIM[d.t].ref+' · '+z.a+'A'});const k=MCCB_DIM.find(x=>z.a<=x[0]);return{w:d.t==='cb2'?Math.round(k[1]*.7):k[1],h:k[2],dp:k[3],m:'plate',ref:k[4]+' · '+z.a+'A'};}
+  if(T.ctl==='vfd'){const tb=T.model==='ACS580'||T.model==='ACS880'?V580:VSM[T.model]||VSM.def,k=tb.find(x=>z.kw<=x[0]),big=tb===V580;
+    return{w:k[1]+(T.model==='ACS880'?30:0),h:k[2]+(T.model==='ACS880'?70:0),dp:k[3],ct:big?150:75,cb:big?86:75,m:'plate',ref:'ABB '+T.model+' – '+z.kw+' kW · khung '+k[4]+(T.model==='ACS580'?'':' (tham khảo)')};}
+  return null;}
 function dimOf(d){
+  {const zs=dimSized(d);if(zs)return zs;}
   const T=TYPES[d.t];if(!T)return{w:45,h:80,dp:70,m:'din',ref:'?'};
   if(DIM[d.t])return DIM[d.t];
   if(T.ctl==='plc'){const b=T.plc.cpu==='1214';return{w:b?110:90,h:100,dp:75,m:'din',ref:'Siemens S7-1200 CPU '+T.plc.cpu+'C'};}
@@ -4542,6 +4558,8 @@ function cabLayout(E,src,col){
     if(!w)return;const k=w.a.d===o.id?w.b.d:w.a.d;ins.splice(ins.indexOf(o),1);ins.splice(ins.findIndex(x=>x.id===k)+1,0,o);});
   const ord=src.ord||[],brk=src.brk||[];
   if(ord.length){const base=ins.slice();ins.sort((a,b)=>{const ia=ord.indexOf(a.id),ib=ord.indexOf(b.id);return(ia<0?1e3+base.indexOf(a):ia)-(ib<0?1e3+base.indexOf(b):ib);});}
+  /* thiết bị bắt tấm đế (MCCB, contactor lớn, biến tần) gom chung 1 hàng trên cùng, còn lại lên ray – đỡ tốn chiều cao */
+  if(!ord.length)ins=ins.filter(d=>info[d.id].m==='plate').concat(ins.filter(d=>info[d.id].m!=='plate'));
   const seq=ins.map(d=>{const D=info[d.id];return{d,m:D.m,w:D.w,h:D.h,D};}).concat(tbl.map(t=>({tb:t,m:'din',w:t.w,h:t.h})));
   const bands=[];let cur=null;const over=[];if(Lr<60)over.push({});
   seq.filter(it=>!(it.d&&tallIds.includes(it.d.id))).forEach(it=>{const sp=it.m==='plate'&&cur&&cur.m==='plate'&&cur.items.length?20:0;
@@ -4609,12 +4627,13 @@ function cabLayout(E,src,col){
   return{ties,tieMode:!!src.tie,winR,hd,vd,xC,colW,tall:tallIds,E,G,pw,ph,Lr,railX0,railX1,bands,seq,ducts,needH,needD,Dy,VL,VR,tbl,tbMap,routes,rails,hLen,vLen,info,doorDevs,dpos,win,doorNeed,dW,dH,over,fit,lastK};
 }
 function cabSuggest(src){for(const E of ENCL){const L=cabLayout(E,src);if(L.fit.ok)return L;}return null;}
-function cabSrcNow(){S.cab=S.cab||{size:''};return{devs:S.devs,wires:S.wires,ord:S.cab.ord||[],brk:S.cab.brk||[],tie:!!S.cab.tie,ties:S.cab.ties||[]};}
+const isSpare=d=>d.spare&&!S.wires.some(w=>w.a.d===d.id||w.b.d===d.id);
+function cabSrcNow(){S.cab=S.cab||{size:''};return{devs:S.devs.filter(d=>!isSpare(d)),wires:S.wires,ord:S.cab.ord||[],brk:S.cab.brk||[],tie:!!S.cab.tie,ties:S.cab.ties||[]};}
 /* lấy bố trí tủ của mạch đang có: tủ người dùng chọn, hoặc tủ đề xuất */
 let cabMemo=null;
-function cabNow(){const src=cabSrcNow(),key=S.devs.map(d=>d.id+d.t+(d.sub||'')+(d.p&&d.p.kw||'')).join()+'|'+S.wires.map(w=>w.a.d+w.a.t+w.b.d+w.b.t).join()+'|'+JSON.stringify(S.cab);
+function cabNow(){const src=cabSrcNow(),key=S.devs.map(d=>d.id+d.t+(d.sub||'')+(d.p&&d.p.kw||'')).join()+'|'+S.wires.map(w=>w.a.d+w.a.t+w.b.d+w.b.t).join()+'|'+JSON.stringify(S.cab)+JSON.stringify(S.devs.map(d=>[d.p,d.spare]));
   if(cabMemo&&cabMemo.key===key)return cabMemo.R;const R=cabNow0(src);cabMemo={key,R};return R;}
-function cabNow0(src){const sug=cabSuggest(src),E=encParse(S.cab.size);
+function cabNow0(src){try{CABSZ=(calc()||{}).sz||{};}catch(e){CABSZ={};}const sug=cabSuggest(src),E=encParse(S.cab.size);
   const L=E?cabLayout(E,src):sug||cabLayout(ENCL[ENCL.length-1],src);return{L,sug,chosen:!!E};}
 function fitWhy(L){const f=L.fit,r=[];if(!f.h)r.push('thiếu chiều cao tấm đế (cần '+Math.ceil(L.needH)+' mm, có '+L.ph+' mm)');if(!f.w)r.push('thiết bị '+L.over.map(i=>i.d?tagOf(i.d):'X1').join(', ')+' rộng hơn ray/tấm đế');
   if(!f.d)r.push('thiếu chiều sâu (cần ≥ '+L.needD+' mm)');if(!f.door)r.push('cánh tủ không đủ chỗ cho nút/đèn');return r.join('; ');}
@@ -4765,7 +4784,8 @@ function cabTables(L){
   return out;
 }
 const tblHTML=t=>'<h3>'+esc(t[0])+'</h3><table><tr>'+t[1].map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>'+t[2].map(r=>'<tr>'+r.map((c,i)=>'<td>'+(i?'':'<b>')+esc(c).replace(/\n/g,'<br><small>')+(String(c).includes('\n')?'</small>':'')+(i?'':'</b>')+'</td>').join('')+'</tr>').join('')+'</table>';
-function cabStatus(R){const L=R.L;if(!S.devs.some(d=>{const m=dimOf(d).m;return m==='din'||m==='plate'||m==='door';}))return'<span class="mut">Chưa có thiết bị lắp trong tủ.</span>';
+function cabStatus(R){const n=S.devs.filter(isSpare).length;return cabStatus0(R)+(n?'<br><span class="mut">ℹ️ '+n+' thiết bị dư (chưa đấu dây) không tính vào tủ – đấu dây vào thì tự được xếp vào tủ.</span>':'');}
+function cabStatus0(R){const L=R.L;if(!S.devs.some(d=>{const m=dimOf(d).m;return m==='din'||m==='plate'||m==='door';}))return'<span class="mut">Chưa có thiết bị lắp trong tủ.</span>';
   if(R.chosen&&L.fit.ok)return'✅ Tủ <b>'+encStr(L.E)+'</b> vừa: tấm đế dùng '+Math.ceil(L.needH)+' / '+L.ph+' mm chiều cao, sâu cần '+L.needD+' mm.'+(R.sug&&encStr(R.sug.E)!==encStr(L.E)?' <span class="mut">(Tủ nhỏ nhất vừa: '+encStr(R.sug.E)+')</span>':'');
   if(R.chosen)return'<span style="color:#f87171">❌ Tủ '+encStr(L.E)+' không đủ: '+esc(fitWhy(L))+'.</span>'+(R.sug?'<br>👉 Đề xuất: <b>'+encStr(R.sug.E)+'</b> <button class="btn" id="cabUseSug" style="padding:3px 8px;font-size:12px">Dùng tủ này</button>':'<br>Cần tủ đứng lớn hơn hoặc chia 2 tủ.');
   return R.sug?'💡 Chưa chọn tủ – app đề xuất <b>'+encStr(R.sug.E)+'</b> (đã trừ máng '+R.sug.G.duct+'×'+R.sug.G.dh+', khe đi dây 25 mm và '+Math.round(SPARE*100)+'% ray dự phòng).':'<span style="color:#f87171">Mạch quá lớn cho 1 tủ – cần chia nhiều tủ.</span>';}
@@ -4790,30 +4810,31 @@ function renderCab(){
     '<div class="calcbox" id="cabStat">'+cabStatus(R)+'</div>'+
     '<div class="mcSeg" id="cabSeg"><button data-v="plate" class="'+(cabView==='plate'?'on':'')+'">🗄 Tủ & đấu dây</button><button data-v="3d" class="'+(cabView==='3d'?'on':'')+'">🧊 3D</button><button data-v="bom" class="'+(cabView==='bom'?'on':'')+'">📋 Vật tư</button></div>'+
     (cabView!=='bom'?'<div class="cabTools"><button class="btn" id="cabDoorBtn">'+(cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh')+'</button><button class="btn '+(running?'stop':'run')+'" id="cabRun">'+(running?'■ Dừng':'▶ Chạy thử')+'</button>'+
-      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
+      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
     pal+
     (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
         '<span class="mut">'+cabHelp()+'</span>')+'</div>':'')+
     body+(cabView==='plate'?'<div class="mut" style="margin-top:6px">Ray DIN: '+L.rails.map((r,i)=>'R'+(i+1)+' = '+r.len+' mm').join(' · ')+(L.tbl.length?' · Hàng kẹp X1: '+L.tbl.length+' kẹp':'')+(L.ties.length?' · Dây rút: '+L.ties.length+' sợi':'')+'</div>':'');
   const sv=B.querySelector('.cabWrap>svg');if(sv){sv.removeAttribute('height');sv.removeAttribute('width');sv.style.width='100%';sv.style.height='auto';sv.style.display='block';}
-  B.querySelector('#cabSize').onchange=e=>{S.cab.size=e.target.value;save();renderCab();};
-  const us=B.querySelector('#cabUseSug');if(us)us.onclick=()=>{S.cab.size=encStr(R.sug.E);save();renderCab();};
+  B.querySelector('#cabSize').onchange=e=>{S.cab.size=e.target.value;save();snap();renderCab();};
+  const us=B.querySelector('#cabUseSug');if(us)us.onclick=()=>{S.cab.size=encStr(R.sug.E);save();snap();renderCab();};
   B.querySelectorAll('#cabSeg button').forEach(b=>b.onclick=()=>{cabView=b.dataset.v;cabTieMode=false;renderCab();});
   const db=B.querySelector('#cabDoorBtn');if(db)db.onclick=()=>{if(cabView==='3d'){cabOpen=!cabOpen;db.textContent=cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh';sfx('clack');}else cabToggleDoor();};
   const rb=B.querySelector('#cabRun');if(rb)rb.onclick=()=>{unlockAudio();running?stop():start();rb.textContent=running?'■ Dừng':'▶ Chạy thử';rb.className='btn '+(running?'stop':'run');cabLive(true);};
   [['#v3rt','route3','up','floor'],['#v3q','q3','hi','lo']].forEach(([q,k,a,b])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{S.cab[k]=(S.cab[k]||a)===a?b:a;save();renderCab();};});
   [['#v3cab','cab'],['#v3all','all']].forEach(([q,v])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(C3&&C3.view)C3.view(v);};});
-  const tb=B.querySelector('#cabTie');if(tb)tb.onclick=()=>{S.cab.tie=!S.cab.tie;save();renderCab();cabMsg(S.cab.tie?'Bỏ máng răng lược – dây đi thành bó, tự rút dây rút mỗi 80 mm. Bấm ➕ Dây rút để tự rút thêm.':'Dùng lại máng răng lược.');};
+  [['#cabUndo',undo],['#cabRedo',redo]].forEach(([q,f])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(running){cabMsg('Bấm ■ Dừng trước khi hoàn tác.');return;}f();cabSel=null;cabPend=null;renderCab();cabMsg(f===undo?'Đã hoàn tác.':'Đã làm lại.');};});
+  const tb=B.querySelector('#cabTie');if(tb)tb.onclick=()=>{S.cab.tie=!S.cab.tie;save();snap();renderCab();cabMsg(S.cab.tie?'Bỏ máng răng lược – dây đi thành bó, tự rút dây rút mỗi 80 mm. Bấm ➕ Dây rút để tự rút thêm.':'Dùng lại máng răng lược.');};
   const tt=B.querySelector('#cabTieT');if(tt)tt.onclick=()=>{cabTieMode=!cabTieMode;if(cabTieMode&&!cabOpen)cabToggleDoor();renderCab();cabMsg(cabTieMode?'Chạm vào bó dây để rút 1 sợi dây rút (đen). Chạm dây rút đen để cắt bỏ.':'Đã tắt công cụ dây rút.');};
   B.querySelectorAll('.cabPalG button').forEach(b=>b.onclick=()=>{cabPalG=b.dataset.g;renderCab();});
   B.querySelectorAll('.cabPal [data-k]').forEach(b=>b.onclick=()=>cabAdd(b.dataset.k,b.dataset.s||undefined));
   B.querySelectorAll('.cabTools [data-m]').forEach(b=>b.onclick=()=>{const m=b.dataset.m;
-    if(m==='reset'){S.cab.ord=[];S.cab.brk=[];cabSel=null;save();renderCab();return;}
+    if(m==='reset'){S.cab.ord=[];S.cab.brk=[];cabSel=null;save();snap();renderCab();return;}
     if(m==='del'){S.devs=S.devs.filter(d=>d.id!==cabSel);S.wires=S.wires.filter(w=>w.a.d!==cabSel&&w.b.d!==cabSel);cabSel=null;selected=null;changed();buildItems();renderCab();return;}
     const ids=L.seq.filter(i=>i.d).map(i=>i.d.id),k=ids.indexOf(cabSel);if(k<0)return;
     if(m==='br'){const a=S.cab.brk=S.cab.brk||[];const j=a.indexOf(cabSel);j<0?a.push(cabSel):a.splice(j,1);}
     else{const j=k+(+m);if(j<0||j>=ids.length)return;[ids[k],ids[j]]=[ids[j],ids[k]];S.cab.ord=ids;}
-    save();renderCab();});
+    save();snap();renderCab();});
   if(sv)cabPlateEvents(sv,L,F);
   const fr=B.querySelector('.dFront');if(fr)cabDoorEvents(fr);
   if(cabView==='3d'&&typeof open3D==='function')open3D(document.getElementById('cab3d'));
@@ -4838,7 +4859,7 @@ function cabPlateEvents(sv,L,F){
     const up=ev=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);if(!moved)return;cabDragged=Date.now();const p=toP(ev);cabDrop(id,p.x,p.y,L);};
     window.addEventListener('pointermove',mv,{passive:false});window.addEventListener('pointerup',up);});
   sv.addEventListener('click',e=>{if(!cabOpen||Date.now()-cabDragged<350)return;
-    if(cabTieMode){const tg=e.target.closest('[data-tie]');const a=S.cab.ties=S.cab.ties||[];if(tg){a.splice(+tg.dataset.tie,1);}else{const p=toP(e);a.push({x:Math.round(p.x),y:Math.round(p.y)});sfx('tick');}save();renderCab();return;}
+    if(cabTieMode){const tg=e.target.closest('[data-tie]');const a=S.cab.ties=S.cab.ties||[];if(tg){a.splice(+tg.dataset.tie,1);}else{const p=toP(e);a.push({x:Math.round(p.x),y:Math.round(p.y)});sfx('tick');}save();snap();renderCab();return;}
     const c=e.target.closest('[data-ct]');if(c){const[did,tid]=c.dataset.ct.split('|');cabTerm(did,tid);return;}
     const g=e.target.closest('[data-cd]');cabSel=g?(cabSel===g.dataset.cd?null:g.dataset.cd):null;cabPend=null;renderCab();});
 }
@@ -4853,7 +4874,7 @@ function cabDrop(id,x,y,L){const items=L.seq.filter(i=>i.d&&!i.col),ids=items.ma
       const left=its.filter(i=>i.x+i.w/2<x);
       if(!left.length){ids.splice(ids.indexOf(its[0].d.id),0,id);brk.add(id);brk.delete(its[0].d.id);}
       else ids.splice(ids.indexOf(left[left.length-1].d.id)+1,0,id);}}
-  S.cab.ord=ids;S.cab.brk=[...brk];save();sfx('clack');renderCab();
+  S.cab.ord=ids;S.cab.brk=[...brk];save();snap();sfx('clack');renderCab();
   const R=cabNow();cabMsg(R.L.fit.ok?'Đã đặt '+tagOf(dev(id))+' – dây tự đi lại theo vị trí mới.':'⚠️ Đặt xong nhưng tủ không đủ chỗ: '+fitWhy(R.L));}
 /* ================= 🧊 MÔ PHỎNG 3D: nhà xưởng, tủ điện kích thước thật, motor đúng cỡ khung IEC theo kW, ống luồn dây, dòng điện chạy, chập nổ ================= */
 let T3=null,P3=null,C3=null;
