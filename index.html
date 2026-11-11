@@ -517,7 +517,9 @@ function load(){try{const t=localStorage.getItem('machdien_v3');if(t){const o=JS
 const dev=id=>S.devs.find(d=>d.id===id);
 const key=(d,t)=>d+':'+t;
 /* biến thể dùng chung kiểu đấu với loại gốc (d.sub): bơm chìm = động cơ 3 đầu */
-const SUBS={pump:{t:'motor',name:'Bơm chìm 3 pha',tag:'P',p:{kw:5.5,cos:0.8,eff:82,len:60}}};
+const SUBS={pump:{t:'motor',name:'Bơm chìm 3 pha',tag:'P',p:{kw:5.5,cos:0.8,eff:82,len:60}},
+  /* aptomat 3 cực cho điện 1 pha 3 dây 110/220V (單相三線): cực trái L1, cực giữa N, cực phải L2 – 3P2E: chỉ 2 cực ngoài có phần tử bảo vệ, cắt đồng thời cả 3 */
+  cb3w:{t:'cb3',name:'Aptomat 1 pha 3 cực 3P2E (1φ3W 110/220V)',tag:'CB'}};
 SUBS.comp={t:'motor',cat:'lanh',name:'Máy nén lạnh 3 pha',tag:'MN',p:{kw:7.5,cos:0.85,eff:88,len:15}};
 SUBS.comp1={t:'motor1',cat:'lanh',name:'Máy nén lạnh 1 pha (block)',tag:'MN',p:{kw:1.5,cos:0.9,eff:75,len:10}};
 SUBS.fanm={t:'motor',cat:'lanh',name:'Quạt dàn nóng / dàn lạnh 3 pha',tag:'QD',p:{kw:0.55,cos:0.75,eff:72,len:15}};
@@ -1561,7 +1563,10 @@ function drawBody(g,d,R){
     const lx=T.w/2-9;el('rect',{x:lx,y:22,width:18,height:28,rx:3,fill:'#94a3b8'},g);
     const c=d.trip?'#f97316':d.on?'#16a34a':'#475569';
     el('rect',{x:lx+2,y:d.trip?29:d.on?24:35,width:14,height:13,rx:2,fill:c},g);
-    txt(g,T.w/2,59,d.trip?'TRIP':d.on?'ON':'OFF',{fill:c,'font-size':8,'font-weight':800});prints(g,d);break;}
+    txt(g,T.w/2,59,d.trip?'TRIP':d.on?'ON':'OFF',{fill:c,'font-size':8,'font-weight':800});
+    if(d.sub==='cb3w'){[['L1','#dc2626',0],['N','#2563eb',1],['L2','#111827',2]].forEach(([n,cl,k])=>{const x=T.terms[k].x;txt(g,x,15,(2*k+1)+'/'+n,{fill:cl,'font-size':6.5,'font-weight':900});txt(g,x,T.h-5.5,(2*k+2)+'/'+n,{fill:cl,'font-size':6,'font-weight':900});});
+      txt(g,13,39,'1φ3W',{fill:'#64748b','font-size':5.6,'font-weight':800});txt(g,T.w-13,39,'3P2E',{fill:'#64748b','font-size':5.6,'font-weight':800});break;}
+    prints(g,d);break;}
   case'switch':
     el('rect',{x:0,y:6,width:50,height:52,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
     el('rect',{x:12,y:14,width:26,height:36,rx:4,fill:'#cbd5e1'},g);
@@ -3984,16 +3989,16 @@ function autoLanh(cnt,R){
 }
 /* ---- Đấu tự động tủ điện 1 pha 3 dây 110/220V: CB tổng → đồng hồ 1P3W → CB nhánh 220V (L1–L2) + CB nhánh 110V (chia đều L1/L2) ---- */
 function autoTW(cnt){
-  const TWK=['src1p3','kwh3','baw2c','ac220','lamp110','socket110'];if(!TWK.some(k=>(cnt[k]|0)>0))return null;
+  const TWK=['src1p3','kwh3','baw2c','ac220','lamp110','socket110','sub:cb3w'];if(!TWK.some(k=>(cnt[k]|0)>0))return null;
   const c=Object.assign({},cnt),used={},take=k=>{used[k]=(used[k]|0)+1;if((c[k]|0)>0)c[k]--;};
   const devs=[],wires=[],rep=[];let nid=1;
-  const D=(t,x,y,ex)=>{const d=Object.assign({id:'d'+(nid++),t,x,y},ex||{});devs.push(d);take(t);return d;};
+  const D=(t,x,y,ex)=>{const d=Object.assign({id:'d'+(nid++),t,x,y},ex||{});devs.push(d);take(ex&&ex.sub&&(c['sub:'+ex.sub]|0)>0?'sub:'+ex.sub:t);return d;};
   const W=(a,ta,b,tb)=>wires.push({id:'w'+(nid++),a:{d:a.id,t:ta},b:{d:b.id,t:tb}});
   let nAC=Math.max(0,cnt.ac220|0),nL=Math.max(0,cnt.lamp110|0),nS=Math.max(0,cnt.socket110|0);
   if(!nAC&&!nL&&!nS){nAC=1;nL=1;nS=1;}
   const n110=nL+nS,nCb1=n110?Math.max(1,Math.min(cnt.cb1|0||1,n110)):0;
   const baw=!((cnt.kwh3|0)>0&&!(cnt.baw2c|0));
-  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true,lbl:'CB tổng 40A'}),km=baw?D('baw2c',250,40,{lbl:'Đồng hồ'}):D('kwh3',62,280,{lbl:'Đồng hồ'});
+  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true,sub:'cb3w',lbl:'CB tổng 40A'}),km=baw?D('baw2c',250,40,{lbl:'Đồng hồ'}):D('kwh3',62,280,{lbl:'Đồng hồ'});
   W(src,'L1',main,'1');W(src,'N',main,'3');W(src,'L2',main,'5');
   const O1=baw?'1L':'1L',O2=baw?'2L':'3L';
   if(baw){
@@ -5472,6 +5477,7 @@ const DEVN={src1:['1-phase supply','單相電源'],src3:['3-phase supply','三�
   vprot:['Voltage protection relay Mikro MX210','電壓保護電驛 Mikro MX210'],hpsw:['High-pressure switch HP (Danfoss KP5 type)','高壓開關 HP (Danfoss KP5 型)'],lpsw:['Low-pressure switch LP (Danfoss KP1 type)','低壓開關 LP (Danfoss KP1 型)'],flowsw:['Flow switch','流量開關'],
   sv:['Solenoid valve 220V','電磁閥 220V'],wv4:['4-way reversing valve 220V','四通閥 220V'],heater:['Defrost / crankcase heater 220V','除霜／曲軸箱加熱器 220V'],tctl:['Temperature controller (Dixell XR / STC-1000)','溫度控制器 (Dixell XR / STC-1000)'],
   kwh3:['kWh meter 1P3W 110/220V','電表 單相三線 110/220V'],baw2c:['CIC BAW-2C kWh meter 1P3W 110/220V 10(80)A (RS485)','巧力 CIC BAW-2C 電表 單相三線 110/220V 10(80)A (RS485)'],barN:['Neutral bar N','中性線端子排 N'],barPE:['Earth bar PE','接地端子排 PE'],ac220:['Air conditioner 220V (L1–L2)','冷氣機 220V (L1–L2)']};
+if(LI>=0){SUBS.cb3w.name=['MCB 3-pole for 1-phase 3-wire, 3P2E (110/220V)','單相三線 無熔絲開關 3P2E (110/220V)'][LI];SUBS.pump.name=['3-phase submersible pump','三相沉水泵'][LI];}
 if(LI>=0)Object.keys(DEVN).forEach(k=>{if(TYPES[k])TYPES[k].name=DEVN[k][LI];});
 const TRD=[
  ['⚡ Bảng điện mô phỏng','⚡ Electrical Panel Simulator','⚡ 配電盤模擬器'],['▶ Chạy thử','▶ Run','▶ 試運轉'],['■ Dừng','■ Stop','■ 停止'],['🗄 Tủ điện','🗄 Cabinet','🗄 配電箱'],['🧩 Lập mạch','🧩 Build circuit','🧩 建立電路'],
