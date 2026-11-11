@@ -5011,7 +5011,7 @@ function lessonBar(){let b=document.getElementById('lsBar');const Ls=LESSONS.fin
   b.innerHTML='<span>🎓 '+esc(Ls.t)+'</span><button class="btn" id="lsHint">💡</button><button class="btn run" id="lsGo">Chấm điểm</button>';
   b.querySelector('#lsGo').onclick=lessonGrade;b.querySelector('#lsHint').onclick=()=>{const m=showModal('<div class="ic">💡</div><h2>Đề bài & gợi ý</h2><p style="text-align:left">'+esc(Ls.d)+'</p><div class="calcbox">'+esc(Ls.hint)+'</div><div class="row"><button class="btn" id="hOk">Đóng</button></div>');m.querySelector('#hOk').onclick=closeModal;};}
 /* ================= 🧊 MÔ PHỎNG 3D: nhà xưởng, tủ điện kích thước thật, motor đúng cỡ khung IEC theo kW, ống luồn dây, dòng điện chạy, chập nổ ================= */
-let T3=null,P3=null,C3=null;
+let T3=null,P3=null,C3=null,G3=null;const M3={};
 /* vận hành 1 thiết bị trên cánh: trả về hàm nhả (nút nhấn giữ) hoặc null */
 function doorAct(d){const c=TYPES[d.t].ctl;unlockAudio();
   if(c==='pb'){if(!running){cabMsg('Bấm ▶ Chạy thử rồi nhấn nút '+tagOf(d)+'.');return null;}sfx('click');d.pressed=true;changed();cabLive(true);return()=>{d.pressed=false;changed();cabLive(true);};}
@@ -5081,7 +5081,7 @@ async function open3D(box){
   box3(LX,.25,.16,colM,CX,HT-.13,.2);
   const roof=new T.Mesh(new T.PlaneGeometry(LX,ZL),mat('#6b7280',{roughness:.9,side:T.DoubleSide}));roof.rotation.x=Math.PI/2;roof.position.set(CX,HT,ZL/2);scene.add(roof);
   const lampM=new T.MeshBasicMaterial({color:'#fffbea',toneMapped:false});
-  for(let x=X0+2;x<X1-.5;x+=3.6)for(const z of[2.2,ZL-1.8]){const hb=new T.Group();hb.position.set(x,4.25,z);scene.add(hb);const sd=new T.Mesh(new T.CylinderGeometry(.18,.3,.28,32,1,true),mat('#334155',{metalness:.7,roughness:.35,side:T.DoubleSide}));hb.add(sd);
+  for(let x=X0+2;x<X1-.5;x+=3.6)for(const z of[2.2,ZL-1.8]){const hb=new T.Group();hb.position.set(x,4.25,z);scene.add(hb);const sd=new T.Mesh(new T.CylinderGeometry(.18,.3,.28,32,1,true),mat('#334155',{metalness:.7,roughness:.35,side:T.DoubleSide}));hb.add(sd);(C.hbs=C.hbs||[]).push({hb,sd,x,z});
     const ds=new T.Mesh(new T.CircleGeometry(.27,32),lampM);ds.rotation.x=Math.PI/2;ds.position.y=-.13;hb.add(ds);const cd=cyl(.006,.006,.9,mat('#111'),6);cd.position.y=.58;hb.add(cd);
     if(hi||z<3){const sp=new T.SpotLight('#fff4dc',hi?5:7,9,.95,.6,1.6);sp.position.set(x,4.1,z);sp.target.position.set(x,0,z);scene.add(sp,sp.target);}}
   /* nắng qua cửa sổ: đèn mặt trời phía sau tường + vệt sáng */
@@ -5147,7 +5147,7 @@ async function open3D(box){
   {const sign=(w,h,fn,x,y,z,ry,emis)=>{const c=canv(Math.round(w*2000),Math.round(h*2000),(cx,cw,ch)=>{cx.scale(2,2);fn(cx,cw/2,ch/2);}),m=new T.Mesh(new T.PlaneGeometry(w,h),emis?new T.MeshBasicMaterial({map:cTex(c),toneMapped:false}):mat('#fff',{map:cTex(c),roughness:.5}));m.position.set(x,y,z);m.rotation.y=ry||0;scene.add(m);return m;};
     const red=mat('#c81e1e',{metalness:.3,roughness:.35}),orange=mat('#ea7a12',{metalness:.4,roughness:.4}),wood=mat('#b7864d',{roughness:.8}),card=mat('#c8a165',{roughness:.9}),blk=mat('#111827',{roughness:.5});
     /* bình chữa cháy + biển */
-    const ex=new T.Group();ex.position.set(-.75,0,.11);scene.add(ex);const bt=cyl(.075,.075,.42,red,28);bt.position.y=1.05;ex.add(bt);const dm=new T.Mesh(new T.SphereGeometry(.075,24,12,0,Math.PI*2,0,Math.PI/2),red);dm.position.y=1.26;ex.add(dm);
+    const ex=new T.Group();ex.position.set(-.75,0,.11);scene.add(ex);C.exG=ex;const bt=cyl(.075,.075,.42,red,28);bt.position.y=1.05;ex.add(bt);const dm=new T.Mesh(new T.SphereGeometry(.075,24,12,0,Math.PI*2,0,Math.PI/2),red);dm.position.y=1.26;ex.add(dm);
     const vh=cyl(.02,.02,.06,blk,12);vh.position.y=1.33;ex.add(vh);box3(.1,.015,.02,blk,.03,1.37,0,ex);const hs=new T.Mesh(new T.TorusGeometry(.07,.008,8,24,Math.PI),blk);hs.position.set(.07,1.2,.03);hs.rotation.z=-Math.PI/2;ex.add(hs);
     box3(.16,.03,.12,mat('#334155',{metalness:.6}),0,.83,-.04,ex);
     sign(.24,.3,(x,w,h)=>{x.fillStyle='#c81e1e';x.fillRect(0,0,w,h);x.fillStyle='#fff';x.font='bold 34px sans-serif';x.textAlign='center';x.fillText('BÌNH',w/2,90);x.fillText('CHỮA',w/2,135);x.fillText('CHÁY',w/2,180);x.font='70px sans-serif';x.fillText('🧯',w/2,270);},-.75,1.7,.012);
@@ -5270,6 +5270,19 @@ async function open3D(box){
     else{const dz=D*.5;pts=[[gx,y0+.01,dz],[gx,y0-.12,dz],[gx,.06,dz],[gx,.03,dz+.3],[a.x-.3,.03,a.z-.45],[a.x,.03,a.z-.35],[a.x,a.y,a.z-.2],[a.x,a.y,a.z]];
       for(let k=0;k<pts.length-3;k++){if(pts[k][1]>.1)continue;}const trayM=mat('#9ca3af',{metalness:.7,roughness:.3});const tr=box3(Math.abs(a.x-gx)+.3,.02,.12,trayM,(a.x+gx)/2,.01,dz+.3,null);tr.castShadow=false;}
     st.flow=run(pts,cond?.016:.009,cond);C.outs.push(st);});
+  /* ---- model 3D thật (Poly Haven, CC0): đèn xưởng, thùng phuy, thùng carton, xe đẩy, máy khoan bàn, biển báo, chuông báo cháy, cục nóng máy lạnh ---- */
+  (async()=>{try{G3=G3||await Promise.all([import('./lib3d/loaders/GLTFLoader.js'),import('./lib3d/libs/meshopt_decoder.module.js')]);}catch(e){return;}
+    const ld=new G3[0].GLTFLoader();ld.setMeshoptDecoder(G3[1].MeshoptDecoder);
+    const mdl=n=>M3[n]=M3[n]||new Promise((res,rej)=>ld.load('./models/'+n+'.glb',g=>res(g.scene),undefined,rej));
+    const put=async(n,x,y,z,ry,sc,anchor,par)=>{try{const src=await mdl(n);if(!C.alive)return null;const o=src.clone(true);o.scale.setScalar(sc||1);o.rotation.y=ry||0;o.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(o);
+      o.position.set(x,anchor==='top'?y-bb.max.y:anchor==='mid'?y-(bb.min.y+bb.max.y)/2:y-bb.min.y,z);o.traverse(q=>{if(q.isMesh){q.castShadow=q.receiveShadow=hi;}});(par||scene).add(o);return o;}catch(e){return null;}};
+    (C.hbs||[]).forEach(h=>{put('hanging_industrial_lamp',0,.62,0,0,.75,'top',h.hb).then(o=>{if(o){h.sd.visible=false;h.hb.children.forEach(c=>{if(c.geometry&&c.geometry.type==='CylinderGeometry'&&c!==h.sd)c.visible=false;});}});});
+    const bx=X1-.5;put('Barrel_01',bx,0,.45,.3);put('Barrel_01',bx-.62,0,.42,1.4);put('Barrel_01',bx-.3,0,1.0,2.2);
+    put('hand_truck',X0+3.0,0,ZL-.75,2.6);put('drill_press_01',X0+2.75,0,ZL-1.0,Math.PI,1.25);put('WetFloorSign_01',X0+1.2,0,Math.min(ZL-1.2,4.8)+.3,1.2);
+    put('fire_alarm',x0+W+.3,2.15,.012,0,1.6,'mid');
+    for(let i=0;i<3;i++)put('cardboard_box_01',X0+3.6+i*.45,0,ZL-.5-(i%2)*.3,i*.7,1.1);
+    C.outs.filter(o=>o.kind==='ac').forEach(o=>{const s=Math.cbrt((PV(o.d,'w')||1800)/1800);put('exterior_aircon_unit',0,.12,0,0,s,null,o.grp).then(m=>{if(!m)return;o.grp.children.forEach(c=>{if(c!==m&&c.position.y>.1)c.visible=false;});m.traverse(q=>{if(q.isMesh)q.userData={dev:o.d.id,kind:'out'};});o.spin=null;});});
+  })();
   /* ---- camera ---- */
   const tgt=new T.Vector3(),sph={r:3,th:.2,ph:1.18};C.tgt=tgt;C.sph=sph;
   const place=()=>{sph.ph=Math.max(.22,Math.min(1.55,sph.ph));sph.r=Math.max(.5,Math.min(20,sph.r));cam.position.set(tgt.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),tgt.y+sph.r*Math.cos(sph.ph),tgt.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));cam.lookAt(tgt);};C.place=place;
