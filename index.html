@@ -4642,7 +4642,8 @@ function cabLayout(E,src,col){
   const fit={h:needH<=ph,w:!over.length,d:needD<=E[2],door:doorNeed<=E[0]-90};fit.ok=fit.h&&fit.w&&fit.d&&fit.door;
   const rails=bands.filter(b=>b.m==='din').map(b=>({b,len:Math.floor(Lr/5)*5,used:Math.ceil(b.used),tb:b.tb}));
   const hLen=fullH,vLen=ducts[ducts.length-1]+duct-ducts[0];
-  return{topDevs,ties,tieMode:!!src.tie,winR,hd,vd,xC,colW,tall:tallIds,E,G,pw,ph,Lr,railX0,railX1,bands,seq,ducts,needH,needD,Dy,VL,VR,tbl,tbMap,routes,rails,hLen,vLen,info,doorDevs,dpos,win,doorNeed,dW,dH,over,fit,lastK};
+  const outside=devs.filter(d=>M(d.id)==='src').concat(devs.filter(d=>M(d.id)==='out'));
+  return{outside,topDevs,ties,tieMode:!!src.tie,winR,hd,vd,xC,colW,tall:tallIds,E,G,pw,ph,Lr,railX0,railX1,bands,seq,ducts,needH,needD,Dy,VL,VR,tbl,tbMap,routes,rails,hLen,vLen,info,doorDevs,dpos,win,doorNeed,dW,dH,over,fit,lastK};
 }
 function cabSuggest(src){for(const E of ENCL){const L=cabLayout(E,src);if(L.fit.ok)return L;}return null;}
 const isSpare=d=>d.spare&&!S.wires.some(w=>w.a.d===d.id||w.b.d===d.id);
@@ -4765,11 +4766,22 @@ function cabSVG(L,o){o=o||{};const E=L.E,W=E[1],H=E[0],G=L.G,F=cabFrame(L),{mL,m
     L.topDevs.slice().reverse().forEach(d=>{const on=R0[d.id]==='on';ty-=15;s+=`<rect x="${tx-12}" y="${ty}" width="24" height="15" rx="2" fill="${TYPES[d.t].col}" fill-opacity="${on?1:.35}" stroke="#334155" stroke-width=".8"/>`+(on?`<rect x="${tx-17}" y="${ty-3}" width="34" height="21" rx="6" fill="${TYPES[d.t].col}" opacity=".3"/>`:'');});
     s+=`<rect x="${tx-12}" y="${ty-4}" width="24" height="4" rx="2" fill="#1f2937"/>`+Tx(tx+17,mT-22,'Đèn tháp',7,'#334155',' font-weight="800"');}
   for(let i=0;i<Math.max(2,Math.round(W/150));i++){const gx=mL+30+i*(W-60)/Math.max(1,Math.max(2,Math.round(W/150))-1);s+=`<circle cx="${gx}" cy="${mT+H-3}" r="6" fill="#1f2937" stroke="#0f172a"/>`;}
-  s+=Tx(mL,VH-12,'Bảng điện mô phỏng · © '+AUTHOR,8,'#94a3b8');
+  if(F.O.items.length){const oy=VH-F.O.h-20,wired={};L.routes.forEach(r=>{wired[r.w.a.d+':'+r.w.a.t]=col[r.w.id]||1;wired[r.w.b.d+':'+r.w.b.t]=col[r.w.id]||1;});
+    s+=`<rect x="4" y="${oy-16}" width="${VW-8}" height="${F.O.h+4}" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="5 4"/>`+Tx(12,oy-5,'NGOÀI TỦ – nguồn vào và thiết bị ngoài hiện trường · chạm chân ● ở đây rồi chạm chân thiết bị trong tủ để kéo dây',7,'#475569',' font-weight="800"');
+    F.O.items.forEach(b=>{const d=b.d,T=TYPES[d.t],isS=T.cat==='src',bx=b.x,by=oy+b.y+16,sel=o.sel===d.id,n=T.terms.length;
+      if(isS)s+=`<path d="M${bx+b.w/2} ${by}V${by-8}H${px+L.VL}V${mT+H}" fill="none" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/><path d="M${bx+b.w/2} ${by}V${by-8}H${px+L.VL}V${mT+H}" fill="none" stroke="#facc15" stroke-width="1" stroke-dasharray="6 5"/>`;
+      s+=`<g data-cd="${d.id}" style="cursor:pointer"><rect x="${bx}" y="${by}" width="${b.w}" height="${b.h}" rx="6" fill="${isS?'#334155':'#e2e8f0'}" stroke="${sel?'#f59e0b':'#334155'}" stroke-width="${sel?2.2:1}"/>`+
+        `<text x="${bx+b.w/2}" y="${by+32}" font-size="9" font-weight="900" text-anchor="middle" fill="${isS?'#facc15':'#0f172a'}">${esc((isS?'⚡ ':'')+tagOf(d))}</text><text x="${bx+b.w/2}" y="${by+43}" font-size="5.5" text-anchor="middle" fill="${isS?'#e2e8f0':'#475569'}">${esc(typeName(d).replace(/ \(.*\)/,'').slice(0,Math.floor(b.w/3.1)))}</text></g>`;
+      T.terms.forEach((t,i)=>{const tx=bx+b.w*(i+.5)/n,k=d.id+':'+t.id,c=wired[k],pend=o.pend&&o.pend.d===d.id&&o.pend.t===t.id,tb=L.tbMap&&L.tbMap[k];
+        s+=`<text x="${tx}" y="${by+15}" font-size="6" font-weight="800" text-anchor="middle" fill="${isS?'#fff':'#0f172a'}">${esc(t.id)}</text>`+(tb?`<text x="${tx}" y="${by+b.h+8}" font-size="5.2" text-anchor="middle" fill="#0369a1" font-weight="800">${esc(tb.id)}</text>`:'')+
+          `<circle data-ct="${d.id}|${t.id}" cx="${tx}" cy="${by}" r="${pend?5.5:4.2}" fill="${pend?'#f59e0b':c?(c==='PE'?'#16a34a':PCOL[c]||'#64748b'):pinFill(t)}" stroke="#0f172a" stroke-width="${c?1.4:.8}" style="cursor:pointer"/>`;});});}
+  s+=Tx(mL,VH-6,'Bảng điện mô phỏng · © '+AUTHOR,8,'#94a3b8');
   return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" width="${VW*(o.k||1)}" height="${VH*(o.k||1)}" font-family="${FONT.replace(/"/g,"'")}"><defs><marker id="ca" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0f172a"/></marker></defs><rect width="${VW}" height="${VH}" fill="#fff"/>${s}</svg>`;
 }
 /* ---- cánh tủ thật: mặt ngoài (thiết bị sống theo mô phỏng), mặt trong, mở / đóng 3D ---- */
-function cabFrame(L){const W=L.E[1],H=L.E[0],mL=Math.max(78,Math.round(W*.32)),mT=70,mR=24,mB=82;return{W,H,mL,mT,mR,mB,VW:W+mL+mR,VH:Math.max(H,L.needH+50)+mT+mB};}
+/* thiết bị ngoài tủ (nguồn, motor, đèn…) vẽ thành hàng khối bên dưới tủ, có chân ● để kéo dây vào */
+function cabOutside(L,VW){const out=[];let x=10,y=0;(L.outside||[]).forEach(d=>{const T=TYPES[d.t],n=T.terms.length,w=Math.max(58,n*15+14);if(x+w>VW-10&&x>10){x=10;y+=84;}out.push({d,x,y,w,h:50});x+=w+10;});return{items:out,h:out.length?y+84+18:0};}
+function cabFrame(L){const W=L.E[1],H=L.E[0],mL=Math.max(78,Math.round(W*.32)),mT=70,mR=24,VW=W+mL+mR,O=cabOutside(L,VW),mB=82+O.h;return{W,H,mL,mT,mR,mB,O,VW,VH:Math.max(H,L.needH+50)+mT+mB};}
 let doorUid=0;
 /* trạng thái 1 thiết bị trên cánh theo kết quả chạy thử */
 function doorState(d){const R=running&&result&&!result.short?result:null,st=R&&R.state?R.state[d.id]:null;
@@ -4883,7 +4895,7 @@ function renderCab(){
     (cabView!=='bom'&&cabView!=='gia'?'<div class="cabTools"><button class="btn" id="cabDoorBtn">'+(cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh')+'</button><button class="btn '+(running?'stop':'run')+'" id="cabRun">'+(running?'■ Dừng':'▶ Chạy thử')+'</button>'+
       (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn'+(S.cab.npc!==0?' on':'')+'" id="v3npc">👷 Anh Sáu</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
     pal+
-    (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(cabWireBar(L)||'')+(cabSelW&&cabOpen&&S.wires.some(w=>w.id===cabSelW)?'':sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
+    (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(cabWireBar(L)||'')+(cabSelW&&cabOpen&&S.wires.some(w=>w.id===cabSelW)?'':sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='src'?'nguồn vào tủ':dimOf(sd).m==='top'?'nóc tủ':dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
         '<span class="mut">'+cabHelp()+'</span>')+'</div>':'')+
     body+(cabView==='plate'?'<div class="mut" style="margin-top:6px">Ray DIN: '+L.rails.map((r,i)=>'R'+(i+1)+' = '+r.len+' mm').join(' · ')+(L.tbl.length?' · Hàng kẹp X1: '+L.tbl.length+' kẹp':'')+(L.ties.length?' · Dây rút: '+L.ties.length+' sợi':'')+'</div>':'');
   {const bx=B.querySelector('.cabSvg');if(bx&&sx0)bx.scrollLeft=sx0;const v=document.getElementById('cabZv');if(v)v.textContent=Math.round(cabZ*100)+'%';}
@@ -4933,7 +4945,7 @@ function cabPalette(){const G=[['in','🔧 Trong tủ'],['door','🚪 Cánh / n�
       return'<button class="item"'+(dis?' disabled':'')+' data-k="'+t+'"'+(sub?' data-s="'+sub+'"':'')+'>'+iconSvg(t,sub||undefined).outerHTML+'<span>'+esc(sub?SUBS[sub].name:T.name)+'</span></button>';}).join('')+'</div>';}
 function cabAdd(t,sub){const n0=S.devs.length;addDev(t,sub);if(S.devs.length===n0)return;const d=S.devs[S.devs.length-1];cabSel=d.id;
   const m=dimOf(d).m;if(m==='door'&&cabOpen)cabToggleDoor();renderCab();
-  cabMsg('Đã gắn '+nameOf(d)+(m==='out'?' (ngoài tủ – dây ra qua hàng kẹp X1)':m==='door'?' lên cánh tủ':m==='src'?'':' vào tủ – kéo thả để đặt đúng chỗ trên ray')+'. Chạm 2 chân ● để đấu dây.');}
+  cabMsg('Đã gắn '+nameOf(d)+(m==='out'?' (ngoài tủ – khối nằm ở khung NGOÀI TỦ bên dưới, dây ra qua hàng kẹp X1)':m==='door'?' lên cánh tủ':m==='src'?' – khối nguồn nằm ở khung NGOÀI TỦ bên dưới, chạm chân L1/L2/L3/N của nó rồi chạm chân aptomat để kéo dây':' vào tủ – kéo thả để đặt đúng chỗ trên ray')+'. Chạm 2 chân ● để đấu dây.');}
 /* kéo thả thiết bị trên tấm đế · công cụ dây rút · chạm chân để đấu dây */
 function cabPlateEvents(sv,L,F){
   const toP=e=>{const m=sv.getScreenCTM().inverse(),p=sv.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(m);return{x:q.x-F.mL-25,y:q.y-F.mT-25,sx:q.x,sy:q.y};};
