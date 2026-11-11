@@ -4893,7 +4893,7 @@ function renderCab(){
     '<div class="calcbox" id="cabStat">'+cabStatus(R)+'</div>'+
     '<div class="mcSeg" id="cabSeg"><button data-v="plate" class="'+(cabView==='plate'?'on':'')+'">🗄 Tủ & đấu dây</button><button data-v="3d" class="'+(cabView==='3d'?'on':'')+'">🧊 3D</button><button data-v="bom" class="'+(cabView==='bom'?'on':'')+'">📋 Vật tư</button><button data-v="gia" class="'+(cabView==='gia'?'on':'')+'">💰 Báo giá</button></div>'+
     (cabView!=='bom'&&cabView!=='gia'?'<div class="cabTools"><button class="btn" id="cabDoorBtn">'+(cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh')+'</button><button class="btn '+(running?'stop':'run')+'" id="cabRun">'+(running?'■ Dừng':'▶ Chạy thử')+'</button>'+
-      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn'+(S.cab.npc!==0?' on':'')+'" id="v3npc">👷 Anh Sáu</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
+      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn'+(S.cab.npc!==0?' on':'')+'" id="v3npc" title="Anh Sáu Điện giảng bài, đố vui (model: Worker – Quaternius, CC0)">👷 Anh Sáu</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
     pal+
     (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(cabWireBar(L)||'')+(cabSelW&&cabOpen&&S.wires.some(w=>w.id===cabSelW)?'':sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='src'?'nguồn vào tủ':dimOf(sd).m==='top'?'nóc tủ':dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
         '<span class="mut">'+cabHelp()+'</span>')+'</div>':'')+
@@ -5078,7 +5078,9 @@ function npcScript(){const has=t=>S.devs.some(d=>d.t===t),cnt=t=>S.devs.filter(d
   return{L,Q};}
 const NPC_OK=['Trúng phóc! Coi bộ cũng không phải dạng vừa.','Đúng rồi! Bữa nay anh Sáu khao ly cà phê… muối.','Chuẩn bài! Thợ cứng rồi đó.','Ngon! Trả lời vậy là mai lên làm tổ trưởng.'],NPC_NO=['Trật lất rồi cưng ơi!','Sai bét! Bữa nào anh Sáu dắt đi học lại.','Hổng phải! Suýt nữa là cháy tủ rồi đó.','Trật! Mà thôi, sai trên máy đỡ hơn sai ngoài công trình.'];
 const npcSay=t=>{try{if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();const v=speechSynthesis.getVoices().find(x=>/^vi/i.test(x.lang));if(!v)return;const u=new SpeechSynthesisUtterance(t.replace(/[^\p{L}\p{N}\s.,!?%–\-/×=]/gu,' '));u.voice=v;u.lang='vi-VN';u.rate=1.1;u.pitch=.9;speechSynthesis.speak(u);}catch(e){}};
-function npcBuild(C,T,mat,seat,target,look){
+const NPC_SEAT=.4,NPC_SP=1.5;/* chiều cao mặt ghế (m), tốc độ đi (m/s) */
+/* nhân vật khối hộp: dùng ngay khi dựng cảnh và làm dự phòng nếu không tải được models/worker.glb */
+function npcBuildBoxes(C,T,mat,seat,target,look){
   const g=new T.Group();C.scene.add(g);const skin=mat('#e0a878',{roughness:.7}),shirt=mat('#1d4ed8',{roughness:.8}),vest=mat('#f97316',{roughness:.7}),pants=mat('#1f2937',{roughness:.85}),hat=mat('#facc15',{roughness:.4}),boot=mat('#111827');
   const bx=(w,h,d,m,x,y,z,p)=>{const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x,y,z);p.add(o);return o;};
   const body=new T.Group();body.position.y=.92;g.add(body);
@@ -5091,34 +5093,82 @@ function npcBuild(C,T,mat,seat,target,look){
   [lL,lR].forEach(l=>bx(.1,.06,.18,boot,0,-.44,.04,l.k));
   g.traverse(o=>{if(o.isMesh)o.userData={kind:'npc'};});
   const N={g,body,head,aL,aR,lL,lR,st:'sit',t:0,seat,target,look};
-  const pose=()=>{const s=N.st==='sit';body.position.y=s?.52:.92;[lL,lR].forEach(l=>{l.a.rotation.x=s?-Math.PI/2:0;l.k.rotation.x=s?Math.PI/2:0;});[aL,aR].forEach(a=>{a.a.rotation.set(s?-.5:0,0,0);a.k.rotation.x=s?-.9:0;});};
+  const pose=()=>{const s=N.st==='sit';body.position.y=s?NPC_SEAT+.02:.92;[lL,lR].forEach(l=>{l.a.rotation.x=s?-Math.PI/2:0;l.k.rotation.x=s?Math.PI/2:0;});[aL,aR].forEach(a=>{a.a.rotation.set(s?-.5:0,0,0);a.k.rotation.x=s?-.9:0;});};
   g.position.set(seat.x,0,seat.z);g.rotation.y=seat.ry;pose();
   N.go=(to,then)=>{N.st='walk';N.to=to;N.then=then;pose();};
   N.tick=(dt,now)=>{N.t+=dt;
-    if(N.st==='walk'){const dx=N.to.x-g.position.x,dz=N.to.z-g.position.z,d=Math.hypot(dx,dz),sp=2.6;g.rotation.y=Math.atan2(dx,dz);
+    if(N.st==='walk'){const dx=N.to.x-g.position.x,dz=N.to.z-g.position.z,d=Math.hypot(dx,dz),sp=NPC_SP;g.rotation.y=Math.atan2(dx,dz);
       if(d<sp*dt+.02){g.position.x=N.to.x;g.position.z=N.to.z;const f=N.then;N.then=null;N.st='idle';pose();if(f)f();return;}
-      g.position.x+=dx/d*sp*dt;g.position.z+=dz/d*sp*dt;const w=Math.sin(N.t*13);lL.a.rotation.x=w*.9;lR.a.rotation.x=-w*.9;lL.k.rotation.x=Math.max(0,-w)*1.1;lR.k.rotation.x=Math.max(0,w)*1.1;aL.a.rotation.x=-w*.8;aR.a.rotation.x=w*.8;aL.k.rotation.x=aR.k.rotation.x=-.8;body.position.y=.92+Math.abs(Math.cos(N.t*13))*.03;body.rotation.x=.12;}
+      g.position.x+=dx/d*sp*dt;g.position.z+=dz/d*sp*dt;const w=Math.sin(N.t*8);lL.a.rotation.x=w*.9;lR.a.rotation.x=-w*.9;lL.k.rotation.x=Math.max(0,-w)*1.1;lR.k.rotation.x=Math.max(0,w)*1.1;aL.a.rotation.x=-w*.8;aR.a.rotation.x=w*.8;aL.k.rotation.x=aR.k.rotation.x=-.8;body.position.y=.92+Math.abs(Math.cos(N.t*8))*.03;body.rotation.x=.12;}
     else if(N.st==='talk'){body.rotation.x=0;const w=Math.sin(N.t*5);aR.a.rotation.set(-1.9+w*.25,0,-.35);aR.k.rotation.x=-.5+w*.3;aL.a.rotation.set(-.3,0,.15);aL.k.rotation.x=-1.2;head.rotation.y=Math.sin(N.t*1.7)*.35;head.rotation.x=Math.sin(N.t*3.1)*.08;body.position.y=.92+Math.sin(N.t*5)*.006;}
     else if(N.st==='sit'){body.rotation.x=0;head.rotation.x=.25+Math.sin(N.t*.8)*.05;head.rotation.y=Math.sin(N.t*.5)*.15;aR.k.rotation.x=-.9+Math.sin(N.t*6)*.06;}
     else{body.rotation.x=0;}};
-  N.face=p=>{g.rotation.y=Math.atan2(p.x-g.position.x,p.z-g.position.z);};
+  N.face=p=>{g.rotation.y=Math.atan2(p.x-g.position.x,p.z-g.position.z);};N.pose=pose;
   return N;}
+/* anh Sáu bằng model rigged models/worker.glb (Quaternius "Worker", CC0): trả N (khối hộp) ngay, tải model xong thì thay vào, giữ nguyên trạng thái st/to/then; lỗi (offline lần đầu, file://) thì giữ khối hộp */
+function npcBuild(C,T,mat,seat,target,look,aim){const N=npcBuildBoxes(C,T,mat,seat,target,look);npcGlb(C,T,N,aim).catch(e=>console.warn('[npc] dùng nhân vật khối hộp:',e&&e.message||e));return N;}
+async function npcGlb(C,T,N,aim){
+  G3=G3||await Promise.all([import('./lib3d/loaders/GLTFLoader.js'),import('./lib3d/libs/meshopt_decoder.module.js')]);
+  /* chỉ cache ArrayBuffer, mỗi lần dựng cảnh parse lại → model/xương/mixer mới hoàn toàn, khỏi cần SkeletonUtils.clone */
+  const buf=await(M3['worker.glb']=M3['worker.glb']||fetch('./models/worker.glb').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).catch(e=>{delete M3['worker.glb'];throw e;}));
+  if(!C.alive||C.npc!==N)return;
+  const ld=new G3[0].GLTFLoader();ld.setMeshoptDecoder(G3[1].MeshoptDecoder);const gltf=await ld.parseAsync(buf,'./models/');
+  if(!C.alive||C.npc!==N)return;
+  const g=new T.Group(),model=gltf.scene;g.add(model);
+  {const b=new T.Box3().setFromObject(model);model.scale.multiplyScalar(1.7/(b.max.y-b.min.y));model.updateMatrixWorld(true);const b2=new T.Box3().setFromObject(model);model.position.y-=b2.min.y;}/* cao 1.7 m, chân chạm y=0 */
+  const sh=!!(C.ren&&C.ren.shadowMap.enabled);model.traverse(o=>{if(o.isMesh){o.userData={kind:'npc'};o.castShadow=sh;o.receiveShadow=false;o.frustumCulled=false;}});
+  /* GLTFLoader bỏ dấu '.' trong tên xương (UpperLeg.L → UpperLegL) nên so tên đã chuẩn hóa */
+  const bones=[];model.traverse(o=>{if(o.isBone)bones.push(o);});const nm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,''),bone=k=>{k=nm(k);return bones.find(b=>nm(b.name)===k)||bones.find(b=>nm(b.name).endsWith(k));};
+  const B={hips:bone('Hips'),body:bone('Body'),head:bone('Head'),ulL:bone('UpperLeg.L'),ulR:bone('UpperLeg.R'),llL:bone('LowerLeg.L'),llR:bone('LowerLeg.R'),uaR:bone('UpperArm.R'),laR:bone('LowerArm.R'),wrR:bone('Wrist.R')};
+  if(!B.hips||!B.ulL||!B.ulR||!B.llL||!B.llR)throw new Error('model thiếu xương');
+  const mixer=new T.AnimationMixer(model),A={},clip=(...ks)=>{for(const k of ks){const c=gltf.animations.find(a=>a.name.split('|').pop().toLowerCase()===k.toLowerCase());if(c)return c;}return null;},mk=(n,...ks)=>{const c=clip(...ks);if(c)A[n]=mixer.clipAction(c);};
+  mk('idle','Idle','Idle_Neutral');mk('walk','Walk');mk('wave','Wave');mk('hit','HitRecieve','HitReact','Hit_Receive');if(!A.idle)throw new Error('model thiếu clip Idle');
+  ['wave','hit'].forEach(n=>{if(A[n]){A[n].setLoop(T.LoopOnce,1);A[n].clampWhenFinished=true;}});if(A.walk)A.walk.timeScale=NPC_SP/1.25;/* clip Walk khớp ~1.25 m/s */
+  let cur=null,once=null;const play=n=>{const a=A[n]||A.idle;if(a===cur)return;a.reset().setEffectiveWeight(1).play();if(cur)cur.crossFadeTo(a,.3,false);cur=a;};
+  mixer.addEventListener('finished',e=>{if(once&&e.action===A[once])once=null;});
+  play('idle');mixer.update(0);g.updateMatrixWorld(true);
+  /* ngồi: hạ xương Body (cha chung của Hips-thân trên và 2 đùi; hạ Hips thì thân lún vào chân), hông ≈ mặt ghế + .09 */
+  const v1=new T.Vector3(),v2=new T.Vector3(),tg=new T.Vector3(),q1=new T.Quaternion(),q2=new T.Quaternion(),q3=new T.Quaternion(),ax=new T.Vector3(),d0=new T.Vector3(),d1=new T.Vector3();
+  const DROP=Math.max(0,B.hips.getWorldPosition(v1).y-(NPC_SEAT+.09)),ROOT=B.body||B.hips,REST=ROOT.position.clone();
+  const rotX=(b,r)=>{if(!b||!r)return;g.getWorldQuaternion(q1);ax.set(1,0,0).applyQuaternion(q1);b.parent.getWorldQuaternion(q2);ax.applyQuaternion(q2.invert());b.quaternion.premultiply(q1.setFromAxisAngle(ax,r));};/* xoay xương quanh trục ngang của nhân vật */
+  const aimB=(b,c,p,w)=>{if(!b||!c||w<=.001)return;b.updateWorldMatrix(true,true);b.getWorldPosition(v1);c.getWorldPosition(v2);d0.subVectors(v2,v1).normalize();d1.subVectors(p,v1).normalize();q1.setFromUnitVectors(d0,d1);q3.identity().slerp(q1,w);b.getWorldQuaternion(q1);q3.multiply(q1);b.parent.getWorldQuaternion(q2);b.quaternion.copy(q2.invert().multiply(q3));b.updateMatrixWorld(true);};/* xoay xương cho đoạn b→c chỉ về p */
+  const ad=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));let sitW=N.st==='sit'?1:0,ptW=0;
+  /* thay khối hộp bằng model, giữ vị trí/hướng hiện tại */
+  const old=N.g;g.position.copy(old.position);g.rotation.y=old.rotation.y;C.scene.add(g);C.scene.remove(old);old.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
+  N.g=g;N.glb=true;N.mixer=mixer;N.pose=()=>{};
+  N.dispose=()=>{try{mixer.stopAllAction();mixer.uncacheRoot(model);model.traverse(o=>{if(o.skeleton)o.skeleton.dispose();});}catch(e){}};
+  N.act=n=>{if(!A[n]||N.st==='walk'||N.st==='sit')return;if(cur===A[n])A[n].reset().play();once=n;};/* 'wave' chào/đúng câu, 'hit' khi chập/cháy */
+  N.go=(to,then)=>{N.st='walk';N.to=to;N.then=then;};
+  N.face=p=>{g.rotation.y=Math.atan2(p.x-g.position.x,p.z-g.position.z);};
+  N.tick=(dt,now)=>{N.t+=dt;let mv=false;const ws=N.st==='sit'?1:0;sitW+=(ws-sitW)*Math.min(1,dt*4);if(Math.abs(sitW-ws)<.01)sitW=ws;
+    if(N.st==='walk'&&sitW<.05){const dx=N.to.x-g.position.x,dz=N.to.z-g.position.z,d=Math.hypot(dx,dz),df=ad(g.rotation.y,Math.atan2(dx,dz));/* đứng dậy xong mới đi */
+      if(d<NPC_SP*dt+.02){g.position.x=N.to.x;g.position.z=N.to.z;const f=N.then;N.then=null;N.st='idle';if(f)f();}
+      else{mv=true;once=null;g.rotation.y+=df*Math.min(1,dt*9);const s=Math.min(d,NPC_SP*dt*(Math.abs(df)>1.2?.25:1));g.position.x+=dx/d*s;g.position.z+=dz/d*s;}}
+    play(mv?'walk':once||'idle');
+    ROOT.position.copy(REST);mixer.update(dt);g.updateMatrixWorld(true);/* trả Body về gốc trước mixer để không hạ dồn */
+    if(sitW>0){ROOT.getWorldPosition(v1);v1.y-=DROP*sitW;ROOT.position.copy(ROOT.parent.worldToLocal(v1));g.updateMatrixWorld(true);
+      [B.ulL,B.ulR].forEach(b=>rotX(b,-1.4*sitW));g.updateMatrixWorld(true);[B.llL,B.llR].forEach(b=>rotX(b,1.31*sitW));rotX(B.head,.15*sitW);g.updateMatrixWorld(true);}
+    /* giảng bài: tay phải chỉ vào tủ (lúc chỉ lúc buông), đầu gật gù */
+    const pw=N.st==='talk'&&!once&&aim&&Math.sin(N.t*.6)>-.4?1:0;ptW+=(pw-ptW)*Math.min(1,dt*5);
+    if(ptW>.01){tg.copy(aim);tg.x+=Math.sin(N.t*1.3)*.25;tg.y+=Math.sin(N.t*2.6)*.06;aimB(B.uaR,B.laR,tg,ptW);aimB(B.laR,B.wrR,tg,ptW);}
+    if(N.st==='talk'&&B.head){rotX(B.head,Math.sin(N.t*3.1)*.05);B.head.updateMatrixWorld(true);}};
+}
 /* hộp thoại + kịch bản */
 function npcStart(C){const N=C.npc,box=C.box;let ui=box.querySelector('.npcBox');if(!ui){ui=document.createElement('div');ui.className='npcBox';box.appendChild(ui);}ui.style.display='none';
   const D={q:[],score:0,asked:0,timer:null,cur:null};C.npcD=D;
   const show=(text,opts,cb)=>{clearTimeout(D.timer);ui.style.display='block';
     ui.innerHTML='<div class="npcN">👷 Anh Sáu Điện'+(D.asked?' <small>· đúng '+D.score+'/'+D.asked+' câu</small>':'')+'<span style="flex:1"></span><button class="btn" data-n="x">🤐 Im đi</button></div><div class="npcT">'+esc(text)+'</div><div class="npcA">'+
       (opts?opts.map((o,i)=>'<button class="btn" data-o="'+i+'">'+esc(o)+'</button>').join(''):'<button class="btn run" data-n="n">Nói tiếp ▶</button>')+'</div>';
-    ui.querySelector('[data-n=x]').onclick=()=>{S.cab.npc=0;save();clearTimeout(D.timer);ui.style.display='none';try{speechSynthesis.cancel();}catch(e){}N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;});cabMsg('Anh Sáu về bàn ngồi rồi. Muốn kêu lại thì bấm 👷 trên thanh công cụ.');const b=document.getElementById('v3npc');if(b)b.classList.remove('on');};
+    ui.querySelector('[data-n=x]').onclick=()=>{S.cab.npc=0;save();clearTimeout(D.timer);ui.style.display='none';try{speechSynthesis.cancel();}catch(e){}N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;N.pose();});cabMsg('Anh Sáu về bàn ngồi rồi. Muốn kêu lại thì bấm 👷 trên thanh công cụ.');const b=document.getElementById('v3npc');if(b)b.classList.remove('on');};
     const nb=ui.querySelector('[data-n=n]');if(nb)nb.onclick=next;ui.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>cb(+b.dataset.o));npcSay(text);if(!opts)D.timer=setTimeout(next,Math.max(7000,text.length*85));};
   const fill=()=>{const sc=npcScript(),L=sc.L.sort(()=>Math.random()-.5),Q=sc.Q.sort(()=>Math.random()-.5);D.q=[];while(L.length||Q.length){if(L.length)D.q.push({t:L.shift()});if(Q.length)D.q.push({quiz:Q.shift()});}};
   const next=()=>{if(!C.alive||N.st!=='talk')return;if(!D.q.length)fill();const it=D.q.shift();
     if(it.t){show(it.t);return;}const z=it.quiz,ord=z.o.map((o,i)=>i).sort(()=>Math.random()-.5);
-    show('Đố nè: '+z.q,ord.map(i=>z.o[i]),k=>{const ok=ord[k]===0;D.asked++;if(ok)D.score++;sfx(ok?'click':'clack');show((ok?NPC_OK:NPC_NO)[Math.random()*4|0]+' '+(ok?'':'Đáp án là "'+z.o[0]+'". ')+z.why);});};
-  D.say=k=>{if(N.st!=='talk')return;show(k==='short'?'Trời đất quỷ thần ơi, CHẬP rồi cha nội! Pha chạm pha là dòng vọt lên cả ngàn ampe, aptomat cắt hổng kịp là tiêu cái tủ. Bấm ■ Dừng, gỡ sợi dây đấu bậy ra giùm anh cái!':'Khét lẹt rồi đó! Có món đồ vừa cháy. Thiết bị ăn sai điện áp hoặc bị quá dòng thì nó "đi" lẹ lắm. Bấm ■ Dừng, coi lại sợi nào vô chân đó.');};
+    show('Đố nè: '+z.q,ord.map(i=>z.o[i]),k=>{const ok=ord[k]===0;D.asked++;if(ok){D.score++;N.act&&N.act('wave');}sfx(ok?'click':'clack');show((ok?NPC_OK:NPC_NO)[Math.random()*4|0]+' '+(ok?'':'Đáp án là "'+z.o[0]+'". ')+z.why);});};
+  D.say=k=>{if(N.st!=='talk')return;N.act&&N.act('hit');show(k==='short'?'Trời đất quỷ thần ơi, CHẬP rồi cha nội! Pha chạm pha là dòng vọt lên cả ngàn ampe, aptomat cắt hổng kịp là tiêu cái tủ. Bấm ■ Dừng, gỡ sợi dây đấu bậy ra giùm anh cái!':'Khét lẹt rồi đó! Có món đồ vừa cháy. Thiết bị ăn sai điện áp hoặc bị quá dòng thì nó "đi" lẹ lắm. Bấm ■ Dừng, coi lại sợi nào vô chân đó.');};
   D.arrive=()=>{N.st='talk';N.face(N.look);fill();const nd=S.devs.length,nw=S.wires.length,bad=result&&result.short;
-    if(bad){D.say('short');return;}show('Ê ê khoan, để anh Sáu coi cái tủ này cái đã… '+nd+' món đồ, '+nw+' sợi dây. Đấu vậy cũng có nghề đó, để coi chạy có êm hông. Anh nói sơ nguyên lý, lát anh đố vài câu, trả lời trật là anh cười ráng chịu nghen.');};
-  D.leave=()=>{clearTimeout(D.timer);try{speechSynthesis.cancel();}catch(e){}if(N.st==='sit')return;ui.style.display='block';ui.innerHTML='<div class="npcN">👷 Anh Sáu Điện</div><div class="npcT">Thôi nghỉ, anh về bàn làm ly trà đá.'+(D.asked?' Bữa nay em trả lời đúng '+D.score+'/'+D.asked+' câu.':'')+'</div>';D.timer=setTimeout(()=>ui.style.display='none',3500);N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;N.go;const s=N.st;N.st='sit';N.body.position.y=.52;[N.lL,N.lR].forEach(l=>{l.a.rotation.x=-Math.PI/2;l.k.rotation.x=Math.PI/2;});[N.aL,N.aR].forEach(a=>{a.a.rotation.set(-.5,0,0);a.k.rotation.x=-.9;});});};
+    if(bad){D.say('short');return;}N.act&&N.act('wave');show('Ê ê khoan, để anh Sáu coi cái tủ này cái đã… '+nd+' món đồ, '+nw+' sợi dây. Đấu vậy cũng có nghề đó, để coi chạy có êm hông. Anh nói sơ nguyên lý, lát anh đố vài câu, trả lời trật là anh cười ráng chịu nghen.');};
+  D.leave=()=>{clearTimeout(D.timer);try{speechSynthesis.cancel();}catch(e){}if(N.st==='sit')return;ui.style.display='block';ui.innerHTML='<div class="npcN">👷 Anh Sáu Điện</div><div class="npcT">Thôi nghỉ, anh về bàn làm ly trà đá.'+(D.asked?' Bữa nay em trả lời đúng '+D.score+'/'+D.asked+' câu.':'')+'</div>';D.timer=setTimeout(()=>ui.style.display='none',3500);N.go(N.seat,()=>{N.st='sit';N.g.rotation.y=N.seat.ry;N.pose();});};
 }
 /* ================= 🧊 MÔ PHỎNG 3D: nhà xưởng, tủ điện kích thước thật, motor đúng cỡ khung IEC theo kW, ống luồn dây, dòng điện chạy, chập nổ ================= */
 let T3=null,P3=null,C3=null,G3=null;const M3={};
@@ -5132,7 +5182,7 @@ function doorAct(d){const c=TYPES[d.t].ctl;unlockAudio();
   else{cabMsg(nameOf(d)+(running?'':' – bấm ▶ Chạy thử để xem đèn sáng.'));return null;}
   changed();cabLive(true);return null;}
 async function svgCanvas(str,w,h){const img=await svgImg(str);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);return c;}
-function dispose3D(){if(!C3)return;if(C3.rec){try{C3.rec.stop();}catch(e){}}C3.alive=false;cancelAnimationFrame(C3.raf);try{C3.ro&&C3.ro.disconnect();C3.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();const m=o.material;(Array.isArray(m)?m:m?[m]:[]).forEach(x=>{if(x.map)x.map.dispose();x.dispose();});});
+function dispose3D(){if(!C3)return;if(C3.rec){try{C3.rec.stop();}catch(e){}}C3.alive=false;cancelAnimationFrame(C3.raf);try{C3.npc&&C3.npc.dispose&&C3.npc.dispose();C3.ro&&C3.ro.disconnect();C3.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();const m=o.material;(Array.isArray(m)?m:m?[m]:[]).forEach(x=>{if(x.map)x.map.dispose();x.dispose();});});
   C3.env&&C3.env.dispose();C3.comp&&C3.comp.dispose&&C3.comp.dispose();C3.ren.dispose();C3.ren.domElement.remove();}catch(e){}C3=null;}
 /* khung động cơ IEC 4 cực: [kW tối đa, chiều cao tâm trục H (mm), dài tổng (mm), Ø trục (mm)] */
 const IEC_FR=[[0.55,71,240,14],[0.75,80,290,19],[1.5,90,340,24],[3,100,380,28],[4,112,400,28],[7.5,132,470,38],[15,160,610,42],[22,180,690,48],[30,200,770,55],[45,225,820,60],[55,250,910,65],[90,280,1050,75],[200,315,1250,80],[1e9,355,1500,95]];
@@ -5395,8 +5445,8 @@ async function open3D(box){
   })();
   /* ---- anh Sáu Điện ---- */
   {const seat={x:X0+1.6,z:ZL-1.5,ry:0},target={x:x0+W+.8,z:D+1.05},look=new T.Vector3(x0+W*.4,0,D+2.6);
-    const st=cyl(.16,.14,.5,mat('#475569',{metalness:.5}),16);st.position.set(seat.x,.25,seat.z);scene.add(st);
-    C.npc=npcBuild(C,T,mat,seat,target,look);npcStart(C);C.npcRun=false;}
+    const st=cyl(.16,.14,NPC_SEAT,mat('#475569',{metalness:.5}),16);st.position.set(seat.x,NPC_SEAT/2,seat.z);scene.add(st);
+    C.npc=npcBuild(C,T,mat,seat,target,look,new T.Vector3(x0+W*.5,y0+H*.55,D+.05));npcStart(C);C.npcRun=false;}
   /* ---- camera ---- */
   const tgt=new T.Vector3(),sph={r:3,th:.2,ph:1.18};C.tgt=tgt;C.sph=sph;
   const place=()=>{sph.ph=Math.max(.22,Math.min(1.55,sph.ph));sph.r=Math.max(.5,Math.min(20,sph.r));cam.position.set(tgt.x+sph.r*Math.sin(sph.ph)*Math.sin(sph.th),tgt.y+sph.r*Math.cos(sph.ph),tgt.z+sph.r*Math.sin(sph.ph)*Math.cos(sph.th));cam.lookAt(tgt);};C.place=place;
