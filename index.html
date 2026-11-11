@@ -82,6 +82,10 @@ h1{font-size:16px;margin:0}
 .shMeta input,.form input,.form select{flex:1;min-width:0;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px;font-size:15px}
 #sheetSvg{margin:0 8px;background:#fff;border-radius:8px;overflow:auto}
 #sheetCalc{padding:6px 12px 40px}
+.cabSvg{background:#fff;border-radius:8px;overflow:auto;margin-top:8px}.cabTop{display:flex;gap:8px;align-items:center;margin:4px 0 8px}.cabTop label{font-size:12.5px;color:var(--mut);font-weight:700}
+.cabTop select,#bdCab select{flex:1;width:100%;background:#0b121a;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font-size:14px}
+.cabTools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}.cabTools .btn{padding:5px 10px}
+.cabTbl h3,#sheetCalc .cabTbl h3{font-size:15px;margin:12px 0 8px}.cabTbl table{width:100%;border-collapse:collapse;font-size:12.5px}.cabTbl td,.cabTbl th{border:1px solid var(--line);padding:6px;vertical-align:top;text-align:left;line-height:1.4}.cabTbl th{background:#17212c}.cabTbl small{color:var(--mut)}
 #sheetCalc h3{font-size:15px;margin:10px 0 8px}
 #sheetCalc table{width:100%;border-collapse:collapse;font-size:12.5px}
 #sheetCalc td,#sheetCalc th{border:1px solid var(--line);padding:6px;vertical-align:top;text-align:left;line-height:1.4}
@@ -237,6 +241,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 <div class="items" id="items"></div>
 <div class="tools">
   <button id="sheetBtn" class="btn">📐 Bản vẽ</button>
+  <button id="cabBtn" class="btn">🗄 Tủ điện</button>
   <button id="parBtn" class="btn" disabled>⚙ Thông số</button>
   <span style="flex:1"></span>
   <button id="undoBtn" class="btn" title="Hoàn tác (Ctrl+Z)" disabled>↶</button>
@@ -272,6 +277,10 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div class="shMeta"><input id="mPrj" placeholder="Tên công trình"><input id="mBy" placeholder="Người vẽ"></div>
   <div id="sheetSvg"></div>
   <div id="sheetCalc"></div>
+</div>
+<div id="cabSheet" class="sheet" hidden>
+  <div class="shHead"><button class="btn" id="cabClose">✕</button><b style="font-size:15px">🗄 Tủ điện</b><span style="flex:1"></span><button class="btn" id="cabZoom">🔍</button></div>
+  <div id="cabBody" style="padding:6px 10px 30px"></div>
 </div>
 <div id="lanhSheet" class="sheet" hidden>
   <div class="shHead"><button class="btn" id="lanhClose">✕</button><b style="font-size:15px">❄️ Ngành lạnh</b><span style="flex:1"></span></div>
@@ -322,6 +331,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
     <div class="chips" id="bdChips"><button>đảo chiều</button><button>sao tam giác 8s</button><button>tự tắt sau 30s</button><button>trễ 10s mới chạy</button><button>đóng 10s ngắt 5s</button><button>dừng khẩn</button><button>đèn báo</button><button>đèn cầu thang 60s</button><button>biến tần</button></div>
     <div id="bdParse" class="calcbox"></div>
   </div>
+  <div class="bdNote" id="bdCab"></div>
   <div class="bdAct"><button class="btn big" id="bdAdd">➕ Thêm vào bảng<small>Giữ mạch đang có, thêm thiết bị</small></button><button class="btn big" id="bdManual">✋ Tự đấu mạch<small>Đặt thiết bị lên bảng, mình tự nối dây</small></button><button class="btn run big" id="bdAuto">⚡ Đấu tự động<small>Hệ thống tự đấu hoàn chỉnh</small></button></div>
 </div>
 <div id="modal" class="modal" hidden></div>
@@ -448,6 +458,14 @@ TYPES.src1p3={cat:'src',name:'Nguồn 1 pha 3 dây 110/220V (Đài Loan)',tag:'N
 TYPES.kwh3={cat:'prot',name:'Đồng hồ điện 1P3W 110/220V (單相三線)',tag:'KWH',w:150,h:120,
   terms:[P_('1S',25,0,''),P_('2S',75,0,''),P_('3S',125,0,''),P_('1L',25,120,''),P_('2L',75,120,''),P_('3L',125,120,'')],
   contacts:[['1S','1L','M'],['2S','2L','M'],['3S','3L','M']]};
+/* 巧力 CIC BAW-2C – đồng hồ điện tử 1 pha 3 dây 110/220V 10(80)A, có RS485 + xung (theo sơ đồ đấu dây của hãng):
+   cầu đấu dưới đáy, thứ tự 1S · 2S · 2L · 1L. "1", "2" = 2 DÂY NÓNG L1, L2 (không phải trung tính); S = phía nguồn (電源), L = phía tải (負載).
+   Dây trung tính "0" (nối đất) đi THẲNG từ nguồn ra tải, KHÔNG qua đồng hồ. Hàng kẹp nhỏ: 24 = RS485 A, 23 = RS485 B, 20 = xung +, 21 = xung −.
+   Vỏ 139 × 95 × 48.5 mm, lỗ bắt dây Φ9.0, "2 vào 2 ra". */
+TYPES.baw2c={cat:'prot',name:'Đồng hồ CIC BAW-2C 1P3W 110/220V 10(80)A (單相三線 · RS485)',tag:'KWH',w:210,h:150,
+  terms:[P_('1S',20,150,'1S'),P_('2S',50,150,'2S'),P_('2L',80,150,'2L'),P_('1L',110,150,'1L'),P_('24',138,150,'A'),P_('23',158,150,'B'),P_('20',178,150,'+'),P_('21',198,150,'−')],
+  contacts:[['1S','1L','M'],['2S','2L','M']]};
+const BAW_ROLE={'1S':'nguồn 1 (L1) vào – từ CB tổng','2S':'nguồn 2 (L2) vào – từ CB tổng','2L':'ra tải 2 (L2)','1L':'ra tải 1 (L1)','24':'RS485 A (Modbus RTU)','23':'RS485 B','20':'xung kWh (+)','21':'xung kWh (−)'};
 const KWH_ROLE={'1S':'L1 nguồn vào (từ CB tổng)','2S':'N nguồn vào','3S':'L2 nguồn vào (từ CB tổng)','1L':'L1 ra tải','2L':'N ra tải → cầu đấu N','3L':'L2 ra tải'};
 TYPES.barN={cat:'prot',name:'Cầu đấu trung tính N',tag:'TBN',w:120,h:26,bar:'#cbd5e1',
   terms:[P_('1',15,0,''),P_('2',45,0,''),P_('3',75,0,''),P_('4',105,0,'')],contacts:[['1','2','M'],['2','3','M'],['3','4','M']]};
@@ -460,7 +478,7 @@ TYPES.socket.sock=1;
 PCOL.A1=PCOL.L1;PCOL.A2=PCOL.L2;
 const isTW=p=>p==='A1'||p==='A2';
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
-Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});TYPES.kwh3.multi=false;
+Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});TYPES.kwh3.multi=false;TYPES.baw2c.multi=false;
 const CATS=[['lap','🧩 Lập mạch'],['lanh','❄️ Ngành lạnh'],['proj','📁 Mạch của tôi'],['io','📥 Nhập mạch'],['tinh','🧮 Tính motor'],['diag','🩺 Dò lỗi'],['mau','Mạch mẫu']];
 
 let S={devs:[],wires:[],nid:1};
@@ -627,7 +645,7 @@ function changed(){if(running)evaluate();save();snap();render();if(DG.meter&&DG.
 
 /* ================= hoàn tác / làm lại ================= */
 /* bỏ trạng thái tạm thời của lúc chạy thử khỏi lịch sử */
-const RUNTIME_KEYS=new Set(['kw','burnV','ptrip','tpw','tcOn','temp','tT','latch','en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem','vok','vpw','vstat','vt0','vTO','vtest','shTrip','shT0','shTO']);
+const RUNTIME_KEYS=new Set(['kw','mpw','rev','merr','burnV','ptrip','tpw','tcOn','temp','tT','latch','en','t0','pressed','fo','ro','vs','burnWhy','burned','trip','pw','di','qo','mem','vok','vpw','vstat','vt0','vTO','vtest','shTrip','shT0','shTO']);
 const hist={u:[],r:[],last:null};
 function snapJson(){return JSON.stringify(S,(k,v)=>RUNTIME_KEYS.has(k)?undefined:v);}
 function snap(){
@@ -739,7 +757,9 @@ function act(d){
     case'tm':return!!d.en&&!d.burned&&d.t0!=null&&Date.now()-d.t0>=tsec(d)*1000;}
   return false;
 }
+let NOCOND=null;
 function conducts(d,c,mode){
+  if(NOCOND&&NOCOND.has(d.id))return false;
   if(FAULT&&FAULT.k==='c'&&FAULT.d===d.id&&FAULT.a===c[0]&&FAULT.b===c[1])return FAULT.closed;
   if(TYPES[d.t].ctl==='plc')return mode==='closed'||!!(d.pw&&!d.burned&&d.run!==false&&d.qo&&d.qo[c[3]]);
   if(c[2]==='M')return true;if(mode==='closed')return true;
@@ -1062,6 +1082,20 @@ function evaluate(){
       else if(S.devs.some(x=>x.t.startsWith('motor'))&&!connected(d,'95')&&(connected(d,'2')||connected(d,'1')))msgs.push(['ℹ️',nm+': chưa đấu 95-96 nối tiếp mạch điều khiển – nhảy rồi contactor vẫn không nhả.']);
     }else if(d.t==='estop'&&d.latched){warns++;msgs.push(['🛑',nm+': đang bị NHẤN KHẨN – chạm lại để nhả.']);}
     else if(T.ctl&&T.cat!=='src'){if(!T.terms.some(t=>connected(d,t.id))){warns++;msgs.push(['⚠️',nm+': đang để thừa, chưa đấu.']);}}
+  });
+  S.devs.filter(d=>d.t==='baw2c').forEach(d=>{const nm=nameOf(d),pp=t=>pot1(f,P,key(d.id,t));d.mpw=false;d.rev=false;d.merr=false;
+    if(!['1S','2S','1L','2L'].some(t=>connected(d,t))){warns++;msgs.push(['⚠️',nm+': chưa đấu dây.']);return;}
+    const hot=x=>x==='A1'||x==='A2'||x==='L1'||x==='L2'||x==='L3'||x==='L';
+    NOCOND=new Set([d.id]);const fc=nets('closed'),Pc=pots(fc);NOCOND=null;
+    const side=ts=>ts.map(t=>pot1(fc,Pc,key(d.id,t))).filter(hot).length;
+    const sS=side(['1S','2S']),sL=side(['1L','2L']);
+    const pN=['1S','2S','1L','2L'].find(t=>pot1(fc,Pc,key(d.id,t))==='N');
+    if(pN){errors++;d.merr=true;msgs.push(['❌',nm+': dây trung tính N đang vào chân '+pN+'. BAW-2C chỉ đấu 2 dây nóng: 1S/1L = L1, 2S/2L = L2. Trung tính 0 đi thẳng từ nguồn ra tải (qua cầu đấu N), không qua đồng hồ.']);return;}
+    if(!sS&&sL){warns++;d.rev=true;msgs.push(['⚠️',nm+': ĐẤU NGƯỢC – nguồn đang vào phía tải 1L/2L, đèn REV (反向) sáng. Nguồn phải vào 1S (L1) và 2S (L2), tải lấy ra ở 1L, 2L.']);}
+    const a=pp('1S'),b=pp('2S');
+    if(hot(a)&&hot(b)&&a===b){errors++;d.merr=true;msgs.push(['❌',nm+': 1S và 2S cùng một dây nóng ('+pn(a)+') – đồng hồ không có 220V, đo sai. 1S = L1, 2S = L2.']);return;}
+    if(hot(a)&&hot(b)){d.mpw=true;if(!d.rev)msgs.push(['✅',nm+': đúng sơ đồ hãng – 1S = '+pn(a)+', 2S = '+pn(b)+' (220V), ra tải 1L / 2L, trung tính đi thẳng.']);}
+    else if(sS||sL)msgs.push(['⏸️',nm+': chưa có điện (CB tổng đang cắt).']);
   });
   // schedule timers
   clearTimeout(tmTO);let rem=Infinity;
@@ -1555,6 +1589,23 @@ function drawBody(g,d,R){
     const e=txt(g,75,50,(d.kwh||0).toFixed(3).padStart(8,'0')+' kWh',{fill:'#4ade80','font-size':10.5,'font-family':'monospace','font-weight':700});
     const k=txt(g,75,70,running&&d.kw?d.kw.toFixed(2)+' kW':'0.00 kW',{fill:'#0f172a','font-size':9.5,'font-weight':800});kwhEls[d.id]=[e,k];
     txt(g,75,82,'1P3W 110/220V · 單相三線',{fill:'#475569','font-size':7.5,'font-weight':700});break;}
+  case'baw2c':{
+    el('rect',{x:0,y:0,width:T.w,height:T.h,rx:10,fill:'#f8fafc',stroke:'#475569','stroke-width':1.5},g);
+    el('rect',{x:4,y:T.h-30,width:T.w-8,height:26,rx:5,fill:'#e2e8f0',stroke:'#94a3b8'},g);
+    el('line',{x1:124,y1:T.h-28,x2:124,y2:T.h-6,stroke:'#94a3b8','stroke-dasharray':'2 2'},g);
+    txt(g,65,T.h-34,'電源 1·2 → 負載 2·1 · 0 đi thẳng',{fill:'#64748b','font-size':6.6,'font-weight':700});
+    txt(g,168,T.h-34,'RS485 24·23 · Pulse 20·21',{fill:'#64748b','font-size':6.2,'font-weight':700});
+    txt(g,40,16,'CIC 巧力',{fill:'#1d4ed8','font-size':10,'font-weight':900});
+    txt(g,140,16,'BAW-2C · 1P3W 110/220V · 10(80)A · 60Hz',{fill:'#334155','font-size':7.2,'font-weight':800});
+    el('rect',{x:24,y:26,width:122,height:30,rx:3,fill:'#0f172a',stroke:'#020617'},g);
+    const e=txt(g,85,46,(d.kwh||0).toFixed(2).padStart(8,'0')+' kWh',{fill:'#fde68a','font-size':11,'font-family':'monospace','font-weight':700});
+    const k=txt(g,85,72,running&&d.kw?d.kw.toFixed(2)+' kW':'0.00 kW',{fill:'#0f172a','font-size':9.5,'font-weight':800});
+    const pw=running&&d.mpw,rv=running&&d.rev;
+    el('circle',{cx:166,cy:32,r:4.5,fill:pw?'#22c55e':'#cbd5e1',stroke:'#475569'},g);txt(g,166,46,'POWER',{fill:'#475569','font-size':5.8,'font-weight':800});
+    const led=el('circle',{cx:186,cy:32,r:4.5,fill:'#cbd5e1',stroke:'#475569'},g);txt(g,186,46,'kWh',{fill:'#475569','font-size':5.8,'font-weight':800});
+    el('circle',{cx:176,cy:62,r:4.5,fill:rv?'#f97316':'#cbd5e1',stroke:'#475569'},g);txt(g,176,76,'REV 反向',{fill:rv?'#c2410c':'#475569','font-size':5.8,'font-weight':800});
+    txt(g,85,86,'1600 imp/kWh · CNS14607',{fill:'#64748b','font-size':6.5,'font-weight':700});
+    kwhEls[d.id]=[e,k,led];break;}
   case'barN':case'barPE':
     el('rect',{x:2,y:2,width:T.w-4,height:T.h-6,rx:4,fill:T.bar,stroke:'#475569'},g);
     txt(g,T.w/2,T.h-8,d.t==='barN'?'N':'PE',{fill:'#1f2937','font-size':10,'font-weight':900});break;
@@ -1779,7 +1830,7 @@ const SPEC={src1:'1 pha 220V ~ (L, N, PE)',src3:'3 pha 4 dây 380V/220V + PE',cb
   contactor:'Cuộn 220V AC (A1-A2), 3 tiếp điểm chính, 1NO 13-14, 1NC 21-22',ol:'Rơ-le nhiệt: 95-96 NC, 97-98 NO',
   relay:'Rơ-le MY2, cuộn 220V (13-14), 2 tiếp điểm chuyển',timer:'Timer on-delay, cuộn 220V (2-7)',
   pilotG:'Đèn báo xanh 220V',pilotR:'Đèn báo đỏ 220V',pilotY:'Đèn báo vàng 220V',lamp:'Đèn 220V',fan:'Quạt 220V',socket:'Ổ cắm 220V có tiếp địa',
-  motor:'Động cơ 3 pha 380V (U-V-W)',src1p3:'1 pha 3 dây: L1–N 110V, L2–N 110V, L1–L2 220V + PE',kwh3:'Đồng hồ 1 pha 3 dây 110/220V (chuẩn JIS/Taipower). Chân vào: 1S = L1, 2S = N, 3S = L2. Chân ra: 1L = L1, 2L = N, 3L = L2',barN:'Thanh đồng gom dây trung tính',barPE:'Thanh đồng gom dây tiếp địa',lamp110:'Đèn 110V (L1 hoặc L2 với N)',socket110:'Ổ cắm 110V có tiếp địa',ac220:'Máy lạnh 220V: đấu L1 + L2 + PE, không đấu N',motor6:'Động cơ 3 pha 6 đầu dây, khởi động Y/Δ'};
+  motor:'Động cơ 3 pha 380V (U-V-W)',src1p3:'1 pha 3 dây: L1–N 110V, L2–N 110V, L1–L2 220V + PE',kwh3:'Đồng hồ 1 pha 3 dây 110/220V (chuẩn JIS/Taipower). Chân vào: 1S = L1, 2S = N, 3S = L2. Chân ra: 1L = L1, 2L = N, 3L = L2',baw2c:'巧力 CIC BAW-2C 1P3W 110/220V 10(80)A, vỏ 139×95×48.5 mm. Chân (trái→phải): 1S = L1 vào, 2S = L2 vào, 2L = L2 ra, 1L = L1 ra. Trung tính 0 đi thẳng, không qua đồng hồ. RS485: 24 (A), 23 (B). Xung: 20 (+), 21 (−)',barN:'Thanh đồng gom dây trung tính',barPE:'Thanh đồng gom dây tiếp địa',lamp110:'Đèn 110V (L1 hoặc L2 với N)',socket110:'Ổ cắm 110V có tiếp địa',ac220:'Máy lạnh 220V: đấu L1 + L2 + PE, không đấu N',motor6:'Động cơ 3 pha 6 đầu dây, khởi động Y/Δ'};
 const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
 function showModal(html){const m=document.getElementById('modal');m.innerHTML='<div class="card">'+html+'</div>';m.hidden=false;return m;}
 function closeModal(){document.getElementById('modal').hidden=true;}
@@ -1911,6 +1962,18 @@ async function buildPages(){
     wiringGuide().forEach(g=>{if(!g.used.length)return;section(g.tag+' – '+g.name,T3);
       const rows=[];g.used.forEach(u=>u.to.forEach((o,i)=>rows.push([i?'':u.term+(u.role?'\n'+u.role:''),'☐ '+o.tag+' : '+o.term+(o.role?'\n'+o.role:''),'#'+o.no,colTxt(o.col),o.col])));
       table(['Chân','Nối tới','Dây số','Loại dây'],[420,900,170,TW-1490],rows,T3,true);});}
+  // ---- bố trí tủ điện (kích thước thật) + vật tư
+  {const R=cabNow(),L=R.L;if(L.seq.length||L.doorDevs.length){
+    const T5='BỐ TRÍ TỦ ĐIỆN '+encStr(L.E)+' mm'+(R.chosen?'':' (ĐỀ XUẤT)');newPage(T5);
+    const sp=cabSVG(L,{cols}),dp=doorSVG(L),vb=t=>t.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/).slice(1).map(Number);
+    const big=(t,w,h,k)=>t.replace(/ width="[\d.]+" height="[\d.]+"/,' width="'+Math.round(w*k)+'" height="'+Math.round(h*k)+'"');
+    const [w1,h1]=vb(sp),[w2,h2]=vb(dp),ay=M+110,ah=PH-ay-M-170;
+    const k1=Math.min(TW*0.62/w1,ah/h1),k2=Math.min(TW*0.34/w2,ah/h2);
+    const i1=await svgImg(big(sp,w1,h1,k1*1.5)),i2=await svgImg(big(dp,w2,h2,k2*1.5));
+    x.drawImage(i1,M,ay,w1*k1,h1*k1);x.drawImage(i2,M+TW*0.65,ay,w2*k2,h2*k2);
+    const T6='TỦ ĐIỆN '+encStr(L.E)+' – VẬT TƯ & KÍCH THƯỚC';newPage(T6);
+    x.font='500 23px '+FONT;x.fillStyle='#1e293b';wrap(cabStatus(R).replace(/<[^>]+>/g,''),TW-30).forEach(l=>{x.fillText(l,M+12,y+26);y+=34;});y+=10;
+    cabTables(L).forEach(t=>{section(t[0],T6);table(t[1],[380,1080,TW-1460],t[2],T6);});}}
   // ---- sơ đồ bố trí thực tế
   const dg=await diagramImage();
   newPage('SƠ ĐỒ ĐẤU NỐI THỰC TẾ (bố trí trên bảng)');
@@ -1936,7 +1999,7 @@ async function exportPDF(){
     }else{fail('Chế độ xem này không hỗ trợ tải file. Mở trang trên claude.ai (web hoặc app) để xuất PDF nhé.');return;}
     const file=(()=>{try{return new File([blob],name,{type:'application/pdf'});}catch(e){return null;}})();
     const canShare=!dl&&file&&navigator.canShare&&navigator.canShare({files:[file]});
-    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p><b>'+name+'</b><br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, hướng dẫn đấu từng thiết bị, sơ đồ bố trí.</p>'+
+    const m=showModal('<div class="ic">📄</div><h2>Đã xuất file PDF!</h2><p><b>'+name+'</b><br>'+pages.length+' trang: sơ đồ nguyên lý, bảng tính chọn thiết bị & dây, bảng đấu dây, hướng dẫn đấu từng thiết bị, bố trí tủ điện & vật tư, sơ đồ bố trí.</p>'+
       (dl?'':'<p class="mut">File nằm trong thư mục <b>Tải xuống (Download)</b> của máy. Không thấy file thì bấm '+(canShare?'<b>Chia sẻ / Lưu</b>':'<b>Mở PDF</b>')+' bên dưới.</p>')+
       '<div class="row">'+(dl?'':(canShare?'<button class="btn" id="mShare">📤 Chia sẻ / Lưu</button>':'<button class="btn" id="mOpen">📂 Mở PDF</button>'))+'<button class="btn run" id="mOk">Xong</button></div>');
     m.querySelector('#mOk').onclick=closeModal;
@@ -2429,6 +2492,7 @@ function termRole(d,tid){
     if(tid==='SL+')return'ra +24VDC (cấp nút/cảm biến)';if(tid==='SM')return'ra 0V (M)';if(tid==='1M')return'chung ngõ vào (nối 0V)';if(/^\dL$/.test(tid))return'chung ngõ ra rơ-le nhóm '+tid[0];
     if(tid==='3L+')return'+24VDC cho ngõ ra transistor';if(tid==='3M')return'0V ngõ ra transistor';if(tid[0]==='I')return'ngõ vào số';if(tid[0]==='Q')return'ngõ ra '+(P.rly?'rơ-le':'transistor');return'';}
   if(d.t==='kwh3')return KWH_ROLE[tid]||'';
+  if(d.t==='baw2c')return BAW_ROLE[tid]||'';
   if(d.t==='barN')return'thanh trung tính N';if(d.t==='barPE')return'thanh tiếp địa PE';if(d.t==='src1p3')return({L1:'dây nóng L1 (110V)',N:'trung tính',L2:'dây nóng L2 (110V)'})[tid]||'';
   if(d.t==='vprot')return({L1:'đo điện áp pha L1',L2:'đo điện áp pha L2',L3:'đo điện áp pha L3',N:'trung tính (chế độ 3P4W)','11':'chân chung (C) rơ-le ra','12':'thường đóng – đóng khi CÓ SỰ CỐ','14':'thường mở – đóng khi điện áp TỐT'})[tid]||'';
   if(d.t==='mccbst'){if(tid==='C1'||tid==='C2')return'cuộn shunt trip 220V';if(tid==='11')return'tiếp điểm phụ AX – chung';if(tid==='14')return'tiếp điểm phụ AX – đóng khi MCCB đóng';}
@@ -2978,7 +3042,7 @@ const IO_ALIAS={src3:'nguon3p nguon3pha nguon3 3p 3pha src3',src1:'nguon1p nguon
 IO_ALIAS.vprot='vprot mx210 mikromx210 rolebaovedienap relaydienap voltagerelay';IO_ALIAS.mccbst='mccbst mccbshunt mccbshunttrip shunttrip mccbsht mccb';IO_ALIAS.hpsw='hpsw hp kp5 apcao congtacapcao';IO_ALIAS.lpsw='lpsw lp kp1 apthap congtacapthap';IO_ALIAS.flowsw='flowsw fl flowswitch congtacdongchay';IO_ALIAS.sv='sv vandientu solenoid evr';IO_ALIAS.wv4='wv4 van4nga 4wv 4way vandaochieu';IO_ALIAS.heater='heater dientro xada suoicacte';IO_ALIAS.tctl='tctl tc thermostat dieukhiennhiet xr02cx xr06cx stc1000 dixell';IO_ALIAS.comp='comp maynen compressor maynen3pha';IO_ALIAS.comp1='comp1 maynen1pha';IO_ALIAS.fanm='fanm quatdan quatdannong quatdanlanh';
 IO_ALIAS.cb1='cb1 cb1p aptomat1p mcb1p';IO_ALIAS.motor1='motor1 motor1p dongco1pha motor1pha dongco1p';IO_ALIAS.psu='psu nguon24v nguon24vdc toong nguontoong nguondc 24vdc';IO_ALIAS.relay24='relay24 my2dc my224v roletrunggian24v rtg24 relay24vdc';
 Object.keys(PLC_CPU).forEach(c=>Object.keys(PLC_VAR).forEach(v=>{const vf=PLC_VAR[v].nm.toLowerCase().replace(/[^a-z]/g,'');IO_ALIAS['plc'+c+v]=['plc'+c+v,'s7'+c+'c'+vf,c+'c'+vf,'cpu'+c+'c'+vf,'s71200'+c+'c'+vf].join(' ')+(c==='1214'&&v==='ar'?' plc s71200 s7':'');}));
-Object.assign(IO_ALIAS,{src1p3:'src1p3 nguon1p3w nguon110220 nguondailoan nguon1p3d',kwh3:'kwh3 dongho donghodien kwh dienke 1p3w',barN:'barn caudaun thanhn',barPE:'barpe caudaupe caudautiepdia thanhpe',lamp110:'lamp110 den110',socket110:'socket110 ocam110',ac220:'ac220 maylanh maylanh220'});
+Object.assign(IO_ALIAS,{src1p3:'src1p3 nguon1p3w nguon110220 nguondailoan nguon1p3d',kwh3:'kwh3 dongho donghodien kwh dienke 1p3w',baw2c:'baw2c baw cic donghocic dongho2c bawc',barN:'barn caudaun thanhn',barPE:'barpe caudaupe caudautiepdia thanhpe',lamp110:'lamp110 den110',socket110:'socket110 ocam110',ac220:'ac220 maylanh maylanh220'});
 const IO_MAP={};Object.keys(IO_ALIAS).forEach(k=>IO_ALIAS[k].split(' ').forEach(a=>IO_MAP[normVN(a).replace(/[^a-z0-9]/g,'')]=k));
 const IO_EX=`# Khởi động từ có rơ-le nhiệt, đèn báo
 NGUON = nguon3p
@@ -3426,7 +3490,7 @@ function refreshSheet(){
   sv.removeAttribute('width');sv.removeAttribute('height');sv.style.width=sheetZoom?'260%':'100%';sv.style.height='auto';sv.style.display='block';
   const C=r.C;
   const rows=S.devs.map(d=>`<tr><td><b>${esc(tagOf(d))}</b></td><td>${esc(typeName(d))}${PDEF[d.t]&&d.t!=='timer'?'<br><small>'+esc(paramText(d))+'</small>':''}</td><td>${(C.rec[d.id]||[]).map(esc).join('<br>')}</td></tr>`).join('');
-  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+plcSheetHTML()+guideHTML()+'<p class="mut" style="text-align:center;margin-top:18px">Bảng điện mô phỏng · © '+AUTHOR+'</p>';
+  document.getElementById('sheetCalc').innerHTML='<h3>Bảng tính chọn thiết bị & dây dẫn</h3><table><tr><th>Ký hiệu</th><th>Thiết bị / thông số nhập</th><th>Chọn theo tính toán</th></tr>'+rows+'</table><ul>'+C.notes.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p class="mut">Gợi ý tham khảo, cần kiểm tra lại theo điều kiện lắp đặt thực tế (nhiệt độ, số mạch đi chung, cách đi dây).</p>'+plcSheetHTML()+cabSheetHTML()+guideHTML()+'<p class="mut" style="text-align:center;margin-top:18px">Bảng điện mô phỏng · © '+AUTHOR+'</p>';
 }
 
 document.getElementById('parBtn').onclick=()=>{const d=selected&&selected.kind==='dev'&&dev(selected.id);if(d&&isPLC(d)){openLadder(d);return;}if(d)openParams(d);};
@@ -3700,7 +3764,7 @@ const BD_REL=(()=>{const V=Object.keys(VFD_MODELS),PL=['pilotG','pilotR','pilotY
     pbno:['contactor','pbnc','relay','timer','plc','estop',...PL],pbnc:['contactor','pbno','relay','timer','plc','estop',...PL],estop:['contactor','pbno','pbnc','plc',...V],
     timer:['contactor','pbno','pbnc','relay','motor6'],relay:['contactor','pbno','pbnc','timer',...PL],relay24:['plc','psu','contactor'],psu:['plc','relay24','cb2','cb1'],
     vprot:['src3','mccbst','cb3',...PL],pot:[...V],plc:['psu','relay24','pbno','pbnc','estop','switch','contactor','ol',...PL,'cb2','src1','src3',...M3]};
-  const TW=['src1p3','kwh3','barN','barPE','lamp110','socket110','ac220'];TW.forEach(k=>r[k]=TW.filter(x=>x!==k).concat(['cb3','cb2','cb1','switch']));
+  const TW=['src1p3','baw2c','kwh3','barN','barPE','lamp110','socket110','ac220'];TW.forEach(k=>r[k]=TW.filter(x=>x!==k).concat(['cb3','cb2','cb1','switch']));
   V.forEach(k=>r[k]=['src3','cb3','mccbst',...M3,'pot','switch','pbno','pbnc','estop',...PL]);PL.forEach(k=>r[k]=['contactor','relay','plc','pbno','cb2']);r['sub:pump']=r.motor;return r;})();
 const bdRelKey=k=>TYPES[k]&&TYPES[k].ctl==='plc'?'plc':k;
 function bdRelSet(c){const sel=Object.keys(c).filter(k=>(c[k]|0)>0).map(bdRelKey);if(!sel.length)return null;const S2=new Set(sel);sel.forEach(k=>(BD_REL[k]||[]).forEach(x=>S2.add(x)));return S2;}
@@ -3720,7 +3784,7 @@ function renderBuilder(){
     bdKeys(cat).forEach(k=>{
       if(TYPES[bdT(k)].hideBd)return;
       const T=TYPES[bdT(k)],n=c[k]|0,row=document.createElement('div');row.className='bdRow'+(n?' on':'');
-      row.appendChild(iconSvg(bdT(k),bdEx(k).sub));const nm=document.createElement('div');nm.className='bdName';nm.textContent=bdName(k);row.appendChild(nm);
+      row.appendChild(iconSvg(bdT(k),bdEx(k).sub));const nm=document.createElement('div');nm.className='bdName';nm.textContent=bdName(k);{const sm=document.createElement('small');sm.className='mut';sm.style.cssText='display:block;font-size:10.5px;line-height:1.3;margin-top:2px';sm.textContent='📏 '+dimTxt(bdT(k));nm.appendChild(sm);}row.appendChild(nm);
       const stp=document.createElement('div');stp.className='step';
       const mx=T.max||8;
       stp.innerHTML=`<button data-d="-1">−</button><b>${n}</b><button data-d="1">+</button>`;
@@ -3728,7 +3792,7 @@ function renderBuilder(){
       mark(row,k);row.appendChild(stp);list.appendChild(row);
     });
   });
-  updParse();
+  updParse();cabBuilder();
 }
 function updParse(){
   const st=bdState();const R=parseNotes(st.note);const d=descReq(R);const total=Object.values(st.counts).reduce((a,b)=>a+(b|0),0);
@@ -3740,7 +3804,7 @@ function confirmReplace(go){
   m.querySelector('#cNo').onclick=closeModal;m.querySelector('#cYes').onclick=()=>{closeModal();go();};
 }
 function applyBoard(devs,wires,nid){
-  stop();const keep={meta:S.meta,build:S.build,ctypes:S.ctypes};
+  stop();const keep={meta:S.meta,build:S.build,ctypes:S.ctypes,cab:{size:(S.build&&S.build.cab)||(S.cab&&S.cab.size)||''}};
   S=Object.assign({devs,wires,nid:nid+5},keep);selected=null;pending=null;updSel();
   document.getElementById('builder').hidden=true;render();fit();save();buildItems();
 }
@@ -3750,7 +3814,7 @@ function manualPlace(){
     if(x+T.w>900){x=20;y+=rowH+70;rowH=0;}const d=Object.assign({id:'d'+(nid++),t:bdT(k),x,y},bdEx(k));if(k==='timer')d.sec=5;devs.push(d);x+=T.w+50;rowH=Math.max(rowH,T.h);}});
     if(x>20){x=20;y+=rowH+70;rowH=0;}});
   if(!devs.length){hint('Chưa chọn thiết bị nào.');return;}
-  confirmReplace(()=>{applyBoard(devs,[],nid);hint('Đã đặt '+devs.length+' thiết bị lên bảng – anh tự nối dây rồi bấm ▶ Chạy thử nhé.');});
+  confirmReplace(()=>{applyBoard(devs,[],nid);const cn=cabAfterBuild();hint('Đã đặt '+devs.length+' thiết bị lên bảng – anh tự nối dây rồi bấm ▶ Chạy thử nhé.'+(cn?' '+cn:''));});
 }
 /* ================= ĐẤU TỰ ĐỘNG CÓ PLC: sinh mã mạch + chương trình ladder ================= */
 function autoPLC(cnt,R){
@@ -3863,7 +3927,7 @@ function autoLanh(cnt,R){
 }
 /* ---- Đấu tự động tủ điện 1 pha 3 dây 110/220V: CB tổng → đồng hồ 1P3W → CB nhánh 220V (L1–L2) + CB nhánh 110V (chia đều L1/L2) ---- */
 function autoTW(cnt){
-  const TWK=['src1p3','kwh3','ac220','lamp110','socket110'];if(!TWK.some(k=>(cnt[k]|0)>0))return null;
+  const TWK=['src1p3','kwh3','baw2c','ac220','lamp110','socket110'];if(!TWK.some(k=>(cnt[k]|0)>0))return null;
   const c=Object.assign({},cnt),used={},take=k=>{used[k]=(used[k]|0)+1;if((c[k]|0)>0)c[k]--;};
   const devs=[],wires=[],rep=[];let nid=1;
   const D=(t,x,y,ex)=>{const d=Object.assign({id:'d'+(nid++),t,x,y},ex||{});devs.push(d);take(t);return d;};
@@ -3871,27 +3935,38 @@ function autoTW(cnt){
   let nAC=Math.max(0,cnt.ac220|0),nL=Math.max(0,cnt.lamp110|0),nS=Math.max(0,cnt.socket110|0);
   if(!nAC&&!nL&&!nS){nAC=1;nL=1;nS=1;}
   const n110=nL+nS,nCb1=n110?Math.max(1,Math.min(cnt.cb1|0||1,n110)):0;
-  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true,lbl:'CB tổng 40A'}),km=D('kwh3',62,280,{lbl:'Đồng hồ'});
+  const baw=!((cnt.kwh3|0)>0&&!(cnt.baw2c|0));
+  const src=D('src1p3',40,20),main=D('cb3',80,140,{on:true,lbl:'CB tổng 40A'}),km=baw?D('baw2c',250,40,{lbl:'Đồng hồ'}):D('kwh3',62,280,{lbl:'Đồng hồ'});
   W(src,'L1',main,'1');W(src,'N',main,'3');W(src,'L2',main,'5');
-  W(main,'2',km,'1S');W(main,'4',km,'2S');W(main,'6',km,'3S');
-  rep.push('Thiết bị: CB tổng 無熔絲開關 3P2E 40A · đồng hồ 單相三線電度表 1P3W 110/220V · CB máy lạnh 2P 20A · CB sinh hoạt 1P 20A · cầu đấu N + PE.');
-  rep.push('Nguồn L1 · N · L2 → CB tổng 3P (3P2E): chân 1 = L1, chân 3 = N, chân 5 = L2.');
-  rep.push('CB tổng ra → đồng hồ 1P3W: chân 2 → 1S (L1 vào), chân 4 → 2S (N vào), chân 6 → 3S (L2 vào).');
-  rep.push('Đồng hồ ra: 1L = L1 ra, 2L = N ra, 3L = L2 ra (S = phía nguồn, L = phía tải).');
+  const O1=baw?'1L':'1L',O2=baw?'2L':'3L';
+  if(baw){
+    W(main,'2',km,'1S');W(main,'6',km,'2S');
+    rep.push('Thiết bị: CB tổng 無熔絲開關 3P2E 40A · đồng hồ 巧力 CIC BAW-2C 單相三線 1P3W 110/220V 10(80)A · CB máy lạnh 2P 20A · CB sinh hoạt 1P 20A · cầu đấu N + PE.');
+    rep.push('Nguồn 電源 1 · 0 · 2 (L1 · N · L2) → CB tổng 3P2E: chân 1 = L1, chân 3 (cực giữa) = N, chân 5 = L2.');
+    rep.push('Đúng sơ đồ hãng BAW-2C: CB tổng chân 2 → 1S (nguồn 1 = L1), chân 6 → 2S (nguồn 2 = L2). Ra tải 負載: 1L = L1, 2L = L2.');
+    rep.push('Dây trung tính 0: CB tổng chân 4 → thẳng xuống cầu đấu N, KHÔNG qua đồng hồ (BAW-2C không có chân N). Thứ tự cầu đấu từ trái: 1S · 2S · 2L · 1L.');
+    rep.push('Hàng kẹp nhỏ: 24 = RS485 A, 23 = RS485 B (Modbus RTU, đọc chỉ số từ xa), 20 (+) / 21 (−) = ngõ xung kWh – không dùng thì để trống.');
+  }else{
+    W(main,'2',km,'1S');W(main,'4',km,'2S');W(main,'6',km,'3S');
+    rep.push('Thiết bị: CB tổng 無熔絲開關 3P2E 40A · đồng hồ 單相三線電度表 1P3W 110/220V · CB máy lạnh 2P 20A · CB sinh hoạt 1P 20A · cầu đấu N + PE.');
+    rep.push('Nguồn L1 · N · L2 → CB tổng 3P (3P2E): chân 1 = L1, chân 3 = N, chân 5 = L2.');
+    rep.push('CB tổng ra → đồng hồ 1P3W: chân 2 → 1S (L1 vào), chân 4 → 2S (N vào), chân 6 → 3S (L2 vào).');
+    rep.push('Đồng hồ ra: 1L = L1 ra, 2L = N ra, 3L = L2 ra (S = phía nguồn, L = phía tải).');}
   const loadY=640,brY=470,cols=Math.max(nAC+nCb1,1);
   const bN=D('barN',40,brY+130),bE=D('barPE',40+Math.max(4,cols)*90+40,brY+130);
-  W(km,'2L',bN,'1');W(src,'PE',bE,'1');rep.push('Đồng hồ 2L (N ra) → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');
+  if(baw){W(main,'4',bN,'1');W(src,'PE',bE,'1');rep.push('CB tổng chân 4 (N) → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');}
+  else{W(km,'2L',bN,'1');W(src,'PE',bE,'1');rep.push('Đồng hồ 2L (N ra) → cầu đấu N. Tiếp địa nguồn → cầu đấu PE.');}
   let x=40,ni=1,ei=1;const nT=()=>String((ni++%4)+1),eT=()=>String((ei++%4)+1);
   for(let i=0;i<nAC;i++){const cb=D('cb2',x,brY,{on:true,lbl:'CB AC'+(nAC>1?i+1:'')+' 20A'}),ac=D('ac220',x-10,loadY+80+((i%2)*10));
-    W(km,'1L',cb,'1');W(km,'3L',cb,'3');W(cb,'2',ac,'L1');W(cb,'4',ac,'L2');W(bE,eT(),ac,'PE');x+=170;
-    rep.push(tagOf2('AC',i)+': đồng hồ 1L → CB 2P chân 1, đồng hồ 3L → CB 2P chân 3; CB ra chân 2, 4 → máy lạnh L1, L2. KHÔNG đấu N.');}
+    W(km,O1,cb,'1');W(km,O2,cb,'3');W(cb,'2',ac,'L1');W(cb,'4',ac,'L2');W(bE,eT(),ac,'PE');x+=170;
+    rep.push(tagOf2('AC',i)+': đồng hồ '+O1+' (L1) → CB 2P chân 1, đồng hồ '+O2+' (L2) → CB 2P chân 3; CB ra chân 2, 4 → máy lạnh L1, L2. KHÔNG đấu N.');}
   const loads=[];for(let i=0;i<nL;i++)loads.push('lamp110');for(let i=0;i<nS;i++)loads.push('socket110');
-  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?'3L':'1L',cb=D('cb1',x,brY,{on:true,lbl:'CB 110V'+(nCb1>1?' '+(j+1):'')});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
+  const cbs=[];for(let j=0;j<nCb1;j++){const leg=j%2?O2:O1,cb=D('cb1',x,brY,{on:true,lbl:'CB 110V'+(nCb1>1?' '+(j+1):'')});W(km,leg,cb,'1');cbs.push({cb,leg:j%2?'L2':'L1',x});x+=110;}
   let lx=cbs.length?cbs[0].x-10:x;
   loads.forEach((t,i)=>{const k=cbs[i%cbs.length],dv=D(t,lx,loadY+(t==='socket110'?20:0));lx+=t==='socket110'?92:80;
     if(t==='lamp110'){W(k.cb,'2',dv,'a');W(bN,nT(),dv,'b');}else{W(k.cb,'2',dv,'L');W(bN,nT(),dv,'N');W(bE,eT(),dv,'PE');}});
   bN.x=x+10;bN.y=brY+20;bE.x=x+10;bE.y=brY+90;
-  cbs.forEach((k,j)=>rep.push('CB 110V số '+(j+1)+': đồng hồ '+(k.leg==='L1'?'1L':'3L')+' ('+k.leg+') → CB 1P chân 1, N lấy từ cầu đấu N → '+loads.filter((_,i)=>i%cbs.length===j).map(t=>t==='lamp110'?'đèn':'ổ cắm').join(', ')+'.'));
+  cbs.forEach((k,j)=>rep.push('CB 110V số '+(j+1)+': đồng hồ '+(k.leg==='L1'?O1:O2)+' ('+k.leg+') → CB 1P chân 1, N lấy từ cầu đấu N → '+loads.filter((_,i)=>i%cbs.length===j).map(t=>t==='lamp110'?'đèn':'ổ cắm').join(', ')+'.'));
   if(cbs.length>1)rep.push('Các nhánh 110V được chia xen kẽ L1 / L2 cho cân tải.');
   rep.push('Chạy thử: L1–N = 110V, L2–N = 110V, L1–L2 = 220V (đo bằng 🩺 VOM). Đồng hồ kWh chạy nhanh: 1 giây = 1 phút.');
   const added={},unused={},why={};
@@ -3901,27 +3976,29 @@ function autoTW(cnt){
 }
 function tagOf2(p,i){return p+(i+1);}
 const kwhEls={};
-setInterval(()=>{const ms=S.devs.filter(d=>d.t==='kwh3');if(!ms.length)return;
+setInterval(()=>{const ms=S.devs.filter(d=>d.t==='kwh3'||d.t==='baw2c');if(!ms.length)return;
   let w=0;if(running&&result&&!result.short)S.devs.forEach(d=>{const T=TYPES[d.t];
     if(T.load&&result.state&&result.state[d.id]==='on')w+=PV(d,'w')||(d.t.startsWith('pilot')?4:40);
     if(T.sock&&result.sock&&result.sock[d.id]==='on')w+=PV(d,'w');});
-  ms.forEach(d=>{d.kw=running?w/1000:0;if(running)d.kwh=(d.kwh||0)+d.kw/60;const e=kwhEls[d.id];
-    if(e){e[0].textContent=(d.kwh||0).toFixed(3).padStart(8,'0')+' kWh';e[1].textContent=d.kw.toFixed(2)+' kW';}});},1000);
+  ms.forEach(d=>{const bw=d.t==='baw2c',ok=!bw||(d.mpw&&!d.merr);d.kw=running&&ok?w/1000:0;if(running&&ok)d.kwh=(d.kwh||0)+d.kw/120;const e=kwhEls[d.id];
+    if(e){e[0].textContent=(d.kwh||0).toFixed(bw?2:3).padStart(8,'0')+' kWh';e[1].textContent=d.kw.toFixed(2)+' kW';
+      if(e[2])e[2].setAttribute('fill',d.kw>0&&(Date.now()/500|0)%2?'#ef4444':'#cbd5e1');}});},500);
 (()=>{const r=autoTW({src1p3:1,ac220:1,lamp110:1,socket110:1});
-  SAMPLES.push({title:'🇹🇼 Tủ điện Đài Loan 110/220V',desc:'CB tổng 3P2E 40A → đồng hồ 1P3W → CB 2P 20A máy lạnh 220V + CB 1P 20A sinh hoạt 110V (đèn, ổ cắm)',
+  SAMPLES.push({title:'🇹🇼 Tủ điện Đài Loan 110/220V',desc:'CB tổng 3P2E 40A → đồng hồ CIC BAW-2C 1P3W → CB 2P 20A máy lạnh 220V + CB 1P 20A sinh hoạt 110V (đèn, ổ cắm)',
     devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:'Tủ điện 110/220V: bấm ▶ Chạy thử, rồi dùng 🩺 VOM đo L1–N, L1–L2.'});})();
 function autoPlace(){
   const st=bdState(),R=parseNotes(st.note);const r=autoTW(st.counts,R)||autoPLC(st.counts,R)||autoLanh(st.counts,R)||autoBuild(st.counts,R);
   if(r.err){const m=showModal('<div class="ic">⚠️</div><h2>Chưa đấu được</h2><p>'+esc(r.err)+'</p><div class="row"><button class="btn" id="mOk">Đóng</button></div>');m.querySelector('#mOk').onclick=closeModal;return;}
   confirmReplace(()=>{
     applyBoard(r.devs,r.wires,r.nid);
+    const cn=cabAfterBuild();if(cn)r.rep.push(cn);
     const nm=t=>bdName(t).replace(/ \(.*\)/,'');
     const ad=Object.keys(r.added).map(t=>r.added[t]+' '+nm(t)),un=Object.keys(r.unused).map(t=>r.unused[t]+' '+nm(t));
     const m=showModal('<div class="ic">⚡</div><h2>Đã đấu tự động!</h2><div class="calcbox">'+r.rep.map(t=>'• '+esc(t)).join('<br>')+
       (ad.length?'<br><b style="color:#4ade80">Đã thêm cho đủ mạch:</b> '+esc(ad.join(', ')):'')+
       (un.length?'<br><b style="color:#fbbf24">Chưa đấu (để dưới bảng) – lý do:</b><br>'+Object.keys(r.unused).map(t=>'– '+esc(r.unused[t]+' '+nm(t))+': '+esc((r.why&&r.why[t])||'')).join('<br>'):'')+
-      '</div><div class="row"><button class="btn" id="aSheet">📐 Bản vẽ</button><button class="btn run" id="aRun">▶ Chạy thử</button></div>');
-    m.querySelector('#aSheet').onclick=()=>{closeModal();openSheet();};
+      '</div><div class="row"><button class="btn" id="aSheet">📐 Bản vẽ</button><button class="btn" id="aCab">🗄 Tủ</button><button class="btn run" id="aRun">▶ Chạy thử</button></div>');
+    m.querySelector('#aSheet').onclick=()=>{closeModal();openSheet();};m.querySelector('#aCab').onclick=()=>{closeModal();openCab();};
     m.querySelector('#aRun').onclick=()=>{closeModal();unlockAudio();start();};
   });
 }
@@ -4291,6 +4368,310 @@ VR1.14 - HG.X1
 VR1.12 - HR.X1
 HG.X2 - NGUON.N
 HR.X2 - NGUON.N`,'Bấm ▶ Chạy thử, chờ VR1 sáng OUT (trễ 2s) rồi chạm MCCB1 để đóng. Chạm VR1 để giả lập QUÁ ÁP / THẤP ÁP → MCCB nhảy. Thử gỡ dây qua AX 11-14 xem cuộn shunt cháy!']].forEach(([title,desc,code,h,key])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb1'||d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title,key:key||(/Heat pump/.test(title)?'heatpump':'')});});
+/* ================= TỦ ĐIỆN: kích thước thật theo hãng, bố trí ray DIN · máng cáp · hàng kẹp, đề xuất vỏ tủ ================= */
+/* w rộng × h cao × dp sâu (mm). m = cách lắp: din (ray DIN 35 mm), plate (bắt vít lên tấm đế), door (khoét lỗ trên cánh tủ),
+   out (ở ngoài tủ – ra dây qua hàng kẹp X1), src (cáp nguồn vào thẳng CB tổng). ref = mã hàng lấy kích thước. */
+const MCB_=n=>({w:18*n,h:85,dp:78.5,m:'din',ref:'Schneider Acti9 iC60N '+n+'P · 18 mm/cực'});
+const PB22=(ref,o)=>Object.assign({w:30,h:30,dp:50,m:'door',hole:'Ø22.3',ref},o||{});
+const DIM={
+  cb1:MCB_(1),cb2:MCB_(2),cb3:MCB_(3),
+  mccbst:{w:75,h:130,dp:60,m:'plate',ref:'MCCB 3P 100AF LS ABN103c + shunt trip'},
+  vprot:{w:71,h:85,dp:70,m:'din',ref:'Mikro MX210'},
+  contactor:{w:45,h:77,dp:86,m:'din',ref:'Schneider TeSys D LC1D09'},
+  ol:{w:45,h:66,dp:70,m:'din',ref:'Schneider LRD (cắm dưới contactor hoặc đế LAD7B106)'},
+  relay:{w:22,h:73,dp:66,m:'din',ref:'Omron MY2N + đế PYF08A-N'},
+  timer:{w:50,h:74,dp:88,m:'din',ref:'Omron H3CR-A8 + đế P2CF-08'},
+  psu:{w:99,h:82,dp:30,m:'plate',ref:'Mean Well LRS-50-24'},
+  barN:{w:60,h:36,dp:30,m:'din',ref:'Thanh đồng N 4 lỗ trên đế cách điện (tham khảo)'},
+  barPE:{w:60,h:36,dp:30,m:'din',ref:'Thanh đồng PE 4 lỗ (tham khảo)'},
+  baw2c:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'巧力 CIC BAW-2C · lỗ dây Φ9'},
+  kwh3:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'Đồng hồ 1P3W điện tử (tham khảo cỡ BAW)'},
+  pbno:PB22('Nút nhấn Schneider XB7 Ø22'),pbnc:PB22('Nút nhấn Schneider XB7 Ø22'),
+  switch:PB22('Công tắc xoay XB7 Ø22'),pot:PB22('Chiết áp 10 kΩ lỗ Ø22'),
+  estop:PB22('Nút dừng khẩn nấm Ø40 XB7',{w:40,h:40,dp:60}),
+  pilotG:PB22('Đèn báo LED Ø22 XB7',{dp:45}),pilotR:PB22('Đèn báo LED Ø22 XB7',{dp:45}),pilotY:PB22('Đèn báo LED Ø22 XB7',{dp:45}),
+  tctl:{w:75,h:34.5,dp:60,m:'door',hole:'khoét 71×29',ref:'Dixell XR / STC-1000'}
+};
+DIM.relay24=DIM.relay;
+/* biến tần ABB – khung nhỏ nhất của mỗi dòng: [rộng, cao, sâu, chừa trên, chừa dưới, khung] */
+const VFD_DIM={ACS150:[70,169,142,75,75,'R0/R1'],ACS310:[70,169,161,75,75,'R0/R1'],ACS355:[70,169,161,75,75,'R0/R1'],
+  ACS380:[70,205,174,75,75,'R0/R1'],ACS480:[73,223,207,75,75,'R1'],ACS580:[125,331,223,150,86,'R1'],ACS880:[155,405,226,150,200,'R1']};
+function dimOf(d){
+  const T=TYPES[d.t];if(!T)return{w:45,h:80,dp:70,m:'din',ref:'?'};
+  if(DIM[d.t])return DIM[d.t];
+  if(T.ctl==='plc'){const b=T.plc.cpu==='1214';return{w:b?110:90,h:100,dp:75,m:'din',ref:'Siemens S7-1200 CPU '+T.plc.cpu+'C'};}
+  if(T.ctl==='vfd'){const v=VFD_DIM[T.model]||VFD_DIM.ACS580;return{w:v[0],h:v[1],dp:v[2],ct:v[3],cb:v[4],m:'plate',ref:'ABB '+T.model+' khung '+v[5]+' (khung nhỏ nhất – kW lớn khung to hơn)'};}
+  if(T.cat==='src')return{m:'src'};
+  if(T.load||T.sock||T.valve||T.ctl==='ps'||['t1','t3','lanh'].includes(T.cat))return{m:'out'};
+  return{w:45,h:80,dp:70,m:'din',ref:'Thiết bị tự tạo (tham khảo 45×80)'};
+}
+const dimTxt=t=>{const D=dimOf({t});return D.m==='out'?'ngoài tủ · ra dây qua hàng kẹp X1':D.m==='src'?'cáp nguồn vào tủ':D.w+'×'+D.h+'×'+D.dp+' mm · '+({din:'ray DIN',plate:'bắt tấm đế',door:'cánh tủ '+(D.hole||'')})[D.m]+' · '+D.ref;};
+/* hàng kẹp Phoenix Contact: UT 2.5 rộng 5.2 · UT 4 rộng 6.2 · UT 10 rộng 10.2 mm; chặn ray E/UK 9.5 mm */
+const TB={s:{w:5.2,ref:'UT 2.5'},m:{w:6.2,ref:'UT 4'},l:{w:10.2,ref:'UT 10'}};
+function tbSize(d){if(d.t==='motor'||d.t==='motor6')return PV(d,'kw')>7.5?'l':'m';return d.t==='ac220'?'m':'s';}
+/* vỏ tủ sắt sơn tĩnh điện thông dụng: cao × rộng × sâu (mm). Tấm đế ≈ (cao − 50) × (rộng − 50). */
+const ENCL=[[300,200,150],[300,250,150],[400,300,150],[400,300,200],[500,400,200],[600,400,200],[600,500,200],[600,500,250],[700,500,250],
+  [800,600,250],[800,600,300],[1000,700,300],[1000,800,300],[1200,800,300],[1200,800,400],[1600,800,400],[1800,800,500],[2000,800,600],[2000,1000,600]];
+const encStr=E=>E[0]+'×'+E[1]+'×'+E[2];
+const encParse=s=>{const m=String(s||'').match(/(\d+)\D+(\d+)\D+(\d+)/);return m?[+m[1],+m[2],+m[3]]:null;};
+const SPARE=0.2;
+function cabGeo(E){const W=E[1],H=E[0];const duct=W<=400?25:W<=600?40:60;return{pw:W-50,ph:H-50,duct,dh:duct===25?40:duct,gap:25,mg:15,end:9.5};}
+const C_RANK={baw2c:0,kwh3:0,mccbst:1,vprot:1.5,cb3:2,cb2:2.2,cb1:2.4,barN:2.8,barPE:2.9,contactor:3,ol:3.1,relay:4,relay24:4.2,timer:4.4,psu:5};
+const cRank=d=>{const T=TYPES[d.t];return C_RANK[d.t]!==undefined?C_RANK[d.t]:T&&T.ctl==='plc'?4.6:T&&T.ctl==='vfd'?5:4.5;};
+/* thiết bị cao (biến tần) có thể dựng thành CỘT bên phải, ray DIN chạy bên trái – thử cả 2 kiểu, lấy kiểu gọn hơn */
+function cabLayout(E,src,col){
+  if(col===undefined){const A=cabLayout(E,src,false);if(!src.devs.some(d=>{const D=dimOf(d);return D.m==='plate'&&D.h>=200;}))return A;
+    const B=cabLayout(E,src,true);if(B.fit.ok&&(!A.fit.ok||B.needH<=A.needH))return B;if(A.fit.ok)return A;return B.needH<A.needH?B:A;}
+  const G=cabGeo(E),{pw,ph,duct,gap,mg,end}=G;
+  const devs=src.devs,wires=src.wires||[],info={};devs.forEach(d=>info[d.id]=dimOf(d));
+  const tallIds=col?devs.filter(d=>info[d.id].m==='plate'&&info[d.id].h>=200).map(d=>d.id):[];
+  const colW=tallIds.length?Math.max(...tallIds.map(id=>info[id].w)):0,xC=pw-mg-duct-10-colW,xM=xC-10-duct;
+  const railX0=mg+duct+10,railX1=tallIds.length?xM-10:pw-mg-duct-10,Lr=railX1-railX0,cap=Lr*(1-SPARE)-2*end;
+  const byId=id=>devs.find(x=>x.id===id),M=id=>info[id]?info[id].m:null,isIn=id=>M(id)==='din'||M(id)==='plate';
+  /* hàng kẹp X1: mỗi chân thiết bị ngoài tủ có dây vào tủ = 1 kẹp */
+  let tbl=[];const tbMap={};
+  wires.forEach(w=>[[w.a,w.b],[w.b,w.a]].forEach(([o,i])=>{if(M(o.d)!=='out'||!(isIn(i.d)||M(i.d)==='door'))return;const k=o.d+':'+o.t;
+    if(!tbMap[k]){const od=byId(o.d),sz=tbSize(od);tbMap[k]={k,od:o.d,ot:o.t,sz,pe:o.t==='PE',w:TB[sz].w,h:48,oi:devs.indexOf(od),ti:TYPES[od.t].terms.findIndex(t=>t.id===o.t)};tbl.push(tbMap[k]);}}));
+  tbl.sort((a,b)=>a.oi-b.oi||a.ti-b.ti);tbl.forEach((t,i)=>{t.n=i+1;t.id='X1.'+(i+1);});
+  /* thứ tự lắp: nguồn → đóng cắt → động lực → điều khiển → biến tần → hàng kẹp; rơ-le nhiệt đi liền contactor của nó */
+  let ins=devs.filter(d=>isIn(d.id)).map((d,i)=>({d,i}));
+  ins.sort((a,b)=>cRank(a.d)-cRank(b.d)||a.i-b.i);ins=ins.map(x=>x.d);
+  ins.filter(d=>d.t==='ol').forEach(o=>{const w=wires.find(w=>(w.a.d===o.id&&/^[135]$/.test(w.a.t)&&byId(w.b.d)&&byId(w.b.d).t==='contactor')||(w.b.d===o.id&&/^[135]$/.test(w.b.t)&&byId(w.a.d)&&byId(w.a.d).t==='contactor'));
+    if(!w)return;const k=w.a.d===o.id?w.b.d:w.a.d;ins.splice(ins.indexOf(o),1);ins.splice(ins.findIndex(x=>x.id===k)+1,0,o);});
+  const ord=src.ord||[],brk=src.brk||[];
+  if(ord.length){const base=ins.slice();ins.sort((a,b)=>{const ia=ord.indexOf(a.id),ib=ord.indexOf(b.id);return(ia<0?1e3+base.indexOf(a):ia)-(ib<0?1e3+base.indexOf(b):ib);});}
+  const seq=ins.map(d=>{const D=info[d.id];return{d,m:D.m,w:D.w,h:D.h,D};}).concat(tbl.map(t=>({tb:t,m:'din',w:t.w,h:t.h})));
+  const bands=[];let cur=null;const over=[];if(Lr<60)over.push({});
+  seq.filter(it=>!(it.d&&tallIds.includes(it.d.id))).forEach(it=>{const sp=it.m==='plate'&&cur&&cur.m==='plate'&&cur.items.length?20:0;
+    const lim=it.m==='din'?(it.tb?Lr-2*end:cap):Lr;
+    if(!cur||cur.m!==it.m||(it.d&&brk.includes(it.d.id))||(it.tb&&it.tb.n===1)||(cur.items.length&&cur.x+sp+it.w>lim)){cur={m:it.m,items:[],x:0,tb:!!it.tb};bands.push(cur);}
+    const s2=cur.items.length&&it.m==='plate'?20:0;it.bx=cur.x+s2;cur.x=it.bx+it.w;cur.items.push(it);
+    if(it.w>(it.m==='din'?Lr-2*end:Lr))over.push(it);});
+  bands.forEach(b=>{b.hh=Math.max(...b.items.map(i=>i.h));
+    b.top=b.m==='plate'?Math.max(gap,...b.items.map(i=>i.D&&i.D.ct||0)):gap;b.bot=b.m==='plate'?Math.max(gap,...b.items.map(i=>i.D&&i.D.cb||0)):gap;b.H=b.top+b.hh+b.bot;});
+  const ducts=[];let y=mg;ducts.push(y);y+=duct;
+  bands.forEach((b,bi)=>{b.y0=y;y+=b.H;ducts.push(y);y+=duct;b.cy=b.y0+b.top+b.hh/2;
+    const x0=b.m==='din'?railX0+end:railX0;b.items.forEach(it=>{it.x=x0+it.bx;it.y=b.m==='din'?b.cy-it.h/2:b.y0+b.top;it.band=bi;});
+    b.used=b.x+(b.m==='din'?2*end:0);});
+  /* cột thiết bị cao bên phải */
+  let cyy=ducts[0]+duct;seq.filter(it=>it.d&&tallIds.includes(it.d.id)).forEach(it=>{it.col=1;it.x=xC;it.y=cyy+Math.max(gap,it.D.ct||0);cyy=it.y+it.h+Math.max(gap,it.D.cb||0);});
+  if(tallIds.length&&ducts.length<2){ducts.push(cyy);y=cyy+duct;}
+  if(tallIds.length&&cyy>ducts[ducts.length-1]){ducts[ducts.length-1]=cyy;y=cyy+duct;}
+  const needH=y+mg;const Dy=k=>ducts[k]+duct/2,VL=mg+duct/2,VR=pw-mg-duct/2,VM=tallIds.length?xM+duct/2:null;
+  const fullH=pw-2*mg-2*duct,hd=ducts.map((dy,k)=>({y:dy,x0:mg+duct,len:tallIds.length&&k>0&&k<ducts.length-1?xM-mg-duct:fullH}));
+  const vd=[{x:mg,y0:ducts[0],len:ducts[ducts.length-1]+duct-ducts[0]},{x:pw-mg-duct,y0:ducts[0],len:ducts[ducts.length-1]+duct-ducts[0]}];
+  if(VM)vd.push({x:xM,y0:ducts[0]+duct,len:ducts[ducts.length-1]-ducts[0]-duct});
+  /* cánh tủ */
+  const doorDevs=devs.filter(d=>M(d.id)==='door'),win=devs.some(d=>info[d.id].win&&isIn(d.id));
+  const dW=E[1]-80,dH=E[0]-80;let dx=0,dy=win?190:0,rowH=0;const dpos={};
+  doorDevs.forEach(d=>{const cw=d.t==='tctl'?95:d.t==='estop'?60:50,chH=d.t==='tctl'?60:70;if(dx+cw>dW){dx=0;dy+=rowH;rowH=0;}dpos[d.id]={x:40+dx+cw/2,y:40+dy+chH/2-8,cw,chH};dx+=cw;rowH=Math.max(rowH,chH);});
+  const doorNeed=doorDevs.length?dy+rowH:win?190:0;
+  /* toạ độ chân */
+  const pos={};
+  const lastK0=ducts.length-1;
+  seq.forEach(it=>{const bi=it.band;if(it.col){const T=TYPES[it.d.t];T.terms.forEach(t=>{const top=t.y<T.h/2;pos[it.d.id+':'+t.id]={x:it.x+t.x/T.w*it.w,y:top?it.y:it.y+it.h,k:top?0:lastK0,top};});return;}
+    if(it.tb){pos['X1:'+it.tb.n+':in']={x:it.x+it.w/2,y:it.y,k:bi};pos['X1:'+it.tb.n+':out']={x:it.x+it.w/2,y:it.y+it.h,k:bi+1};return;}
+    const T=TYPES[it.d.t];T.terms.forEach(t=>{const top=t.y<T.h/2;pos[it.d.id+':'+t.id]={x:it.x+t.x/T.w*it.w,y:top?it.y:it.y+it.h,k:top?bi:bi+1,top};});});
+  const lastK=ducts.length-1;
+  const endP=(e)=>{const m=M(e.d);if(isIn(e.d))return pos[e.d+':'+e.t];
+    if(m==='door')return{x:VL,y:Dy(0),k:0,door:e.d};if(m==='src')return{x:VL,y:Math.max(needH,ph),k:lastK,src:1};
+    if(m==='out'){const t=tbMap[e.d+':'+e.t];return t?pos['X1:'+t.n+':in']:null;}return null;};
+  const routes=[];
+  wires.forEach((w,i)=>{const pa=endP(w.a),pb=endP(w.b);if(!pa||!pb){routes.push({w,i,ext:1});return;}
+    if(pa.door&&pb.door){const a=dpos[pa.door],b=dpos[pb.door];routes.push({w,i,doorOnly:1,len:Math.ceil((Math.abs(a.x-b.x)+Math.abs(a.y-b.y)+100)/10)*10});return;}
+    const o=((i%7)-3)*duct/9;let a=pa,b=pb;if(a.door||(a.src&&!b.door)){const t=a;a=b;b=t;}
+    let pts;if(a.k===b.k)pts=[[a.x,a.y],[a.x,Dy(a.k)+o],[b.x,Dy(b.k)+o],[b.x,b.y]];
+    else{let vx=VL,bd=1e9;[VL,VR,VM].forEach(v=>{if(v===null)return;const dd=Math.abs(a.x-v)+Math.abs(b.x-v);if(dd<bd){bd=dd;vx=v;}});pts=[[a.x,a.y],[a.x,Dy(a.k)+o],[vx+o,Dy(a.k)+o],[vx+o,Dy(b.k)+o],[b.x,Dy(b.k)+o],[b.x,b.y]];}
+    let len=0;for(let j=1;j<pts.length;j++)len+=Math.abs(pts[j][0]-pts[j-1][0])+Math.abs(pts[j][1]-pts[j-1][1]);
+    if(b.door){pts.push([0,Dy(0)+o]);const p=dpos[b.door];len+=VL+400+(p?p.x+Math.abs(p.y-Dy(0)):0);}
+    routes.push({w,i,pts,len:Math.ceil((len+100)/10)*10,door:b.door||a.door,src:a.src||b.src});});
+  /* chiều sâu: thiết bị sâu nhất + 25 mm; chỗ có nút/đèn trên cánh thì cộng thêm 50 mm thân nút (cột biến tần nằm lệch, không đụng nút) */
+  const dps=devs.filter(d=>isIn(d.id)).map(d=>info[d.id].dp),dpsN=devs.filter(d=>isIn(d.id)&&!tallIds.includes(d.id)).map(d=>info[d.id].dp);
+  const needD=Math.ceil(Math.max(Math.max(0,...dps)+25,doorDevs.length?Math.max(0,...dpsN)+50+25:0));
+  const fit={h:needH<=ph,w:!over.length,d:needD<=E[2],door:doorNeed<=dH};fit.ok=fit.h&&fit.w&&fit.d&&fit.door;
+  const rails=bands.filter(b=>b.m==='din').map(b=>({b,len:Math.floor(Lr/5)*5,used:Math.ceil(b.used),tb:b.tb}));
+  const hLen=fullH,vLen=ducts[ducts.length-1]+duct-ducts[0];
+  return{hd,vd,xC,colW,tall:tallIds,E,G,pw,ph,Lr,railX0,railX1,bands,seq,ducts,needH,needD,Dy,VL,VR,tbl,tbMap,routes,rails,hLen,vLen,info,doorDevs,dpos,win,doorNeed,dW,dH,over,fit,lastK};
+}
+function cabSuggest(src){for(const E of ENCL){const L=cabLayout(E,src);if(L.fit.ok)return L;}return null;}
+function cabSrcNow(){S.cab=S.cab||{size:''};return{devs:S.devs,wires:S.wires,ord:S.cab.ord||[],brk:S.cab.brk||[]};}
+/* lấy bố trí tủ của mạch đang có: tủ người dùng chọn, hoặc tủ đề xuất */
+function cabNow(){const src=cabSrcNow(),sug=cabSuggest(src),E=encParse(S.cab.size);
+  const L=E?cabLayout(E,src):sug||cabLayout(ENCL[ENCL.length-1],src);return{L,sug,chosen:!!E};}
+function fitWhy(L){const f=L.fit,r=[];if(!f.h)r.push('thiếu chiều cao tấm đế (cần '+Math.ceil(L.needH)+' mm, có '+L.ph+' mm)');if(!f.w)r.push('thiết bị '+L.over.map(i=>i.d?tagOf(i.d):'X1').join(', ')+' rộng hơn ray/tấm đế');
+  if(!f.d)r.push('thiếu chiều sâu (cần ≥ '+L.needD+' mm)');if(!f.door)r.push('cánh tủ không đủ chỗ cho nút/đèn');return r.join('; ');}
+/* ---- vẽ mặt tấm đế (đơn vị mm) ---- */
+function cabSVG(L,o){o=o||{};const E=L.E,W=E[1],H=E[0],G=L.G,mL=78,mT=70,mR=24,mB=82,px=mL+25,py=mT+25,dc=G.duct;
+  const VW=W+mL+mR,VH=Math.max(H,L.needH+50)+mT+mB;let s='';
+  const R=(x,y,w,h,f,st,ex)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" stroke="${st||'none'}"${ex||''}/>`;
+  const Tx=(x,y,t,fs,f,ex)=>`<text x="${x}" y="${y}" font-size="${fs}" fill="${f||'#0f172a'}"${ex||''}>${esc(t)}</text>`;
+  const col=o.cols||{};
+  s+=Tx(mL,22,'TỦ '+encStr(E)+' mm – mặt tấm đế',Math.min(15,W/22),'#0f172a',' font-weight="800"');
+  s+=Tx(mL,38,'Tấm đế '+L.ph+'×'+L.pw+' · máng '+dc+'×'+G.dh+' · ray TS35 · dự phòng ray '+Math.round(SPARE*100)+'%',Math.min(9.5,W/48),'#475569');
+  /* kích thước bao */
+  s+=`<line x1="${mL}" y1="${mT-14}" x2="${mL+W}" y2="${mT-14}" stroke="#0f172a" stroke-width=".8" marker-start="url(#ca)" marker-end="url(#ca)"/>`+Tx(mL+W/2,mT-18,W+' mm',10,'#0f172a',' text-anchor="middle" font-weight="800"');
+  s+=`<line x1="${mL-18}" y1="${mT}" x2="${mL-18}" y2="${mT+H}" stroke="#0f172a" stroke-width=".8" marker-start="url(#ca)" marker-end="url(#ca)"/>`+`<text x="${mL-22}" y="${mT+H/2}" font-size="10" font-weight="800" text-anchor="middle" transform="rotate(-90 ${mL-22} ${mT+H/2})">${H} mm</text>`;
+  s+=R(mL,mT,W,H,'#64748b','#334155',' rx="6" stroke-width="2"')+R(mL+6,mT+6,W-12,H-12,'#94a3b8','#475569',' rx="4"');
+  s+=`<g transform="translate(${px},${py})">`;
+  s+=R(0,0,L.pw,L.ph,'#fff7ed','#c2410c',' stroke-width="1.2"');
+  if(L.needH>L.ph)s+=R(0,L.ph,L.pw,L.needH-L.ph,'#fecaca','#dc2626',' stroke-dasharray="4 3" opacity=".7"')+Tx(L.pw/2,L.ph+14,'⚠ VƯỢT TẤM ĐẾ '+Math.ceil(L.needH-L.ph)+' mm',10,'#b91c1c',' text-anchor="middle" font-weight="800"');
+  /* máng cáp */
+  const ductR=(x,y,w,h,vert)=>{let t=R(x,y,w,h,'#e2e8f0','#94a3b8',' stroke-width=".6"');const n=Math.floor((vert?h:w)/10);for(let i=1;i<n;i++){const q=(vert?y:x)+i*10;t+=vert?`<line x1="${x}" y1="${q}" x2="${x+3}" y2="${q}" stroke="#94a3b8" stroke-width=".5"/><line x1="${x+w-3}" y1="${q}" x2="${x+w}" y2="${q}" stroke="#94a3b8" stroke-width=".5"/>`:`<line x1="${q}" y1="${y}" x2="${q}" y2="${y+3}" stroke="#94a3b8" stroke-width=".5"/><line x1="${q}" y1="${y+h-3}" x2="${q}" y2="${y+h}" stroke="#94a3b8" stroke-width=".5"/>`;}return t;};
+  const top=L.ducts[0],bot=L.ducts[L.ducts.length-1]+dc;
+  L.vd.forEach(v=>s+=ductR(v.x,v.y0,dc,v.len,1));
+  L.hd.forEach(h=>s+=ductR(h.x0,h.y,h.len,dc,0));
+  if(L.tall.length){const it=L.seq.find(i=>i.col);s+=Tx(L.xC,L.ducts[0]+dc+9,'BẮT VÍT TẤM ĐẾ – chừa thoáng',6.5,'#9a3412',' font-weight="800"')+Tx(L.xC,L.ducts[0]+dc+17,'trên '+(it.D.ct||25)+' / dưới '+(it.D.cb||25)+' mm theo hãng',6.5,'#9a3412',' font-weight="800"');}
+  /* ray DIN */
+  L.bands.forEach((b,bi)=>{if(b.m!=='din')return;const n=L.rails.findIndex(r=>r.b===b)+1,rl=Math.floor(L.Lr/5)*5;
+    s+=R(L.railX0,b.cy-17.5,rl,35,'#d1d5db','#6b7280',' stroke-width=".6"');for(let x=L.railX0+8;x<L.railX0+rl-8;x+=25)s+=R(x,b.cy-3,12,6,'#9ca3af','none',' rx="2"');
+    s+=Tx(L.railX0,b.y0+9,(b.tb?'HÀNG KẸP X1 · ':'')+'RAY DIN '+n+' · dài '+rl+' mm (dùng '+Math.ceil(b.used)+', trống '+Math.max(0,rl-Math.ceil(b.used))+')',7,'#0369a1',' font-weight="800"');
+    s+=`<line x1="${L.railX0}" y1="${b.y0+12}" x2="${L.railX0+rl}" y2="${b.y0+12}" stroke="#0369a1" stroke-width=".5" marker-start="url(#ca)" marker-end="url(#ca)"/>`;});
+  L.bands.forEach(b=>{if(b.m==='plate')s+=Tx(L.railX0,b.y0+9,'BẮT VÍT TẤM ĐẾ'+(b.items.some(i=>i.D&&i.D.ct)?' · chừa khoảng thoáng giải nhiệt trên/dưới theo hãng':''),7,'#9a3412',' font-weight="800"');});
+  /* dây */
+  if(!o.noWires)L.routes.forEach(r=>{if(!r.pts)return;const c=col[r.w.id],pe=c==='PE',hl=o.sel&&(r.w.a.d===o.sel||r.w.b.d===o.sel);
+    const d='M'+r.pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+    s+=`<path d="${d}" fill="none" stroke="${pe?'#16a34a':PCOL[c]||'#475569'}" stroke-width="${hl?2.2:1.3}" stroke-linejoin="round" opacity="${o.sel&&!hl?.25:.95}"/>`;
+    if(pe)s+=`<path d="${d}" fill="none" stroke="#facc15" stroke-width="${hl?2.2:1.3}" stroke-dasharray="4 4" opacity="${o.sel&&!hl?.25:.95}"/>`;});
+  /* thiết bị */
+  L.seq.forEach(it=>{const x=it.x,y=it.y,w=it.w,h=it.h;
+    if(it.tb){const t=it.tb,od=dev(t.od),c=(()=>{const r=L.routes.find(r=>r.pts&&((r.w.a.d===t.od&&r.w.a.t===t.ot)||(r.w.b.d===t.od&&r.w.b.t===t.ot)));return r&&col[r.w.id];})();
+      s+=R(x+.3,y,w-.6,h,t.pe?'#16a34a':c==='N'?'#3b82f6':'#cbd5e1','#475569',' stroke-width=".4"');if(t.pe)s+=R(x+.3,y+h/2-3,w-.6,6,'#facc15');
+      s+=`<text x="${x+w/2}" y="${y+h/2}" font-size="3.6" font-weight="800" text-anchor="middle" transform="rotate(-90 ${x+w/2} ${y+h/2})">${t.n}</text>`;
+      s+=`<line x1="${x+w/2}" y1="${y+h}" x2="${x+w/2}" y2="${L.ph+(L.needH>L.ph?L.needH-L.ph:0)+6}" stroke="#64748b" stroke-width=".5" stroke-dasharray="2 2"/>`;
+      const ly=Math.max(L.ph,L.needH)+9;s+=`<text x="${x+w/2+1.3}" y="${ly}" font-size="3.6" fill="#334155" transform="rotate(90 ${x+w/2+1.3} ${ly})">${esc((od?tagOf(od):'?')+'.'+t.ot)}</text>`;return;}
+    const d=it.d,T=TYPES[d.t],sel=o.sel===d.id;
+    const f=d.t.startsWith('cb')?'#f8fafc':d.t==='contactor'?'#e5e7eb':d.t==='ol'?'#d1d5db':d.t.startsWith('relay')?'#dbeafe':T.ctl==='plc'?'#cbd5e1':T.ctl==='vfd'?'#e5e7eb':d.t==='barN'?'#fde68a':d.t==='barPE'?'#bbf7d0':'#f1f5f9';
+    s+=`<g data-cd="${d.id}" style="cursor:pointer">`+R(x,y,w,h,f,sel?'#f59e0b':'#334155',` rx="2" stroke-width="${sel?2:.7}"`);
+    if(d.t.startsWith('cb'))s+=R(x+w/2-4,y+h/2-7,8,14,'#1e293b','none',' rx="1.5"');
+    if(T.ctl==='plc')s+=R(x+2,y+2,w-4,10,'#0f766e')+R(x+4,y+h/2-6,w-8,12,'#0f172a','none',' rx="1"');
+    if(T.ctl==='vfd')s+=R(x+w*.2,y+18,w*.6,36,'#0f172a','none',' rx="2"')+R(x+8,y+h-30,w-16,16,'#94a3b8','none',' rx="2"');
+    if(d.t==='baw2c'||d.t==='kwh3')s+=R(x+12,y+22,w-24,20,'#0f172a','none',' rx="2"')+R(x+4,y+h-26,w-8,22,'#e2e8f0','#94a3b8');
+    if(d.t==='timer')s+=`<circle cx="${x+w/2}" cy="${y+h/2-6}" r="14" fill="#fff" stroke="#475569"/>`;
+    const lab=tagOf(d),narrow=w<34;
+    s+=narrow?`<text x="${x+w/2+3}" y="${y+h/2}" font-size="${Math.min(7,(h-20)*1.7/Math.max(1,lab.length))}" font-weight="900" text-anchor="middle" transform="rotate(-90 ${x+w/2+3} ${y+h/2})">${esc(lab)}</text>`
+      :Tx(x+w/2,y+h/2+(T.ctl==='vfd'?40:d.t==='baw2c'||d.t==='kwh3'?10:4),lab,Math.min(8,(w-4)*1.7/Math.max(1,lab.length)),'#0f172a',' text-anchor="middle" font-weight="900"');
+    if(!narrow)s+=Tx(x+w/2,y+h-4,w+'×'+h,4.6,'#475569',' text-anchor="middle"');
+    s+='</g>';});
+  /* chân (chạm để nối dây) */
+  L.seq.forEach(it=>{if(it.tb)return;const d=it.d,T=TYPES[d.t];T.terms.forEach(t=>{const top=t.y<T.h/2,x=it.x+t.x/T.w*it.w,y=top?it.y:it.y+it.h,pend=o.pend&&o.pend.d===d.id&&o.pend.t===t.id;
+    s+=`<circle data-ct="${d.id}|${t.id}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${pend?3.4:2.3}" fill="${pend?'#f59e0b':pinFill(t)}" stroke="#334155" stroke-width=".5" style="cursor:pointer"/>`;});});
+  /* cửa dây ra */
+  const gy=Math.max(L.ph,L.needH)+2;
+  if(L.routes.some(r=>r.src))s+=Tx(L.VL-4,gy+20,'↑ cáp nguồn vào',6.5,'#b91c1c',' font-weight="800"');
+  if(L.routes.some(r=>r.door))s+=Tx(2,L.Dy(0)-dc/2-3,'↔ bó dây sang cánh tủ (qua bản lề)',6.5,'#7c3aed',' font-weight="800"');
+  s+='</g>';
+  for(let i=0;i<Math.max(2,Math.round(W/150));i++){const gx=mL+30+i*(W-60)/Math.max(1,Math.max(2,Math.round(W/150))-1);s+=`<circle cx="${gx}" cy="${mT+H-3}" r="6" fill="#1f2937" stroke="#0f172a"/>`;}
+  s+=Tx(mL,VH-12,'Bảng điện mô phỏng · © '+AUTHOR,8,'#94a3b8');
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" width="${VW*(o.k||1)}" height="${VH*(o.k||1)}" font-family="${FONT.replace(/"/g,"'")}"><defs><marker id="ca" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0f172a"/></marker></defs><rect width="${VW}" height="${VH}" fill="#fff"/>${s}</svg>`;
+}
+/* ---- vẽ mặt trong cánh tủ (nhìn từ ngoài) ---- */
+function doorSVG(L,o){o=o||{};const E=L.E,W=E[1],H=E[0],mL=50,mT=50,VW=W+mL+30,VH=H+mT+40;let s='';
+  const Tx=(x,y,t,fs,f,ex)=>`<text x="${x}" y="${y}" font-size="${fs}" fill="${f||'#0f172a'}"${ex||''}>${esc(t)}</text>`;
+  s+=Tx(mL,20,'CÁNH TỦ – nhìn từ ngoài, bản lề trái',Math.min(14,W/20),'#0f172a',' font-weight="800"');
+  s+=`<rect x="${mL}" y="${mT}" width="${W}" height="${H}" fill="#cbd5e1" stroke="#334155" stroke-width="2" rx="6"/>`;
+  [0.15,0.85].forEach(f=>s+=`<rect x="${mL-6}" y="${mT+H*f-20}" width="8" height="40" fill="#475569" rx="2"/>`);
+  s+=`<rect x="${mL+W-22}" y="${mT+H/2-30}" width="10" height="60" fill="#1f2937" rx="3"/>`;
+  if(L.win){s+=`<rect x="${mL+40}" y="${mT+40}" width="140" height="170" fill="#e0f2fe" stroke="#0369a1" stroke-dasharray="5 3" rx="4"/>`+Tx(mL+110,mT+128,'Ô kính xem đồng hồ',9,'#0369a1',' text-anchor="middle" font-weight="800"')+Tx(mL+110,mT+142,'khoét 120 × 160',8,'#0369a1',' text-anchor="middle"');}
+  L.doorDevs.forEach(d=>{const p=L.dpos[d.id];if(!p)return;const x=mL+p.x,y=mT+p.y;const c={pilotG:'#22c55e',pilotR:'#ef4444',pilotY:'#facc15',pbno:'#16a34a',pbnc:'#dc2626',estop:'#dc2626',switch:'#111827',pot:'#111827'}[d.t]||'#334155';
+    if(d.t==='tctl')s+=`<rect x="${x-37.5}" y="${y-17}" width="75" height="34.5" fill="#111827" rx="3"/><text x="${x}" y="${y+6}" font-size="15" fill="#ef4444" text-anchor="middle" font-family="monospace">-18.0</text>`;
+    else if(d.t==='estop')s+=`<circle cx="${x}" cy="${y}" r="24" fill="#facc15" stroke="#a16207"/><circle cx="${x}" cy="${y}" r="20" fill="${c}" stroke="#7f1d1d"/>`;
+    else s+=`<circle cx="${x}" cy="${y}" r="15" fill="#9ca3af" stroke="#334155"/><circle cx="${x}" cy="${y}" r="11" fill="${c}" stroke="#0f172a"/>`+(d.t==='switch'||d.t==='pot'?`<rect x="${x-2}" y="${y-10}" width="4" height="12" fill="#fff"/>`:'');
+    s+=`<rect x="${x-p.cw/2+3}" y="${y+(d.t==='tctl'?20:d.t==='estop'?26:18)}" width="${p.cw-6}" height="12" fill="#fff" stroke="#94a3b8" rx="1.5"/>`+Tx(x,y+(d.t==='tctl'?29:d.t==='estop'?35:27),tagOf(d),8,'#0f172a',' text-anchor="middle" font-weight="800"');});
+  if(!L.doorDevs.length&&!L.win)s+=Tx(mL+W/2,mT+H/2,'Cánh tủ trơn – không có nút / đèn',12,'#475569',' text-anchor="middle"');
+  s+=`<line x1="${mL}" y1="${mT+H+18}" x2="${mL+W}" y2="${mT+H+18}" stroke="#0f172a" stroke-width=".8" marker-start="url(#cb)" marker-end="url(#cb)"/>`+Tx(mL+W/2,mT+H+32,W+' mm',10,'#0f172a',' text-anchor="middle" font-weight="800"');
+  return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" width="${VW*(o.k||1)}" height="${VH*(o.k||1)}" font-family="${FONT.replace(/"/g,"'")}"><defs><marker id="cb" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0f172a"/></marker></defs><rect width="${VW}" height="${VH}" fill="#fff"/>${s}</svg>`;
+}
+/* ---- bảng vật tư tủ: [tiêu đề, cột, hàng] ---- */
+function cabTables(L){
+  const G=L.G,out=[];
+  out.push(['Vỏ tủ, ray DIN, máng cáp',['Hạng mục','Quy cách','Số lượng / chiều dài'],[
+    ['Vỏ tủ','Tủ sắt sơn tĩnh điện '+encStr(L.E)+' mm (cao × rộng × sâu)','1 bộ'],
+    ['Tấm đế','≈ '+L.ph+' × '+L.pw+' mm (tùy hãng vỏ tủ)','1 tấm'],
+    ...L.rails.map((r,i)=>['Ray DIN '+(i+1)+(r.tb?' (hàng kẹp X1)':''),'TS35×7.5 thép mạ, cắt dài '+r.len+' mm','Đã dùng '+r.used+' mm · còn trống '+Math.max(0,r.len-r.used)+' mm']),
+    ['Chặn ray (end stop)','Phoenix E/UK – rộng 9.5 mm',(L.rails.length*2)+' cái'],
+    ['Máng răng lược ngang',G.duct+'×'+G.dh+' mm, cắt '+L.hd.map(h=>Math.round(h.len)).join(' + ')+' mm',L.hd.length+' đoạn = '+(L.hd.reduce((a,h)=>a+h.len,0)/1000).toFixed(2)+' m'],
+    ['Máng răng lược đứng',G.duct+'×'+G.dh+' mm, cắt '+L.vd.map(v=>Math.round(v.len)).join(' + ')+' mm',L.vd.length+' đoạn = '+(L.vd.reduce((a,v)=>a+v.len,0)/1000).toFixed(2)+' m'],
+    ['Chiều sâu cần','Thiết bị sâu nhất + 25 mm (+ 50 mm thân nút/đèn trên cánh)',L.needD+' mm (tủ sâu '+L.E[2]+' mm)']]]);
+  out.push(['Thiết bị trong tủ – kích thước theo hãng',['Ký hiệu','Thiết bị / mã tham chiếu','R × C × S (mm) · lắp'],
+    L.seq.filter(i=>i.d).map(i=>[tagOf(i.d),typeName(i.d)+'\n'+i.D.ref,i.D.w+' × '+i.D.h+' × '+i.D.dp+' · '+(i.D.m==='din'?'ray DIN '+(L.rails.findIndex(r=>r.b===L.bands[i.band])+1):'bắt vít tấm đế')])
+    .concat(L.doorDevs.map(d=>{const D=dimOf(d);return[tagOf(d),typeName(d)+'\n'+D.ref,'Cánh tủ · '+D.hole];}))]);
+  if(L.tbl.length)out.push(['Hàng kẹp X1 (dây ra thiết bị ngoài tủ)',['Kẹp','Loại','Nối ra'],L.tbl.map(t=>{const od=dev(t.od);return['X1.'+t.n,'Phoenix '+TB[t.sz].ref+(t.pe?'-PE (xanh-vàng)':'')+' · rộng '+t.w+' mm',(od?tagOf(od)+' : '+t.ot:'')];})]);
+  const cols=wireColors(),rw=L.routes.filter(r=>r.pts||r.doorOnly);
+  if(rw.length)out.push(['Chiều dài dây trong tủ (đi theo máng, đã cộng 100 mm tuốt đầu)',['Dây','Từ → Đến','Dài'],rw.map(r=>{const a=dev(r.w.a.d),b=dev(r.w.b.d);
+    return['#'+(r.i+1)+' '+wireName(cols[r.w.id]),tagOf(a)+':'+r.w.a.t+' → '+tagOf(b)+':'+r.w.b.t+(r.door?' (sang cánh)':r.src?' (cáp nguồn)':''),r.len+' mm'];})
+    .concat([['Tổng','',(rw.reduce((a,r)=>a+r.len,0)/1000).toFixed(2)+' m']])]);
+  return out;
+}
+const tblHTML=t=>'<h3>'+esc(t[0])+'</h3><table><tr>'+t[1].map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>'+t[2].map(r=>'<tr>'+r.map((c,i)=>'<td>'+(i?'':'<b>')+esc(c).replace(/\n/g,'<br><small>')+(String(c).includes('\n')?'</small>':'')+(i?'':'</b>')+'</td>').join('')+'</tr>').join('')+'</table>';
+function cabStatus(R){const L=R.L;if(!S.devs.some(d=>{const m=dimOf(d).m;return m==='din'||m==='plate'||m==='door';}))return'<span class="mut">Chưa có thiết bị lắp trong tủ.</span>';
+  if(R.chosen&&L.fit.ok)return'✅ Tủ <b>'+encStr(L.E)+'</b> vừa: tấm đế dùng '+Math.ceil(L.needH)+' / '+L.ph+' mm chiều cao, sâu cần '+L.needD+' mm.'+(R.sug&&encStr(R.sug.E)!==encStr(L.E)?' <span class="mut">(Tủ nhỏ nhất vừa: '+encStr(R.sug.E)+')</span>':'');
+  if(R.chosen)return'<span style="color:#f87171">❌ Tủ '+encStr(L.E)+' không đủ: '+esc(fitWhy(L))+'.</span>'+(R.sug?'<br>👉 Đề xuất: <b>'+encStr(R.sug.E)+'</b> <button class="btn" id="cabUseSug" style="padding:3px 8px;font-size:12px">Dùng tủ này</button>':'<br>Cần tủ đứng lớn hơn hoặc chia 2 tủ.');
+  return R.sug?'💡 Chưa chọn tủ – app đề xuất <b>'+encStr(R.sug.E)+'</b> (đã trừ máng '+R.sug.G.duct+'×'+R.sug.G.dh+', khe đi dây 25 mm và '+Math.round(SPARE*100)+'% ray dự phòng).':'<span style="color:#f87171">Mạch quá lớn cho 1 tủ – cần chia nhiều tủ.</span>';}
+let cabView='plate',cabSel=null,cabPend=null,cabZoom=false;
+function openCab(){document.getElementById('cabSheet').hidden=false;renderCab();}
+function renderCab(){
+  S.cab=S.cab||{size:''};const R=cabNow(),L=R.L,B=document.getElementById('cabBody');
+  const opts='<option value="">🤖 Tự đề xuất'+(R.sug?' ('+encStr(R.sug.E)+')':'')+'</option>'+ENCL.map(E=>'<option value="'+encStr(E)+'"'+(S.cab.size===encStr(E)?' selected':'')+'>'+encStr(E)+' mm'+(E[0]>=1600?' · tủ đứng':'')+'</option>').join('');
+  const cols=wireColors();
+  let body='';
+  if(cabView==='plate')body='<div id="cabSvg" class="cabSvg">'+cabSVG(L,{cols,sel:cabSel,pend:cabPend})+'</div>';
+  else if(cabView==='door')body='<div id="cabSvg" class="cabSvg">'+doorSVG(L)+'</div>';
+  else body='<div class="cabTbl">'+cabTables(L).map(tblHTML).join('')+'</div>';
+  const sd=cabSel&&dev(cabSel);
+  B.innerHTML='<div class="cabTop"><label>Vỏ tủ (cao × rộng × sâu)</label><select id="cabSize">'+opts+'</select></div>'+
+    '<div class="calcbox" id="cabStat">'+cabStatus(R)+'</div>'+
+    '<div class="mcSeg" id="cabSeg"><button data-v="plate" class="'+(cabView==='plate'?'on':'')+'">🔧 Tấm đế & đấu dây</button><button data-v="door" class="'+(cabView==='door'?'on':'')+'">🚪 Cánh tủ</button><button data-v="bom" class="'+(cabView==='bom'?'on':'')+'">📋 Vật tư & kích thước</button></div>'+
+    (cabView==='plate'?'<div class="cabTools">'+(sd?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button>':'<span class="mut">Chạm thiết bị để dời chỗ · chạm 2 chân ● để nối dây (bảng chính cũng cập nhật)</span>')+'<span style="flex:1"></span><button class="btn" data-m="reset">↺ Tự xếp</button></div>':'')+
+    body+(cabView!=='bom'?'<div class="mut" style="margin-top:6px">Ray DIN: '+L.rails.map((r,i)=>'R'+(i+1)+' = '+r.len+' mm').join(' · ')+(L.tbl.length?' · Hàng kẹp X1: '+L.tbl.length+' kẹp':'')+'</div>':'');
+  const sv=B.querySelector('.cabSvg svg');if(sv){sv.removeAttribute('height');sv.style.width=cabZoom?'280%':'100%';sv.style.height='auto';sv.style.display='block';}
+  B.querySelector('#cabSize').onchange=e=>{S.cab.size=e.target.value;save();renderCab();};
+  const us=B.querySelector('#cabUseSug');if(us)us.onclick=()=>{S.cab.size=encStr(R.sug.E);save();renderCab();};
+  B.querySelectorAll('#cabSeg button').forEach(b=>b.onclick=()=>{cabView=b.dataset.v;renderCab();});
+  B.querySelectorAll('.cabTools [data-m]').forEach(b=>b.onclick=()=>{const m=b.dataset.m;
+    if(m==='reset'){S.cab.ord=[];S.cab.brk=[];cabSel=null;save();renderCab();return;}
+    const ids=L.seq.filter(i=>i.d).map(i=>i.d.id),k=ids.indexOf(cabSel);if(k<0)return;
+    if(m==='br'){const a=S.cab.brk=S.cab.brk||[];const j=a.indexOf(cabSel);j<0?a.push(cabSel):a.splice(j,1);}
+    else{const j=k+(+m);if(j<0||j>=ids.length)return;[ids[k],ids[j]]=[ids[j],ids[k]];S.cab.ord=ids;}
+    save();renderCab();});
+  if(sv)sv.addEventListener('click',e=>{const c=e.target.closest('[data-ct]');if(c){const[did,tid]=c.dataset.ct.split('|');cabTerm(did,tid);return;}
+    const g=e.target.closest('[data-cd]');cabSel=g?(cabSel===g.dataset.cd?null:g.dataset.cd):null;cabPend=null;renderCab();});
+}
+function cabTerm(did,tid){
+  if(!cabPend){cabPend={d:did,t:tid};cabSel=did;renderCab();cabMsg('Chạm chân thứ hai để nối dây từ '+tagOf(dev(did))+':'+tid+'.');return;}
+  if(cabPend.d===did&&cabPend.t===tid){cabPend=null;renderCab();return;}
+  const a=cabPend,b={d:did,t:tid};cabPend=null;
+  const dup=S.wires.some(w=>(w.a.d===a.d&&w.a.t===a.t&&w.b.d===b.d&&w.b.t===b.t)||(w.b.d===a.d&&w.b.t===a.t&&w.a.d===b.d&&w.a.t===b.t));
+  if(!dup)S.wires.push({id:'w'+(S.nid++),a,b});changed();renderCab();
+  cabMsg(dup?'Hai chân này đã có dây rồi.':'Đã nối '+tagOf(dev(a.d))+':'+a.t+' → '+tagOf(dev(b.d))+':'+b.t+' – dây tự đi theo máng.');
+}
+function cabMsg(t){const e=document.getElementById('cabStat');if(e)e.innerHTML=esc(t);}
+/* ---- trong 🧩 Lập mạch: chọn vỏ tủ, xem đề xuất theo số thiết bị đã chọn ---- */
+function cabPseudo(counts){const devs=[],wires=[];let n=0;
+  Object.keys(counts||{}).forEach(k=>{if(!TYPES[bdT(k)])return;for(let i=0;i<(counts[k]|0);i++){const d=Object.assign({id:'p'+(n++),t:bdT(k)},bdEx(k));devs.push(d);}});
+  const anchor=devs.find(d=>{const m=dimOf(d).m;return m==='din'||m==='plate';});
+  if(anchor)devs.forEach(d=>{if(dimOf(d).m==='out')TYPES[d.t].terms.forEach(t=>wires.push({id:'pw'+(n++),a:{d:d.id,t:t.id},b:{d:anchor.id,t:TYPES[anchor.t].terms[0].id}}));});
+  return{devs,wires,ord:[],brk:[]};}
+function cabBuilder(){const box=document.getElementById('bdCab');if(!box)return;const st=bdState();const src=cabPseudo(st.counts);
+  const inside=src.devs.some(d=>dimOf(d).m!=='out'&&dimOf(d).m!=='src');const sug=inside?cabSuggest(src):null,E=encParse(st.cab);const L=E&&inside?cabLayout(E,src):null;
+  box.innerHTML='<label>🗄 Tủ điện (vỏ tủ cao × rộng × sâu)</label><select id="bdCabSel"><option value="">🤖 Chưa chọn – app tự đề xuất</option>'+ENCL.map(x=>'<option'+(st.cab===encStr(x)?' selected':'')+'>'+encStr(x)+'</option>').join('')+'</select>'+
+    '<div class="calcbox" style="margin-top:6px">'+(!inside?'<span class="mut">Chọn thiết bị lắp trong tủ (CB, contactor, rơ-le, PLC, biến tần, đồng hồ…) để app tính tủ.</span>':
+    L?(L.fit.ok?'✅ Tủ '+encStr(E)+' đủ chỗ ('+L.rails.length+' ray DIN dài '+(L.rails[0]?L.rails[0].len:0)+' mm).':'<span style="color:#f87171">❌ Tủ '+encStr(E)+' không đủ: '+esc(fitWhy(L))+'.</span>'+(sug?' 👉 Đề xuất <b>'+encStr(sug.E)+'</b>.':'')):
+    sug?'💡 Đề xuất tủ <b>'+encStr(sug.E)+'</b> · '+sug.rails.length+' ray DIN dài '+(sug.rails[0]?sug.rails[0].len:0)+' mm · máng '+sug.G.duct+'×'+sug.G.dh+(sug.tbl.length?' · hàng kẹp X1 ~'+sug.tbl.length+' kẹp':'')+' (đã trừ hao đi dây + '+Math.round(SPARE*100)+'% ray dự phòng).':'Quá lớn cho 1 tủ.')+'</div>';
+  box.querySelector('#bdCabSel').onchange=e=>{st.cab=e.target.value;save();cabBuilder();};}
+/* sau khi dựng mạch từ Lập mạch: nhận tủ đã chọn hoặc tủ đề xuất */
+function cabAfterBuild(){const st=bdState();S.cab={size:st.cab||''};const R=cabNow();save();
+  if(!R.L.seq.length&&!R.L.doorDevs.length)return null;
+  if(st.cab&&R.L.fit.ok)return'🗄 Tủ '+st.cab+' vừa – xem bố trí ở 🗄 Tủ điện.';
+  if(st.cab)return'🗄 Tủ '+st.cab+' KHÔNG đủ chỗ ('+fitWhy(R.L)+')'+(R.sug?' → đề xuất '+encStr(R.sug.E)+'.':'.');
+  return R.sug?'🗄 Anh chưa chọn tủ → app đề xuất tủ '+encStr(R.sug.E)+' mm (đã trừ máng đi dây '+R.sug.G.duct+'×'+R.sug.G.dh+' và '+Math.round(SPARE*100)+'% ray dự phòng). Ray DIN: '+R.sug.rails.map(r=>r.len+' mm').join(', ')+'.':null;}
+/* ---- trong 📐 Bản vẽ ---- */
+function cabSheetHTML(){const R=cabNow(),L=R.L;if(!L.seq.length&&!L.doorDevs.length)return'';
+  return'<h3>🗄 Bố trí tủ điện '+encStr(L.E)+' mm'+(R.chosen?'':' (đề xuất)')+'</h3><div class="calcbox">'+cabStatus(R)+'</div><div class="cabSvg" style="background:#fff;border-radius:8px;overflow:auto">'+cabSVG(L,{cols:wireColors()}).replace(/ width="[\d.]+" height="[\d.]+"/,' style="width:100%;height:auto;display:block"')+'</div>'+
+    '<div class="cabSvg" style="background:#fff;border-radius:8px;overflow:auto;margin-top:8px">'+doorSVG(L).replace(/ width="[\d.]+" height="[\d.]+"/,' style="width:100%;max-width:520px;height:auto;display:block"')+'</div>'+cabTables(L).map(tblHTML).join('');}
+document.getElementById('cabBtn').onclick=openCab;
+document.getElementById('cabClose').onclick=()=>{document.getElementById('cabSheet').hidden=true;cabPend=null;};
+document.getElementById('cabZoom').onclick=()=>{cabZoom=!cabZoom;const sv=document.querySelector('#cabBody .cabSvg svg');if(sv)sv.style.width=cabZoom?'280%':'100%';};
+
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();
 if(!S.devs.length)hint('Bấm 🧩 Lập mạch hoặc 📥 Nhập mạch để dựng mạch, hoặc chọn mạch mẫu ở trên.');
 })();
