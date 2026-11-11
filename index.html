@@ -25,7 +25,8 @@ h1{font-size:16px;margin:0}
 .tab{flex:0 0 auto;white-space:nowrap;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 9px;font-size:13px;font-weight:700;cursor:pointer}
 .tab.on{color:#fff;border-bottom-color:#facc15}
 .items{display:none;padding:6px 10px 10px;background:#121b25;border-top:1px solid var(--line);border-bottom:1px solid var(--line);max-height:58vh;overflow-y:auto}
-.items.open{display:block}.helpBox summary{cursor:pointer;font-weight:700;color:var(--mut);padding:2px 0}.helpBox[open] summary{color:#facc15}
+.items.open{display:block}#lsBar{display:flex;gap:8px;align-items:center;margin:0 12px 6px;padding:6px 10px;background:#1e293b;border:1px solid #facc15;border-radius:10px;font-weight:700;font-size:13px}#lsBar span{flex:1}#lsBar .btn{padding:5px 10px}
+.helpBox summary{cursor:pointer;font-weight:700;color:var(--mut);padding:2px 0}.helpBox[open] summary{color:#facc15}
 .mauHd{font-weight:800;color:#facc15;font-size:13px;margin:8px 2px 6px}.mauGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.mauGrid .item.wide{width:auto}
 .item{flex:0 0 auto;width:84px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;color:var(--txt);font-size:11px;line-height:1.2;cursor:pointer}
 .item svg{width:62px;height:42px;display:block;margin:0 auto 3px}
@@ -607,7 +608,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat&&c!=='mau'?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='more'){actionSheet('🧰 Công cụ',[{t:'📁 Mạch của tôi',f:openProj},{t:'📥 Nhập / 📤 Xuất mạch',f:openIO},{t:'🧮 Tính thông số motor',f:openMotorCalc},{t:'🩺 Dò lỗi',f:openDiag},{t:'📐 Bản vẽ + xuất PDF',f:openSheet}]);return;}if(c==='tu'){openCab();return;}if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}if(c==='lanh'){openLanh();return;}if(c==='proj'){openProj();return;}if(c==='mau'){mauToggle();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='more'){actionSheet('🧰 Công cụ',[{t:'🎓 Bài học đấu dây (chấm điểm)',f:openLessons},{t:'📁 Mạch của tôi',f:openProj},{t:'📥 Nhập / 📤 Xuất mạch',f:openIO},{t:'🧮 Tính thông số motor',f:openMotorCalc},{t:'🩺 Dò lỗi',f:openDiag},{t:'📐 Bản vẽ + xuất PDF',f:openSheet}]);return;}if(c==='tu'){openCab();return;}if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}if(c==='lanh'){openLanh();return;}if(c==='proj'){openProj();return;}if(c==='mau'){mauToggle();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -2027,6 +2028,7 @@ async function buildPages(){
     x.font='500 23px '+FONT;x.fillStyle='#1e293b';wrap(cabStatus(R).replace(/<[^>]+>/g,''),TW-30).forEach(l=>{x.fillText(l,M+12,y+26);y+=34;});y+=10;
     cabTables(L).forEach(t=>{section(t[0],T6);table(t[1],[380,1080,TW-1460],t[2],T6);});
     const qr=quoteRows(L);if(quoteTotal(qr)>0){const T7='BÁO GIÁ SƠ BỘ VẬT TƯ TỦ ĐIỆN';newPage(T7);table(['Hạng mục','Số lượng','Đơn giá × SL = Thành tiền'],[1200,260,TW-1460],qr.map(r=>[r.name,r.qty+' '+r.unit,PRICE[r.name]?vnd(PRICE[r.name])+' × '+r.qty+' = '+vnd(PRICE[r.name]*r.qty):'—']).concat([['TỔNG VẬT TƯ (chưa gồm nhân công, vận chuyển, VAT)','',vnd(quoteTotal(qr))]]),T7);}}}
+  if(cab3Shot){try{const im3=new Image();await new Promise((r,j)=>{im3.onload=r;im3.onerror=j;im3.src=cab3Shot;});newPage('PHỐI CẢNH 3D');const ay=M+110,ah=PH-ay-M-40,k=Math.min(TW/im3.width,ah/im3.height);x.drawImage(im3,M+(TW-im3.width*k)/2,ay,im3.width*k,im3.height*k);}catch(e){}}
   // ---- sơ đồ bố trí thực tế
   const dg=await diagramImage();
   newPage('SƠ ĐỒ ĐẤU NỐI THỰC TẾ (bố trí trên bảng)');
@@ -4870,7 +4872,7 @@ function renderCab(){
     '<div class="calcbox" id="cabStat">'+cabStatus(R)+'</div>'+
     '<div class="mcSeg" id="cabSeg"><button data-v="plate" class="'+(cabView==='plate'?'on':'')+'">🗄 Tủ & đấu dây</button><button data-v="3d" class="'+(cabView==='3d'?'on':'')+'">🧊 3D</button><button data-v="bom" class="'+(cabView==='bom'?'on':'')+'">📋 Vật tư</button><button data-v="gia" class="'+(cabView==='gia'?'on':'')+'">💰 Báo giá</button></div>'+
     (cabView!=='bom'&&cabView!=='gia'?'<div class="cabTools"><button class="btn" id="cabDoorBtn">'+(cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh')+'</button><button class="btn '+(running?'stop':'run')+'" id="cabRun">'+(running?'■ Dừng':'▶ Chạy thử')+'</button>'+
-      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
+      (cabView==='3d'?'<button class="btn" id="v3cab">🎯 Tủ</button><button class="btn" id="v3all">🏭 Toàn cảnh</button><button class="btn" id="v3rt">'+((S.cab.route3||'up')==='up'?'🔀 Ống trên cao':'🔀 Máng dưới sàn')+'</button><button class="btn" id="v3q">'+((S.cab.q3||'hi')==='hi'?'✨ Đẹp':'⚡ Nhẹ')+'</button><button class="btn" id="v3shot">📸 Ảnh</button><button class="btn" id="v3rec">⏺ Quay</button>':'')+(S.lesson&&cabView==='plate'?'<button class="btn run" id="cabGrade">🎓 Chấm điểm</button>':'')+(cabView==='plate'&&!cabOpen?'<button class="btn'+(cabArr?' on':'')+'" id="cabArrB">✥ Xếp nút trên cánh</button>':'')+(cabView==='plate'?'<button class="btn'+(S.cab.tie?' on':'')+'" id="cabTie">'+(S.cab.tie?'🪢 Đang bó dây rút':'🪢 Bó dây rút')+'</button><button class="btn'+(cabTieMode?' on':'')+'" id="cabTieT">➕ Dây rút</button><span style="flex:1"></span><button class="btn" id="cabUndo"'+(hist.u.length?'':' disabled')+'>↶</button><button class="btn" id="cabRedo"'+(hist.r.length?'':' disabled')+'>↷</button><button class="btn" data-m="reset">↺ Tự xếp</button>':'')+'</div>':'')+
     pal+
     (cabView==='plate'?'<div class="cabTools" id="cabSelBar">'+(sd&&cabOpen?'<b>'+esc(tagOf(sd))+'</b> <small class="mut">'+esc(dimOf(sd).m==='out'?'ngoài tủ':dimOf(sd).m==='door'?'trên cánh':dimOf(sd).w+'×'+dimOf(sd).h+' mm')+'</small><button class="btn" data-m="-1">◀</button><button class="btn" data-m="1">▶</button><button class="btn" data-m="br">'+((S.cab.brk||[]).includes(sd.id)?'⤴ Bỏ xuống ray':'⤵ Xuống ray mới')+'</button><button class="btn del" data-m="del">🗑 Gỡ</button>':
         '<span class="mut">'+cabHelp()+'</span>')+'</div>':'')+
@@ -4882,6 +4884,7 @@ function renderCab(){
   const db=B.querySelector('#cabDoorBtn');if(db)db.onclick=()=>{if(cabView==='3d'){cabOpen=!cabOpen;db.textContent=cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh';sfx('clack');}else cabToggleDoor();};
   const rb=B.querySelector('#cabRun');if(rb)rb.onclick=()=>{unlockAudio();running?stop():start();rb.textContent=running?'■ Dừng':'▶ Chạy thử';rb.className='btn '+(running?'stop':'run');cabLive(true);};
   [['#v3rt','route3','up','floor'],['#v3q','q3','hi','lo']].forEach(([q,k,a,b])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{S.cab[k]=(S.cab[k]||a)===a?b:a;save();renderCab();};});
+  {const a=B.querySelector('#v3shot');if(a)a.onclick=c3Photo;const r=B.querySelector('#v3rec');if(r)r.onclick=c3Rec;const gr=B.querySelector('#cabGrade');if(gr)gr.onclick=lessonGrade;}
   [['#v3cab','cab'],['#v3all','all']].forEach(([q,v])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(C3&&C3.view)C3.view(v);};});
   [['#cabUndo',undo],['#cabRedo',redo]].forEach(([q,f])=>{const e=B.querySelector(q);if(e)e.onclick=()=>{if(running){cabMsg('Bấm ■ Dừng trước khi hoàn tác.');return;}f();cabSel=null;cabPend=null;renderCab();cabMsg(f===undo?'Đã hoàn tác.':'Đã làm lại.');};});
   const ab=B.querySelector('#cabArrB');if(ab)ab.onclick=()=>{cabArr=!cabArr;renderCab();cabMsg(cabArr?'Kéo nút / đèn / switch trên cánh tới chỗ anh muốn (bước 5 mm). Bấm lại ✥ để quay về vận hành. ↺ Tự xếp để trả về mặc định.':'Đã tắt chế độ xếp nút.');};
@@ -4938,6 +4941,75 @@ function cabDrop(id,x,y,L){const items=L.seq.filter(i=>i.d&&!i.col),ids=items.ma
       else ids.splice(ids.indexOf(left[left.length-1].d.id)+1,0,id);}}
   S.cab.ord=ids;S.cab.brk=[...brk];save();snap();sfx('clack');renderCab();
   const R=cabNow();cabMsg(R.L.fit.ok?'Đã đặt '+tagOf(dev(id))+' – dây tự đi lại theo vị trí mới.':'⚠️ Đặt xong nhưng tủ không đủ chỗ: '+fitWhy(R.L));}
+/* ================= lưu file dùng chung · chụp ảnh / quay video 3D ================= */
+async function saveBlob(blob,name){let dl=null;if(window.claude&&typeof window.claude.use==='function'){try{dl=await window.claude.use('downloads');}catch(e){dl=null;}}
+  if(dl){try{await dl.save({filename:name,data:blob});return true;}catch(e){return false;}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);return true;}
+let cab3Shot=null;
+/* ghép khung 3D + tên công trình + bản quyền lên 1 canvas 2D (dùng cho ảnh và video) */
+function c3Compose(C){const src=C.ren.domElement,cv=C.cap||(C.cap=document.createElement('canvas'));if(cv.width!==src.width||cv.height!==src.height){cv.width=src.width;cv.height=src.height;}
+  const x=cv.getContext('2d'),w=cv.width,h=cv.height,k=w/800;x.drawImage(src,0,0);
+  const g=x.createLinearGradient(0,h-90*k,0,h);g.addColorStop(0,'#0000');g.addColorStop(1,'#000a');x.fillStyle=g;x.fillRect(0,h-90*k,w,90*k);
+  x.fillStyle='#fff';x.font='800 '+(26*k)+'px '+FONT;x.textAlign='left';x.fillText(((S.meta&&S.meta.prj)||'Tủ điện '+encStr(C.L.E)+' mm'),20*k,h-44*k);
+  x.font='600 '+(17*k)+'px '+FONT;x.fillStyle='#fde68a';x.fillText('⚡ Bảng điện mô phỏng · © '+AUTHOR,20*k,h-18*k);return cv;}
+function c3Photo(){const C=C3;if(!C){cabMsg('Mở tab 🧊 3D trước đã.');return;}C.wantShot=true;}
+function c3Rec(){const C=C3;if(!C)return;const b=document.getElementById('v3rec');
+  if(C.rec){C.rec.stop();return;}
+  if(!window.MediaRecorder){cabMsg('Trình duyệt này chưa hỗ trợ quay video – anh dùng quay màn hình của máy nhé.');return;}
+  const cv=c3Compose(C),st=cv.captureStream(30),mime=['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  let rec;try{rec=new MediaRecorder(st,mime?{mimeType:mime,videoBitsPerSecond:6e6}:undefined);}catch(e){cabMsg('Không quay được video trên máy này.');return;}
+  const parts=[],t0=Date.now();rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data);};
+  rec.onstop=async()=>{clearInterval(tm);if(C3===C)C.rec=null;if(b)b.textContent='⏺ Quay';const ext=/mp4/.test(rec.mimeType)?'mp4':'webm';const ok=await saveBlob(new Blob(parts,{type:rec.mimeType}),'tu-dien-3d-'+stamp()+'.'+ext);cabMsg(ok?'🎬 Đã lưu video 3D (.'+ext+') vào thư mục Tải xuống.':'Không lưu được video.');};
+  C.rec=rec;rec.start(500);const tm=setInterval(()=>{const s=Math.round((Date.now()-t0)/1000);if(b)b.textContent='⏹ Dừng '+s+'s';if(s>=30&&rec.state==='recording')rec.stop();},500);
+  cabMsg('⏺ Đang quay… xoay cảnh, bấm ▶ Chạy thử, mở cánh tùy ý. Bấm ⏹ để dừng (tự dừng sau 30 giây).');}
+/* ================= 🎓 BÀI HỌC ĐẤU DÂY: cho sẵn thiết bị, người học tự đấu, app chạy thử từng bước rồi chấm điểm ================= */
+const LS_={g:(t,i)=>S.devs.filter(d=>d.t===t)[i||0],m:(R,d)=>!!(d&&R&&R.motor&&R.motor[d.id]&&R.motor[d.id].st==='on'),fwd:(R,d)=>!!(d&&R.motor[d.id]&&R.motor[d.id].fwd),on:(R,d)=>!!(d&&R&&R.state&&R.state[d.id]==='on'),
+  tap:d=>{d.pressed=true;evaluate();d.pressed=false;evaluate();}};
+const LESSONS=[
+ {k:'den',t:'Bài 1 · Đèn và công tắc',d:'Đấu 1 đèn 220V bật tắt bằng công tắc, qua aptomat 2P. Công tắc phải cắt dây pha.',devs:{src1:1,cb2:1,switch:1,lamp:1},hint:'Nguồn L, N → CB 2P (1, 3). CB ra 2 (pha) → công tắc → đèn. Đèn về N ở chân 4 của CB.',
+  steps:[['Bật công tắc → đèn sáng',()=>{LS_.g('switch').on=true;evaluate();},R=>LS_.on(R,LS_.g('lamp'))],['Tắt công tắc → đèn tắt',()=>{LS_.g('switch').on=false;evaluate();},R=>!LS_.on(R,LS_.g('lamp'))],
+   ['Công tắc cắt dây PHA (không cắt N)',()=>{LS_.g('switch').on=true;evaluate();},R=>!(R.msgs||[]).some(m=>/cắt dây N/.test(m[1]))]]},
+ {k:'tugiu',t:'Bài 2 · Khởi động từ tự giữ',d:'Motor 3 pha chạy bằng nút ON, dừng bằng nút OFF, có rơ-le nhiệt bảo vệ. Nhả nút ON motor vẫn chạy (tự giữ).',devs:{src3:1,cb3:1,cb2:1,contactor:1,ol:1,motor:1,pbno:1,pbnc:1},
+  hint:'Động lực: CB 3P → K (1,3,5 → 2,4,6) → OL → motor. Điều khiển: L → OFF (1-2) → ON (3-4) → OL 95-96 → A1; A2 → N. Tự giữ: 13-14 của K song song với nút ON.',
+  steps:[['Chưa nhấn gì → motor đứng yên',()=>evaluate(),R=>!LS_.m(R,LS_.g('motor'))],['Nhấn rồi NHẢ nút ON → motor vẫn chạy (tự giữ)',()=>LS_.tap(LS_.g('pbno')),R=>LS_.m(R,LS_.g('motor'))],
+   ['Nhấn OFF → motor dừng',()=>LS_.tap(LS_.g('pbnc')),R=>!LS_.m(R,LS_.g('motor'))],
+   ['Đang chạy, rơ-le nhiệt nhảy → motor dừng',()=>{LS_.tap(LS_.g('pbno'));LS_.g('ol').trip=true;evaluate();},R=>!LS_.m(R,LS_.g('motor'))]]},
+ {k:'daochieu',t:'Bài 3 · Đảo chiều motor có khóa chéo',d:'2 contactor: ON1 chạy thuận, ON2 chạy nghịch, OFF dừng. Đang chạy thuận mà nhấn nghịch thì KHÔNG được chập.',devs:{src3:1,cb3:1,cb2:1,contactor:2,ol:1,motor:1,pbno:2,pbnc:1},
+  hint:'K2 đảo 2 pha (ví dụ ra 2,4,6 của K2 nối sang 3,1,5 của OL). Khóa chéo: cuộn K1 đi qua tiếp điểm NC 21-22 của K2 và ngược lại. Mỗi contactor tự giữ bằng 13-14 của chính nó.',
+  steps:[['Nhấn ON1 → motor chạy THUẬN',()=>LS_.tap(LS_.g('pbno',0)),R=>LS_.m(R,LS_.g('motor'))&&LS_.fwd(R,LS_.g('motor'))],
+   ['Đang chạy thuận, nhấn ON2 → không chập, vẫn chạy thuận (khóa chéo)',()=>LS_.tap(LS_.g('pbno',1)),R=>!R.short&&!R.tripped&&LS_.m(R,LS_.g('motor'))&&LS_.fwd(R,LS_.g('motor'))],
+   ['Nhấn OFF → dừng',()=>LS_.tap(LS_.g('pbnc')),R=>!LS_.m(R,LS_.g('motor'))],['Nhấn ON2 → motor chạy NGHỊCH',()=>LS_.tap(LS_.g('pbno',1)),R=>LS_.m(R,LS_.g('motor'))&&!LS_.fwd(R,LS_.g('motor'))]]},
+ {k:'gat',t:'Bài 4 · Switch gạt 1–0–2 chọn bơm',d:'Gạt trái chạy bơm 1, giữa dừng cả hai, gạt phải chạy bơm 2. Mỗi bơm có rơ-le nhiệt riêng.',devs:{src3:1,cb3:1,cb2:1,contactor:2,ol:2,motor:2,sel3:1},
+  hint:'L → 13 và 23 của switch gạt. 14 → (95-96 OL1) → A1 của K1; 24 → (95-96 OL2) → A1 của K2. A2 về N.',
+  steps:[['Gạt vị trí 1 → chỉ bơm 1 chạy',()=>{LS_.g('sel3').pos=1;evaluate();},R=>LS_.m(R,LS_.g('motor',0))&&!LS_.m(R,LS_.g('motor',1))],['Gạt về 0 → cả hai dừng',()=>{LS_.g('sel3').pos=0;evaluate();},R=>!LS_.m(R,LS_.g('motor',0))&&!LS_.m(R,LS_.g('motor',1))],
+   ['Gạt vị trí 2 → chỉ bơm 2 chạy',()=>{LS_.g('sel3').pos=2;evaluate();},R=>!LS_.m(R,LS_.g('motor',0))&&LS_.m(R,LS_.g('motor',1))],
+   ['Bơm 2 quá tải → bơm 2 dừng',()=>{LS_.g('ol',1).trip=true;evaluate();},R=>!LS_.m(R,LS_.g('motor',1))]]},
+ {k:'canhbao',t:'Bài 5 · Đèn báo chạy + cảnh báo quá tải',d:'Bài 2 thêm: đèn xanh sáng khi motor chạy, đèn cảnh báo chớp + còi khi rơ-le nhiệt nhảy (dùng tiếp điểm 97-98).',devs:{src3:1,cb3:1,cb2:1,contactor:1,ol:1,motor:1,pbno:1,pbnc:1,pilotG:1,warnL:1},
+  hint:'Đèn xanh mắc song song cuộn K (A1–A2). Đèn cảnh báo: L → 97-98 của OL → X1; X2 → N.',
+  steps:[['Chưa chạy → đèn xanh tắt, cảnh báo tắt',()=>evaluate(),R=>!LS_.on(R,LS_.g('pilotG'))&&!LS_.on(R,LS_.g('warnL'))],['Nhấn ON → motor chạy, đèn xanh sáng',()=>LS_.tap(LS_.g('pbno')),R=>LS_.m(R,LS_.g('motor'))&&LS_.on(R,LS_.g('pilotG'))&&!LS_.on(R,LS_.g('warnL'))],
+   ['Quá tải → motor dừng, đèn xanh tắt, cảnh báo chớp',()=>{LS_.g('ol').trip=true;evaluate();},R=>!LS_.m(R,LS_.g('motor'))&&!LS_.on(R,LS_.g('pilotG'))&&LS_.on(R,LS_.g('warnL'))]]}];
+function lessonStart(Ls){confirmReplace(()=>{const devs=[];let nid=1,x=30,y=30,rh=0;
+  Object.keys(Ls.devs).forEach(t=>{for(let i=0;i<Ls.devs[t];i++){const T=TYPES[t];if(x+T.w>760){x=30;y+=rh+70;rh=0;}const d={id:'d'+(nid++),t,x,y};if(T.ctl==='cb'||t==='switch')d.on=T.ctl==='cb';devs.push(d);x+=T.w+50;rh=Math.max(rh,T.h);}});
+  applyBoard(devs,[],nid);S.lesson=Ls.k;S.meta=Object.assign({},S.meta,{prj:Ls.t});S.cab={size:''};save();
+  const m=showModal('<div class="ic">🎓</div><h2>'+esc(Ls.t)+'</h2><p style="text-align:left">'+esc(Ls.d)+'</p><p class="mut" style="text-align:left">Thiết bị đã đặt sẵn, CHƯA có dây. Anh tự đấu (trên bảng hoặc trong 🗄 Tủ điện), xong bấm <b>🎓 Chấm điểm</b>.</p><div class="row"><button class="btn" id="lsBoard">Đấu trên bảng</button><button class="btn run" id="lsCab">🗄 Đấu trong tủ</button></div>');
+  m.querySelector('#lsBoard').onclick=closeModal;m.querySelector('#lsCab').onclick=()=>{closeModal();openCab();};lessonBar();});}
+function lessonGrade(){const Ls=LESSONS.find(x=>x.k===S.lesson);if(!Ls)return;if(!S.wires.length){hint('Chưa có dây nào – đấu dây rồi mới chấm điểm nhé.');cabMsg('Chưa có dây nào – đấu dây rồi mới chấm điểm nhé.');return;}
+  stop();S.devs.forEach(d=>{const c=TYPES[d.t].ctl;if(c==='cb')d.on=true;if(c==='sw')d.on=false;if(c==='sel')d.pos=0;d.trip=false;d.latched=false;});
+  const mu=muted;muted=true;const out=[];let dead=false;
+  const NEED={den:{1:0},tugiu:{2:1,3:1},daochieu:{2:0},gat:{1:0,3:2},canhbao:{2:1}}[Ls.k]||{};
+  try{start();Ls.steps.forEach(([name,act,exp],si)=>{let ok=false;if(!dead){try{act();ok=!!exp(result||{})&&!(result&&(result.short||result.tripped))&&(NEED[si]===undefined||out[NEED[si]][1]);if(result&&(result.short||result.tripped))dead=true;}catch(e){ok=false;}}out.push([name,ok]);});}catch(e){}
+  const boom=dead;stop();muted=mu;S.devs.forEach(d=>{if(TYPES[d.t].ctl==='cb')d.on=true;});save();render();
+  const n=out.filter(o=>o[1]).length,pt=Math.round(n/out.length*10),best=(S.lsBest=S.lsBest||{});if(pt===10)best[Ls.k]=1;save();
+  const m=showModal('<div class="ic">'+(pt===10?'🏆':boom?'💥':'📝')+'</div><h2>'+pt+' / 10 điểm</h2><div class="calcbox">'+out.map(o=>(o[1]?'✅ ':'❌ ')+esc(o[0])).join('<br>')+(boom?'<br><b style="color:#f87171">💥 Có chập mạch khi chạy thử – dừng chấm tại đó.</b>':'')+'</div>'+
+    (pt===10?'<p>Đấu đúng hết rồi, giỏi quá! 🎉</p>':'<details class="mcAdv"><summary>💡 Xem gợi ý</summary><p class="mut" style="text-align:left">'+esc(Ls.hint)+'</p></details>')+
+    '<div class="row"><button class="btn" id="lgOk">Đóng</button>'+(pt===10?'<button class="btn run" id="lgNext">Bài tiếp ▶</button>':'<button class="btn run" id="lgRun">▶ Tự chạy thử</button>')+'</div>');
+  if(pt===10)dogReact('ok');m.querySelector('#lgOk').onclick=closeModal;const nx=m.querySelector('#lgNext');if(nx)nx.onclick=()=>{closeModal();openLessons();};const rn=m.querySelector('#lgRun');if(rn)rn.onclick=()=>{closeModal();unlockAudio();start();};}
+function openLessons(){const b=S.lsBest||{};actionSheet('🎓 Bài học đấu dây',LESSONS.map(L=>({t:(b[L.k]?'🏆 ':'')+L.t,f:()=>lessonStart(L)})).concat(S.lesson?[{t:'📝 Chấm điểm bài đang làm',cls:'run',f:lessonGrade},{t:'✖ Thoát chế độ bài học',f:()=>{delete S.lesson;save();lessonBar();}}]:[]));}
+setInterval(()=>{const b=document.getElementById('lsBar');if((b?b.dataset.k:'')!==(S.lesson||''))lessonBar();},800);
+function lessonBar(){let b=document.getElementById('lsBar');const Ls=LESSONS.find(x=>x.k===S.lesson);
+  if(!Ls){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='lsBar';document.querySelector('.tools').after(b);}b.dataset.k=Ls.k;
+  b.innerHTML='<span>🎓 '+esc(Ls.t)+'</span><button class="btn" id="lsHint">💡</button><button class="btn run" id="lsGo">Chấm điểm</button>';
+  b.querySelector('#lsGo').onclick=lessonGrade;b.querySelector('#lsHint').onclick=()=>{const m=showModal('<div class="ic">💡</div><h2>Đề bài & gợi ý</h2><p style="text-align:left">'+esc(Ls.d)+'</p><div class="calcbox">'+esc(Ls.hint)+'</div><div class="row"><button class="btn" id="hOk">Đóng</button></div>');m.querySelector('#hOk').onclick=closeModal;};}
 /* ================= 🧊 MÔ PHỎNG 3D: nhà xưởng, tủ điện kích thước thật, motor đúng cỡ khung IEC theo kW, ống luồn dây, dòng điện chạy, chập nổ ================= */
 let T3=null,P3=null,C3=null;
 /* vận hành 1 thiết bị trên cánh: trả về hàm nhả (nút nhấn giữ) hoặc null */
@@ -4950,7 +5022,7 @@ function doorAct(d){const c=TYPES[d.t].ctl;unlockAudio();
   else{cabMsg(nameOf(d)+(running?'':' – bấm ▶ Chạy thử để xem đèn sáng.'));return null;}
   changed();cabLive(true);return null;}
 async function svgCanvas(str,w,h){const img=await svgImg(str);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);return c;}
-function dispose3D(){if(!C3)return;C3.alive=false;cancelAnimationFrame(C3.raf);try{C3.ro&&C3.ro.disconnect();C3.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();const m=o.material;(Array.isArray(m)?m:m?[m]:[]).forEach(x=>{if(x.map)x.map.dispose();x.dispose();});});
+function dispose3D(){if(!C3)return;if(C3.rec){try{C3.rec.stop();}catch(e){}}C3.alive=false;cancelAnimationFrame(C3.raf);try{C3.ro&&C3.ro.disconnect();C3.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();const m=o.material;(Array.isArray(m)?m:m?[m]:[]).forEach(x=>{if(x.map)x.map.dispose();x.dispose();});});
   C3.env&&C3.env.dispose();C3.comp&&C3.comp.dispose&&C3.comp.dispose();C3.ren.dispose();C3.ren.domElement.remove();}catch(e){}C3=null;}
 /* khung động cơ IEC 4 cực: [kW tối đa, chiều cao tâm trục H (mm), dài tổng (mm), Ø trục (mm)] */
 const IEC_FR=[[0.55,71,240,14],[0.75,80,290,19],[1.5,90,340,24],[3,100,380,28],[4,112,400,28],[7.5,132,470,38],[15,160,610,42],[22,180,690,48],[30,200,770,55],[45,225,820,60],[55,250,910,65],[90,280,1050,75],[200,315,1250,80],[1e9,355,1500,95]];
@@ -5272,7 +5344,8 @@ async function open3D(box){
       if(sh2!==C.short||wb!==C.wb){drawPlate();C.flows.forEach(f=>f.f.material.color.set(sh2?'#ff4d4d':'#ffffff'));}
       S.devs.forEach(d=>{if(!d.burned)C.burned.delete(d.id);});C.short=sh2;C.wb=wb;
       L.seq.forEach(it=>{if(it.d&&(it.d.t.startsWith('cb')||it.d.t==='contactor')){const k=(it.d.on?1:0)+(it.d.en?2:0)+(it.d.burned?4:0);if(it._k!==k){it._k=k;devBox(it);}}});}
-    if(comp)comp.render();else ren.render(scene,cam);};
+    if(comp)comp.render();else ren.render(scene,cam);
+    if(C.rec||C.wantShot){const cv=c3Compose(C);if(C.wantShot){C.wantShot=false;cab3Shot=cv.toDataURL('image/jpeg',.92);cv.toBlob(async b=>{const ok=b&&await saveBlob(b,'tu-dien-3d-'+stamp()+'.jpg');cabMsg(ok?'📸 Đã lưu ảnh 3D vào thư mục Tải xuống – ảnh này cũng được đưa vào PDF bản vẽ.':'Không lưu được ảnh.');},'image/jpeg',.92);}}};
   C.raf=requestAnimationFrame(loop);
 }
 
@@ -5342,7 +5415,7 @@ document.getElementById('cabBtn').onclick=openCab;
 document.getElementById('cabClose').onclick=()=>{document.getElementById('cabSheet').hidden=true;cabPend=null;};
 document.getElementById('cabZoom').onclick=()=>{cabZoom=!cabZoom;const w=document.querySelector('#cabBody .cabWrap');if(w)w.style.width=cabZoom?'280%':'100%';};
 
-load();buildItems();sizeBoard();applyView();snap();render();dogApply();
+load();buildItems();sizeBoard();applyView();snap();render();dogApply();lessonBar();
 if(!S.devs.length)hint('Bấm 🗄 Tủ điện hoặc 🧩 Lập mạch để dựng mạch, hoặc chọn 📂 Mạch mẫu.');
 })();
 </script>
