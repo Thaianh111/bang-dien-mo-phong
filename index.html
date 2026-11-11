@@ -3826,7 +3826,7 @@ const BD_REL=(()=>{const V=Object.keys(VFD_MODELS),PL=['pilotG','pilotR','pilotY
     pbno:['contactor','pbnc','relay','timer','plc','estop',...PL],pbnc:['contactor','pbno','relay','timer','plc','estop',...PL],estop:['contactor','pbno','pbnc','plc',...V],
     timer:['contactor','pbno','pbnc','relay','motor6'],relay:['contactor','pbno','pbnc','timer',...PL],relay24:['plc','psu','contactor'],psu:['plc','relay24','cb2','cb1'],
     vprot:['src3','mccbst','cb3',...PL],pot:[...V],plc:['psu','relay24','pbno','pbnc','estop','switch','contactor','ol',...PL,'cb2','src1','src3',...M3]};
-  const TW=['src1p3','baw2c','kwh3','barN','barPE','lamp110','socket110','ac220'];TW.forEach(k=>r[k]=TW.filter(x=>x!==k).concat(['cb3','cb2','cb1','switch']));
+  const TW=['src1p3','sub:cb3w','baw2c','kwh3','barN','barPE','lamp110','socket110','ac220'];TW.forEach(k=>r[k]=TW.filter(x=>x!==k).concat(['cb2','cb1','switch']));
   V.forEach(k=>r[k]=['src3','cb3','mccbst',...M3,'pot','switch','pbno','pbnc','estop',...PL]);PL.forEach(k=>r[k]=['contactor','relay','plc','pbno','cb2']);['sel2','sel3'].forEach(k=>r[k]=['contactor','relay','timer','plc','pbnc','estop','warnL',...PL]);r.warnL=['contactor','ol','relay','plc','timer','sel2','sel3'];r['sub:pump']=r.motor;return r;})();
 const bdRelKey=k=>TYPES[k]&&TYPES[k].ctl==='plc'?'plc':k;
 function bdRelSet(c){const sel=Object.keys(c).filter(k=>(c[k]|0)>0).map(bdRelKey);if(!sel.length)return null;const S2=new Set(sel);sel.forEach(k=>(BD_REL[k]||[]).forEach(x=>S2.add(x)));return S2;}
