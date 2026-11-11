@@ -289,7 +289,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div id="sheetCalc"></div>
 </div>
 <div id="cabSheet" class="sheet" hidden>
-  <div class="shHead"><button class="btn" id="cabClose">✕</button><b style="font-size:15px">🗄 Tủ điện</b><span style="flex:1"></span><button class="btn" id="cabZm">－</button><b id="cabZv" style="min-width:44px;text-align:center;font-size:13px">100%</b><button class="btn" id="cabZp">＋</button></div>
+  <div class="shHead"><button class="btn" id="cabClose">✕</button><b style="font-size:15px">🗄 Tủ điện</b><span style="flex:1"></span><button class="btn" id="cabZm" title="Thu nhỏ – phím &lt; hoặc -">－</button><b id="cabZv" style="min-width:44px;text-align:center;font-size:13px">100%</b><button class="btn" id="cabZp" title="Phóng to – phím &gt; hoặc +">＋</button></div>
   <div id="cabBody" style="padding:6px 10px 30px"></div>
 </div>
 <div id="lanhSheet" class="sheet" hidden>
@@ -4767,7 +4767,7 @@ function cabSVG(L,o){o=o||{};const E=L.E,W=E[1],H=E[0],G=L.G,F=cabFrame(L),{mL,m
     s+=`<rect x="${tx-12}" y="${ty-4}" width="24" height="4" rx="2" fill="#1f2937"/>`+Tx(tx+17,mT-22,'Đèn tháp',7,'#334155',' font-weight="800"');}
   for(let i=0;i<Math.max(2,Math.round(W/150));i++){const gx=mL+30+i*(W-60)/Math.max(1,Math.max(2,Math.round(W/150))-1);s+=`<circle cx="${gx}" cy="${mT+H-3}" r="6" fill="#1f2937" stroke="#0f172a"/>`;}
   if(F.O.items.length){const oy=VH-F.O.h-20,wired={};L.routes.forEach(r=>{wired[r.w.a.d+':'+r.w.a.t]=col[r.w.id]||1;wired[r.w.b.d+':'+r.w.b.t]=col[r.w.id]||1;});
-    s+=`<rect x="4" y="${oy-16}" width="${VW-8}" height="${F.O.h+4}" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="5 4"/>`+Tx(12,oy-5,'NGOÀI TỦ – nguồn vào và thiết bị ngoài hiện trường · chạm chân ● ở đây rồi chạm chân thiết bị trong tủ để kéo dây',7,'#475569',' font-weight="800"');
+    s+=`<rect x="${mL}" y="${oy-16}" width="${VW-mL-4}" height="${F.O.h+4}" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="5 4"/>`+Tx(mL+8,oy-5,'NGOÀI TỦ – nguồn & thiết bị hiện trường · chạm chân ● rồi chạm chân trong tủ để kéo dây',Math.min(7,(VW-mL)/62),'#475569',' font-weight="800"');
     F.O.items.forEach(b=>{const d=b.d,T=TYPES[d.t],isS=T.cat==='src',bx=b.x,by=oy+b.y+16,sel=o.sel===d.id,n=T.terms.length;
       if(isS)s+=`<path d="M${bx+b.w/2} ${by}V${by-8}H${px+L.VL}V${mT+H}" fill="none" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/><path d="M${bx+b.w/2} ${by}V${by-8}H${px+L.VL}V${mT+H}" fill="none" stroke="#facc15" stroke-width="1" stroke-dasharray="6 5"/>`;
       s+=`<g data-cd="${d.id}" style="cursor:pointer"><rect x="${bx}" y="${by}" width="${b.w}" height="${b.h}" rx="6" fill="${isS?'#334155':'#e2e8f0'}" stroke="${sel?'#f59e0b':'#334155'}" stroke-width="${sel?2.2:1}"/>`+
@@ -4780,8 +4780,8 @@ function cabSVG(L,o){o=o||{};const E=L.E,W=E[1],H=E[0],G=L.G,F=cabFrame(L),{mL,m
 }
 /* ---- cánh tủ thật: mặt ngoài (thiết bị sống theo mô phỏng), mặt trong, mở / đóng 3D ---- */
 /* thiết bị ngoài tủ (nguồn, motor, đèn…) vẽ thành hàng khối bên dưới tủ, có chân ● để kéo dây vào */
-function cabOutside(L,VW){const out=[];let x=10,y=0;(L.outside||[]).forEach(d=>{const T=TYPES[d.t],n=T.terms.length,w=Math.max(58,n*15+14);if(x+w>VW-10&&x>10){x=10;y+=84;}out.push({d,x,y,w,h:50});x+=w+10;});return{items:out,h:out.length?y+84+18:0};}
-function cabFrame(L){const W=L.E[1],H=L.E[0],mL=Math.max(78,Math.round(W*.32)),mT=70,mR=24,VW=W+mL+mR,O=cabOutside(L,VW),mB=82+O.h;return{W,H,mL,mT,mR,mB,O,VW,VH:Math.max(H,L.needH+50)+mT+mB};}
+function cabOutside(L,VW,X0){X0=X0||10;const out=[];let x=X0,y=0;(L.outside||[]).forEach(d=>{const T=TYPES[d.t],n=T.terms.length,w=Math.max(58,n*15+14);if(x+w>VW-10&&x>X0){x=X0;y+=84;}out.push({d,x,y,w,h:50});x+=w+10;});return{items:out,h:out.length?y+84+18:0};}
+function cabFrame(L){const W=L.E[1],H=L.E[0],mL=Math.max(78,Math.round(W*.32)),mT=70,mR=24,VW=W+mL+mR,O=cabOutside(L,VW,mL+10),mB=82+O.h;return{W,H,mL,mT,mR,mB,O,VW,VH:Math.max(H,L.needH+50)+mT+mB};}
 let doorUid=0;
 /* trạng thái 1 thiết bị trên cánh theo kết quả chạy thử */
 function doorState(d){const R=running&&result&&!result.short?result:null,st=R&&R.state?R.state[d.id]:null;
@@ -4935,7 +4935,7 @@ function cabWireAct(k){const w=S.wires.find(x=>x.id===cabSelW);if(!w)return;
   if(k==='del'){S.wires=S.wires.filter(x=>x!==w);if(S.cab.wo)delete S.cab.wo[w.id];cabSelW=null;cabMove=null;changed();renderCab();cabMsg('Đã xóa dây.');return;}
   if(k==='l'||k==='r'){const o=S.cab.wo=S.cab.wo||{};o[w.id]=Math.max(-6,Math.min(6,(o[w.id]||0)+(k==='l'?-1:1)));save();snap();renderCab();return;}
   cabMove=cabMove&&cabMove.end===k?null:{w:w.id,end:k};renderCab();cabMsg(cabMove?'Chạm chân ● mới để chuyển đầu dây '+tagOf(dev(w[k].d))+':'+w[k].t+' sang đó.':'Đã hủy dời đầu dây.');}
-function cabHelp(){return cabArr&&!cabOpen?'✥ Đang xếp nút: kéo thiết bị trên cánh tới vị trí mới.':cabTieMode?'🪢 Chạm vào bó dây để rút dây rút · chạm dây rút đen để cắt.':cabOpen?'KÉO THẢ thiết bị để đổi chỗ trên ray · chạm 2 chân ● để đấu dây · chạm vào DÂY để sửa / xóa · chụm 2 ngón hoặc ＋ － để thu phóng.':'Cánh đóng: chạm nút / switch gạt / dừng khẩn trên cánh để vận hành (khi ▶ Chạy thử). Chạm tay khóa để mở cánh.';}
+function cabHelp(){return cabArr&&!cabOpen?'✥ Đang xếp nút: kéo thiết bị trên cánh tới vị trí mới.':cabTieMode?'🪢 Chạm vào bó dây để rút dây rút · chạm dây rút đen để cắt.':cabOpen?'KÉO THẢ thiết bị để đổi chỗ trên ray · chạm 2 chân ● để đấu dây · chạm vào DÂY để sửa / xóa · chụm 2 ngón, nút ＋ － hoặc phím &lt; &gt; để thu phóng.':'Cánh đóng: chạm nút / switch gạt / dừng khẩn trên cánh để vận hành (khi ▶ Chạy thử). Chạm tay khóa để mở cánh.';}
 let cabDragging=false,cabPalG='in',cabTieMode=false,cabDragged=0,cabArr=false;
 function cabMount(k){const t=k.startsWith('sub:')?SUBS[k.slice(4)].t:k;const m=dimOf({t}).m;return m==='din'||m==='plate'?'in':m==='top'?'door':m;}
 function cabPalette(){const G=[['in','🔧 Trong tủ'],['door','🚪 Cánh / nóc tủ'],['out','⚙️ Ngoài tủ'],['src','⚡ Nguồn']];
@@ -5554,6 +5554,8 @@ function cabSetZ(z,cx,cy){const box=document.querySelector('#cabBody .cabSvg'),w
   const fx=(box.scrollLeft+cx-r.left)/w.offsetWidth,sc=document.getElementById('cabSheet'),wr=w.getBoundingClientRect(),fy=(cy-wr.top)/wr.height;
   cabZ=z;w.style.width=(z*100)+'%';box.scrollLeft=fx*w.offsetWidth-(cx-r.left);const wr2=w.getBoundingClientRect();if(sc)sc.scrollTop+=(wr2.top+fy*wr2.height)-cy;
   const v=document.getElementById('cabZv');if(v)v.textContent=Math.round(z*100)+'%';}
+document.addEventListener('keydown',e=>{const sh=document.getElementById('cabSheet');if(!sh||sh.hidden||cabView!=='plate'||/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName||''))return;
+  const k=e.key;if(k==='>'||k==='.'||k==='+'||k==='='){e.preventDefault();cabSetZ(cabZ*1.25);}else if(k==='<'||k===','||k==='-'||k==='_'){e.preventDefault();cabSetZ(cabZ/1.25);}else if(k==='0'){e.preventDefault();cabSetZ(1);}});
 document.getElementById('cabZp').onclick=()=>cabSetZ(cabZ*1.4);document.getElementById('cabZm').onclick=()=>cabSetZ(cabZ/1.4);
 {const sh=document.getElementById('cabSheet');let pz=null;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
   sh.addEventListener('touchstart',e=>{if(e.touches.length===2&&e.target.closest('.cabSvg')&&cabView==='plate')pz={d:dist(e.touches),z:cabZ};},{passive:true});
