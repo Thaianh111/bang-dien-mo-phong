@@ -244,7 +244,7 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
 <body>
 <header>
   <h1>⚡ Bảng điện mô phỏng<small style="display:block;font-size:10.5px;font-weight:600;color:#facc15;opacity:.85;margin-top:1px">© Võ Thái Anh</small></h1>
-  <span style="display:flex;gap:6px"><button id="dogBtn" class="btn" style="padding:8px 10px" title="Bật/tắt chú chó">🐶</button><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
+  <span style="display:flex;gap:6px"><button id="dogBtn" class="btn" style="padding:8px 10px" title="Bật/tắt chú chó">🐶</button><button id="langBtn" class="btn" style="padding:8px 10px" title="Ngôn ngữ / Language / 語言">🌐</button><button id="muteBtn" class="btn" style="padding:8px 10px">🔊</button><button id="runBtn" class="btn run">▶ Chạy thử</button></span>
 </header>
 <div class="tabs" id="tabs"></div>
 <div class="items" id="items"></div>
@@ -5427,6 +5427,57 @@ function cabSheetHTML(){const R=cabNow(),L=R.L;if(!L.seq.length&&!L.doorDevs.len
 document.getElementById('cabBtn').onclick=openCab;
 document.getElementById('cabClose').onclick=()=>{document.getElementById('cabSheet').hidden=true;cabPend=null;};
 document.getElementById('cabZoom').onclick=()=>{cabZoom=!cabZoom;const w=document.querySelector('#cabBody .cabWrap');if(w)w.style.width=cabZoom?'280%':'100%';};
+
+/* ================= 🌐 NGÔN NGỮ: Tiếng Việt · English · 繁體中文 =================
+   Dịch ở tầng hiển thị: chữ trên màn hình khớp từ điển thì thay. Thông báo chi tiết khi chạy thử và nội dung PDF vẫn là tiếng Việt. */
+let LANG='vi';try{LANG=localStorage.getItem('bd_lang')||'vi';}catch(e){}
+const LI=LANG==='en'?0:LANG==='zh'?1:-1;
+const DEVN={src1:['1-phase supply','單相電源'],src3:['3-phase supply','三相電源'],src1p3:['1-phase 3-wire 110/220V supply','單相三線 110/220V 電源'],cb1:['MCB 1P','無熔絲開關 1P'],cb2:['MCB 2P','無熔絲開關 2P'],cb3:['MCB 3P','無熔絲開關 3P'],
+  mccbst:['MCCB 3P with 220V shunt trip + aux contact','MCCB 3P 附 220V 分勵跳脫＋輔助接點'],switch:['Switch','開關'],pbno:['ON button (NO 3-4)','ON 按鈕 (NO 3-4)'],pbnc:['OFF button (NC 1-2)','OFF 按鈕 (NC 1-2)'],estop:['Emergency stop (NC)','緊急停止 (NC)'],
+  contactor:['Contactor 3P (1NO+1NC)','電磁接觸器 3P (1NO+1NC)'],ol:['Thermal overload relay (OL)','積熱電驛 (OL)'],relay:['Control relay MY2','中間繼電器 MY2'],relay24:['Control relay MY2 24VDC','中間繼電器 MY2 24VDC'],timer:['8-pin timer (on-delay)','8 腳計時器 (通電延遲)'],
+  pilotG:['Green pilot lamp','綠色指示燈'],pilotR:['Red pilot lamp','紅色指示燈'],pilotY:['Yellow pilot lamp','黃色指示燈'],pilotTR:['Tower light – red tier 220V (cabinet top)','警示燈塔 – 紅色層 220V (箱頂)'],pilotTY:['Tower light – yellow tier 220V (cabinet top)','警示燈塔 – 黃色層 220V (箱頂)'],pilotTG:['Tower light – green tier 220V (cabinet top)','警示燈塔 – 綠色層 220V (箱頂)'],
+  warnL:['Flashing warning light + buzzer Ø22 220V','閃光警示燈＋蜂鳴器 Ø22 220V'],sel2:['Selector switch 2-position 0–1 (1NO+1NC) Ø22','選擇開關 2 段 0–1 (1NO+1NC) Ø22'],sel3:['Selector switch 3-position 1–0–2 (2NO) Ø22','選擇開關 3 段 1–0–2 (2NO) Ø22'],
+  cfan:['Cabinet fan 120×120 220V + filter','配電箱風扇 120×120 220V＋濾網'],lamp:['Lamp 220V','電燈 220V'],lamp110:['Lamp 110V','電燈 110V'],fan:['Fan 220V','風扇 220V'],socket:['Socket 220V','插座 220V'],socket110:['Socket 110V','插座 110V'],
+  motor1:['1-phase motor 220V (capacitor)','單相馬達 220V (電容式)'],motor:['3-phase motor (3 leads)','三相馬達 (3 出線)'],motor6:['6-lead motor (Y/Δ)','六出線馬達 (Y/Δ)'],pot:['Potentiometer 10kΩ','電位器 10kΩ'],psu:['24VDC power supply','24VDC 電源供應器'],
+  vprot:['Voltage protection relay Mikro MX210','電壓保護電驛 Mikro MX210'],hpsw:['High-pressure switch HP (Danfoss KP5 type)','高壓開關 HP (Danfoss KP5 型)'],lpsw:['Low-pressure switch LP (Danfoss KP1 type)','低壓開關 LP (Danfoss KP1 型)'],flowsw:['Flow switch','流量開關'],
+  sv:['Solenoid valve 220V','電磁閥 220V'],wv4:['4-way reversing valve 220V','四通閥 220V'],heater:['Defrost / crankcase heater 220V','除霜／曲軸箱加熱器 220V'],tctl:['Temperature controller (Dixell XR / STC-1000)','溫度控制器 (Dixell XR / STC-1000)'],
+  kwh3:['kWh meter 1P3W 110/220V','電表 單相三線 110/220V'],baw2c:['CIC BAW-2C kWh meter 1P3W 110/220V 10(80)A (RS485)','巧力 CIC BAW-2C 電表 單相三線 110/220V 10(80)A (RS485)'],barN:['Neutral bar N','中性線端子排 N'],barPE:['Earth bar PE','接地端子排 PE'],ac220:['Air conditioner 220V (L1–L2)','冷氣機 220V (L1–L2)']};
+if(LI>=0)Object.keys(DEVN).forEach(k=>{if(TYPES[k])TYPES[k].name=DEVN[k][LI];});
+const TRD=[
+ ['⚡ Bảng điện mô phỏng','⚡ Electrical Panel Simulator','⚡ 配電盤模擬器'],['▶ Chạy thử','▶ Run','▶ 試運轉'],['■ Dừng','■ Stop','■ 停止'],['🗄 Tủ điện','🗄 Cabinet','🗄 配電箱'],['🧩 Lập mạch','🧩 Build circuit','🧩 建立電路'],
+ ['📂 Mạch mẫu ▾','📂 Samples ▾','📂 範例電路 ▾'],['📂 Mạch mẫu ▴','📂 Samples ▴','📂 範例電路 ▴'],['❄️ Ngành lạnh','❄️ Refrigeration','❄️ 冷凍空調'],['🧰 Công cụ ▾','🧰 Tools ▾','🧰 工具 ▾'],['🧰 Công cụ','🧰 Tools','🧰 工具'],
+ ['📐 Bản vẽ','📐 Drawing','📐 圖面'],['Xuất PDF','Export PDF','匯出 PDF'],['⚙ Thông số','⚙ Parameters','⚙ 參數'],['Xóa chọn','Delete selected','刪除所選'],['Làm mới','Clear all','全部清除'],['❓ Hướng dẫn thao tác','❓ How to use','❓ 操作說明'],
+ ['🎓 Bài học đấu dây (chấm điểm)','🎓 Wiring lessons (graded)','🎓 配線課程 (評分)'],['📁 Mạch của tôi','📁 My circuits','📁 我的電路'],['📥 Nhập / 📤 Xuất mạch','📥 Import / 📤 Export','📥 匯入／📤 匯出'],['🧮 Tính thông số motor','🧮 Motor calculator','🧮 馬達計算'],['🩺 Dò lỗi','🩺 Troubleshoot','🩺 故障排除'],['📐 Bản vẽ + xuất PDF','📐 Drawing + PDF','📐 圖面＋PDF'],
+ ['Vỏ tủ (cao × rộng × sâu)','Enclosure (H × W × D)','箱體 (高 × 寬 × 深)'],['🗄 Tủ & đấu dây','🗄 Cabinet & wiring','🗄 箱體與配線'],['🧊 3D','🧊 3D','🧊 3D'],['📋 Vật tư','📋 Materials','📋 材料表'],['💰 Báo giá','💰 Quotation','💰 報價'],
+ ['🚪 Đóng cánh','🚪 Close door','🚪 關門'],['🚪 Mở cánh','🚪 Open door','🚪 開門'],['🪢 Bó dây rút','🪢 Cable-tie bundles','🪢 束線帶'],['🪢 Đang bó dây rút','🪢 Cable ties ON','🪢 束線帶 開'],['➕ Dây rút','➕ Add tie','➕ 加束線帶'],['↺ Tự xếp','↺ Auto arrange','↺ 自動排列'],
+ ['✥ Xếp nút trên cánh','✥ Arrange door devices','✥ 排列門板元件'],['🎓 Chấm điểm','🎓 Grade','🎓 評分'],['Chấm điểm','Grade','評分'],['🔧 Trong tủ','🔧 Inside','🔧 箱內'],['🚪 Cánh / nóc tủ','🚪 Door / top','🚪 門板／箱頂'],['⚙️ Ngoài tủ','⚙️ Field devices','⚙️ 箱外設備'],['⚡ Nguồn','⚡ Supply','⚡ 電源'],
+ ['🎯 Tủ','🎯 Cabinet','🎯 配電箱'],['🏭 Toàn cảnh','🏭 Overview','🏭 全景'],['🔀 Ống trên cao','🔀 Overhead conduit','🔀 高架管路'],['🔀 Máng dưới sàn','🔀 Floor tray','🔀 地面線槽'],['✨ Đẹp','✨ Quality','✨ 高畫質'],['⚡ Nhẹ','⚡ Fast','⚡ 流暢'],['📸 Ảnh','📸 Photo','📸 拍照'],['⏺ Quay','⏺ Record','⏺ 錄影'],
+ ['🗑 Gỡ','🗑 Remove','🗑 移除'],['⤵ Xuống ray mới','⤵ New rail','⤵ 換到新導軌'],['⤴ Bỏ xuống ray','⤴ Same rail','⤴ 回原導軌'],['Dùng tủ này','Use this size','使用此尺寸'],
+ ['Đang dựng mô hình 3D…','Building 3D scene…','正在建立 3D 場景…'],['Tủ điện','Cabinet','配電箱'],['Nguồn điện','Power supply','電源'],['Đèn tháp','Tower light','警示燈塔'],
+ ['Chọn thiết bị có trong mạch và số lượng:','Pick the devices in your circuit and quantities:','選擇電路中的元件與數量：'],['⚡ Đấu tự động','⚡ Auto-wire','⚡ 自動配線'],['✋ Tự đấu mạch','✋ Wire it myself','✋ 自己配線'],['Hệ thống tự đấu hoàn chỉnh','The app wires everything','系統自動完成配線'],['Đặt thiết bị lên bảng, mình tự nối dây','Place devices, wire them yourself','放置元件後自行配線'],
+ ['📝 Ghi chú yêu cầu (dùng cho đấu tự động)','📝 Requirements (for auto-wire)','📝 需求備註 (供自動配線)'],['➕ Thêm vào bảng','➕ Add to board','➕ 加到面板'],['Giữ mạch đang có, thêm thiết bị','Keep current circuit, add devices','保留現有電路並新增元件'],['⚡ Dựng mạch lên bảng','⚡ Build on board','⚡ 建立到面板'],['Dựng mạch','Build','建立'],
+ ['📤 Xuất mạch đang có','📤 Export current circuit','📤 匯出目前電路'],['📋 Sao chép','📋 Copy','📋 複製'],['📄 Ví dụ','📄 Example','📄 範例'],['Tên công trình','Project name','工程名稱'],['Người vẽ','Drawn by','繪圖者'],['Dán mã mạch vào đây…','Paste circuit code here…','在此貼上電路代碼…'],
+ ['Đóng','Close','關閉'],['Hủy','Cancel','取消'],['Đồng ý','OK','確定'],['Xóa','Delete','刪除'],['Lưu','Save','儲存'],['Đấu trên bảng','Wire on board','在面板配線'],['🗄 Đấu trong tủ','🗄 Wire in cabinet','🗄 在箱內配線'],['Bài tiếp ▶','Next lesson ▶','下一課 ▶'],['▶ Tự chạy thử','▶ Run it myself','▶ 自行試運轉'],['💡 Xem gợi ý','💡 Show hint','💡 顯示提示'],
+ ['🎓 Bài học đấu dây','🎓 Wiring lessons','🎓 配線課程'],['Bài 1 · Đèn và công tắc','Lesson 1 · Lamp and switch','第 1 課 · 電燈與開關'],['Bài 2 · Khởi động từ tự giữ','Lesson 2 · Self-holding contactor','第 2 課 · 自保持電路'],['Bài 3 · Đảo chiều motor có khóa chéo','Lesson 3 · Reversing with interlock','第 3 課 · 正逆轉互鎖'],
+ ['Bài 4 · Switch gạt 1–0–2 chọn bơm','Lesson 4 · Selector 1–0–2 pump select','第 4 課 · 選擇開關切換泵浦'],['Bài 5 · Đèn báo chạy + cảnh báo quá tải','Lesson 5 · Run lamp + overload alarm','第 5 課 · 運轉燈＋過載警報'],['📝 Chấm điểm bài đang làm','📝 Grade current lesson','📝 評分目前課程'],['✖ Thoát chế độ bài học','✖ Exit lesson mode','✖ 離開課程模式'],
+ ['⚡ Cơ bản & động cơ','⚡ Basics & motors','⚡ 基礎與馬達'],['🌀 Biến tần ABB','🌀 ABB drives','🌀 ABB 變頻器'],['💻 PLC Siemens','💻 Siemens PLC','💻 西門子 PLC'],['🇹🇼 Điện 110/220V','🇹🇼 110/220V wiring','🇹🇼 110/220V 配電'],['🛡 Bảo vệ · switch gạt · cảnh báo','🛡 Protection · selectors · alarms','🛡 保護 · 選擇開關 · 警報'],
+ ['Hạng mục','Item','項目'],['SL','Qty','數量'],['Đơn giá (đ)','Unit price','單價'],['Thành tiền','Amount','金額'],['TỔNG VẬT TƯ','MATERIALS TOTAL','材料總計'],['💰 Báo giá sơ bộ','💰 Preliminary quotation','💰 初步報價'],['Chưa gồm nhân công, vận chuyển, VAT.','Excludes labour, shipping and VAT.','不含工資、運費與稅金。'],
+ ['Vỏ tủ, ray DIN, máng cáp','Enclosure, DIN rail, wiring duct','箱體、DIN 導軌、線槽'],['Thiết bị trong tủ – kích thước theo hãng','Devices – manufacturer dimensions','元件 – 原廠尺寸'],['Tổng dây và đầu cốt cần mua','Wire and ferrule totals','電線與端子總量'],['Ký hiệu','Tag','代號'],['Quy cách','Spec','規格'],['Số lượng','Quantity','數量'],['Loại','Type','類型'],
+ ['🌐 Ngôn ngữ','🌐 Language','🌐 語言']];
+const TRX=[
+ [/^💡 Chưa chọn tủ – app đề xuất (.+?) \(đã trừ máng (.+?), khe đi dây 25 mm và (\d+)% ray dự phòng\)\.$/,'💡 No enclosure chosen – suggested $1 (allows for $2 duct, 25 mm wiring gap and $3% spare rail).','💡 尚未選擇箱體 – 建議 $1 (已預留 $2 線槽、25 mm 配線間隙與 $3% 導軌餘量)。'],
+ [/^Ray DIN: (.+)$/,'DIN rails: $1','DIN 導軌：$1'],[/^(\d+) \/ 10 điểm$/,'$1 / 10 points','$1 / 10 分'],[/^Tủ điện$/,'Cabinet','配電箱'],
+ [/^🤖 Tự đề xuất(.*)$/,'🤖 Auto suggest$1','🤖 自動建議$1'],[/^⏹ Dừng (\d+)s$/,'⏹ Stop $1s','⏹ 停止 $1s'],[/^(.+) · tủ đứng$/,'$1 · floor-standing','$1 · 落地式']];
+const TRM=new Map(TRD.map(r=>[r[0],r]));
+function trText(t){if(LI<0||!t)return t;const k=t.trim();if(!k)return t;const r=TRM.get(k);if(r)return t.replace(k,r[LI+1]);for(const x of TRX){if(x[0].test(k))return t.replace(k,k.replace(x[0],x[LI+1]));}return t;}
+function trNode(n){if(n.nodeType===3){const v=n.nodeValue,w=trText(v);if(w!==v)n.nodeValue=w;return;}if(n.nodeType!==1||n.tagName==='SCRIPT'||n.tagName==='STYLE'||n.tagName==='TEXTAREA')return;
+  if(n.placeholder){const w=trText(n.placeholder);if(w!==n.placeholder)n.placeholder=w;}
+  const tw=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);let x;while((x=tw.nextNode())){const v=x.nodeValue,w=trText(v);if(w!==v)x.nodeValue=w;}
+  if(n.querySelectorAll)n.querySelectorAll('[placeholder]').forEach(e=>{const w=trText(e.placeholder);if(w!==e.placeholder)e.placeholder=w;});}
+if(LI>=0){document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';trNode(document.body);
+  new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')trNode(m.target);else m.addedNodes.forEach(trNode);})).observe(document.body,{childList:true,subtree:true,characterData:true});}
+function openLang(){actionSheet('🌐 Ngôn ngữ',[['vi','🇻🇳 Tiếng Việt'],['en','🇬🇧 English'],['zh','🇹🇼 繁體中文']].map(([k,n])=>({t:(LANG===k?'✓ ':'')+n,f:()=>{try{localStorage.setItem('bd_lang',k);}catch(e){}location.reload();}})));}
+document.getElementById('langBtn').onclick=openLang;
 
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();lessonBar();
 if(!S.devs.length)hint('Bấm 🗄 Tủ điện hoặc 🧩 Lập mạch để dựng mạch, hoặc chọn 📂 Mạch mẫu.');
