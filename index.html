@@ -335,8 +335,8 @@ html.dogbusy #dogArrow,#dog.corner #dogArrow{display:none}
   <div class="shHead"><button class="btn" id="bdClose">✕</button><b style="font-size:15px">🧩 Lập mạch</b><span style="flex:1"></span><button class="btn" id="bdReset">Xóa chọn</button></div>
   <div class="bdNote">
     <label>✨ Nhập mạch anh muốn – hệ thống tự chọn thiết bị và đấu dây</label>
-    <textarea id="bdNote" rows="3" placeholder="VD: 2 đèn cầu thang tự tắt sau 60 giây · động cơ đảo chiều có dừng khẩn và đèn báo · bơm chạy 10s nghỉ 5s · động cơ sao tam giác 8s · quạt và ổ cắm…"></textarea>
-    <div class="chips" id="bdChips"><button>động cơ</button><button>2 đèn</button><button>quạt</button><button>ổ cắm</button><button>máy bơm</button><button>đảo chiều</button><button>sao tam giác 8s</button><button>tự tắt sau 30s</button><button>trễ 10s mới chạy</button><button>đóng 10s ngắt 5s</button><button>dừng khẩn</button><button>đèn báo</button><button>đèn cầu thang 60s</button><button>biến tần</button></div>
+    <textarea id="bdNote" rows="3" placeholder="VD: đèn cầu thang 2 công tắc · đèn hành lang tự tắt sau 60 giây · động cơ đảo chiều có dừng khẩn và đèn báo · bơm chạy 10s nghỉ 5s · động cơ sao tam giác 8s · quạt và ổ cắm…"></textarea>
+    <div class="chips" id="bdChips"><button>động cơ</button><button>2 đèn</button><button>quạt</button><button>ổ cắm</button><button>máy bơm</button><button>đảo chiều</button><button>sao tam giác 8s</button><button>tự tắt sau 30s</button><button>trễ 10s mới chạy</button><button>đóng 10s ngắt 5s</button><button>dừng khẩn</button><button>đèn báo</button><button>đèn cầu thang 2 công tắc</button><button>đèn tự tắt sau 60s</button><button>biến tần</button></div>
     <div id="bdParse" class="calcbox"></div>
     <button class="btn run big" id="bdAuto2" style="width:100%;margin-top:8px">⚡ Dựng mạch theo yêu cầu<small>Tự chọn thiết bị phù hợp và đấu hoàn chỉnh</small></button>
   </div>
@@ -367,6 +367,9 @@ const TYPES={
     contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO']]},
   cb1:{cat:'prot',name:'Aptomat 1P',tag:'CB',w:40,h:72,ctl:'cb',terms:[P_('1',20,0,'1/L'),P_('2',20,72,'2')],contacts:[['1','2','NO']]},
   switch:{cat:'prot',name:'Công tắc',tag:'S',w:50,h:64,ctl:'sw',terms:[P_('1',25,0,'1'),P_('2',25,64,'2')],contacts:[['1','2','NO']]},
+  switch3:{cat:'prot',name:'Công tắc 3 cực (cầu thang)',tag:'S',w:64,h:64,ctl:'sw',terms:[P_('C',32,0,'C'),P_('1',16,64,'1'),P_('2',48,64,'2')],contacts:[['C','1','NC'],['C','2','NO']]},
+  pb2:{cat:'ctrl',name:'Nút nhấn kép (1NO+1NC)',tag:'SB',w:64,h:64,ctl:'pb',terms:[P_('1',18,0,'1'),P_('3',46,0,'3'),P_('2',18,64,'2'),P_('4',46,64,'4')],contacts:[['1','2','NC'],['3','4','NO']]},
+  ls:{cat:'ctrl',name:'Công tắc hành trình (1NO+1NC)',tag:'LS',w:64,h:64,ctl:'pb',terms:[P_('1',18,0,'1'),P_('3',46,0,'3'),P_('2',18,64,'2'),P_('4',46,64,'4')],contacts:[['1','2','NC'],['3','4','NO']]},
   pbno:{cat:'ctrl',name:'Nút ON (NO 3-4)',tag:'ON',w:50,h:64,ctl:'pb',terms:[P_('3',25,0),P_('4',25,64)],contacts:[['3','4','NO']]},
   pbnc:{cat:'ctrl',name:'Nút OFF (NC 1-2)',tag:'OFF',w:50,h:64,ctl:'pb',terms:[P_('1',25,0),P_('2',25,64)],contacts:[['1','2','NC']]},
   estop:{cat:'ctrl',name:'Dừng khẩn (NC)',tag:'EM',w:56,h:64,ctl:'estop',terms:[P_('1',28,0),P_('2',28,64)],contacts:[['1','2','NC']]},
@@ -374,6 +377,10 @@ const TYPES={
     terms:[P_('A1',14,0),P_('1',46,0,'1/L1'),P_('3',72,0,'3/L2'),P_('5',98,0,'5/L3'),P_('13',128,0,'13NO'),P_('21',154,0,'21NC'),
            P_('A2',14,96),P_('2',46,96,'2/T1'),P_('4',72,96,'4/T2'),P_('6',98,96,'6/T3'),P_('14',128,96,'14NO'),P_('22',154,96,'22NC')],
     contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO'],['13','14','NO'],['21','22','NC']]},
+  softst:{cat:'ctrl',name:'Khởi động mềm (Soft starter)',tag:'KM',w:170,h:96,ctl:'k',coil:['A1','A2'],
+    terms:[P_('A1',14,0,'A1 RUN'),P_('1',46,0,'1/L1'),P_('3',72,0,'3/L2'),P_('5',98,0,'5/L3'),P_('13',128,0,'13'),
+           P_('A2',14,96,'A2'),P_('2',46,96,'2/T1'),P_('4',72,96,'4/T2'),P_('6',98,96,'6/T3'),P_('14',128,96,'14 TOR')],
+    contacts:[['1','2','NO'],['3','4','NO'],['5','6','NO'],['13','14','NO']]},
   ol:{cat:'ctrl',name:'Rơ-le nhiệt (OL)',tag:'OL',w:150,h:80,ctl:'ol',
     terms:[P_('1',20,0,'1/L1'),P_('3',46,0,'3/L2'),P_('5',72,0,'5/L3'),P_('95',106,0,'95'),P_('97',132,0,'97'),
            P_('2',20,80,'2/T1'),P_('4',46,80,'4/T2'),P_('6',72,80,'6/T3'),P_('96',106,80,'96'),P_('98',132,80,'98')],
@@ -395,6 +402,16 @@ const TYPES={
   socket:{cat:'t1',name:'Ổ cắm 220V',tag:'OC',w:72,h:52,terms:[P_('L',16,52),P_('PE',36,52),P_('N',56,52)]},
   motor:{cat:'t3',name:'Động cơ 3 pha (3 đầu)',tag:'M',w:116,h:90,terms:[P_('U',22,0),P_('V',48,0),P_('W',74,0),P_('PE',100,0)]},
   pot:{cat:'ctrl',name:'Chiết áp 10kΩ',tag:'RV',w:56,h:56,terms:[P_('1',12,0,'1'),P_('2',28,0,'2'),P_('3',44,0,'3')]},
+  motor2s:{cat:'t3',name:'Động cơ 2 tốc độ (Dahlander Δ/YY)',tag:'M',w:132,h:100,
+    terms:[P_('U1',24,0,'1U'),P_('V1',60,0,'1V'),P_('W1',96,0,'1W'),P_('U2',24,100,'2U'),P_('V2',60,100,'2V'),P_('W2',96,100,'2W'),P_('PE',122,100)]},
+  motorwr:{cat:'t3',name:'Động cơ rô to dây quấn',tag:'M',w:132,h:100,
+    terms:[P_('U',24,0),P_('V',60,0),P_('W',96,0),P_('K',24,100,'K'),P_('L',60,100,'L'),P_('M',96,100,'M'),P_('PE',122,100)]},
+  motordc:{cat:'t1',name:'Động cơ một chiều (kích từ độc lập)',tag:'MD',w:96,h:84,load:1,lp:['A1','A2'],terms:[P_('A1',22,0,'A1'),P_('A2',70,0,'A2'),P_('F1',22,84,'F1'),P_('F2',70,84,'F2')]},
+  reactor:{cat:'ctrl',name:'Cuộn kháng khởi động 3 pha',tag:'L',w:110,h:80,terms:[P_('1',22,0,'1'),P_('3',55,0,'3'),P_('5',88,0,'5'),P_('2',22,80,'2'),P_('4',55,80,'4'),P_('6',88,80,'6')],contacts:[['1','2','M'],['3','4','M'],['5','6','M']]},
+  rst3:{cat:'ctrl',name:'Điện trở mở máy 3 pha (mạch rô to)',tag:'RM',w:110,h:80,terms:[P_('1',22,0,'1'),P_('3',55,0,'3'),P_('5',88,0,'5'),P_('2',22,80,'2'),P_('4',55,80,'4'),P_('6',88,80,'6')]},
+  res:{cat:'ctrl',name:'Điện trở công suất',tag:'RP',w:50,h:64,terms:[P_('1',25,0,'1'),P_('2',25,64,'2')],contacts:[['1','2','M']]},
+  dcbrake:{cat:'ctrl',name:'Bộ hãm động năng (biến áp + chỉnh lưu)',tag:'HB',w:100,h:76,load:1,lp:['L','N'],terms:[P_('L',26,0,'L'),P_('N',74,0,'N'),P_('DP',26,76,'+'),P_('DN',74,76,'−')]},
+  rect:{cat:'ctrl',name:'Bộ chỉnh lưu cầu AC → DC',tag:'CL',w:100,h:76,terms:[P_('L',26,0,'L'),P_('N',74,0,'N'),P_('DP',26,76,'+'),P_('DN',74,76,'−')],contacts:[['L','DP','M'],['N','DN','M']]},
   motor6:{cat:'t3',name:'Động cơ 6 đầu (Y/Δ)',tag:'M',w:132,h:100,
     terms:[P_('U1',24,0),P_('V1',60,0),P_('W1',96,0),P_('W2',24,100),P_('U2',60,100),P_('V2',96,100),P_('PE',122,100)]}
 };
@@ -505,7 +522,7 @@ PCOL.A1=PCOL.L1;PCOL.A2=PCOL.L2;
 const isTW=p=>p==='A1'||p==='A2';
 const isV=d=>!!(d&&TYPES[d.t]&&TYPES[d.t].ctl==='vfd');
 Object.values(TYPES).forEach(T=>{T.multi=T.terms.length>=5&&T.cat!=='src';});TYPES.kwh3.multi=false;TYPES.baw2c.multi=false;
-const CATS=[['tu','🗄 Tủ điện'],['lap','🧩 Lập mạch'],['mau','📂 Mạch mẫu ▾'],['lanh','❄️ Ngành lạnh'],['more','🧰 Công cụ ▾']];
+const CATS=[['tu','🗄 Tủ điện'],['lap','🧩 Lập mạch'],['mau','📂 Mạch mẫu ▾'],['tim','🔍 Tìm mạch'],['lanh','❄️ Ngành lạnh'],['more','🧰 Công cụ ▾']];
 
 let S={devs:[],wires:[],nid:1};
 let pending=null,selected=null,running=false,result=null,curCat='mau',lastFault='';
@@ -612,7 +629,7 @@ function bgTap(){if(Date.now()-lastPinch<300)return;const had=pending||selected;
 /* ================= picker ================= */
 const tabsEl=document.getElementById('tabs'),itemsEl=document.getElementById('items');
 CATS.forEach(([c,n])=>{const b=document.createElement('button');b.className='tab'+(c===curCat&&c!=='mau'?' on':'');b.textContent=n;b.dataset.c=c;
-  b.onclick=()=>{if(c==='more'){actionSheet('🧰 Công cụ',[{t:'🎓 Bài học đấu dây (chấm điểm)',f:openLessons},{t:'📁 Mạch của tôi',f:openProj},{t:'📥 Nhập / 📤 Xuất mạch',f:openIO},{t:'🧮 Tính thông số motor',f:openMotorCalc},{t:'🩺 Dò lỗi',f:openDiag},{t:'📐 Bản vẽ + xuất PDF',f:openSheet}]);return;}if(c==='tu'){openCab();return;}if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}if(c==='lanh'){openLanh();return;}if(c==='proj'){openProj();return;}if(c==='mau'){mauToggle();return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
+  b.onclick=()=>{if(c==='more'){actionSheet('🧰 Công cụ',[{t:'🎓 Bài học đấu dây (chấm điểm)',f:openLessons},{t:'📁 Mạch của tôi',f:openProj},{t:'📥 Nhập / 📤 Xuất mạch',f:openIO},{t:'🧮 Tính thông số motor',f:openMotorCalc},{t:'🩺 Dò lỗi',f:openDiag},{t:'📐 Bản vẽ + xuất PDF',f:openSheet}]);return;}if(c==='tu'){openCab();return;}if(c==='lap'){openBuilder();return;}if(c==='tinh'){openMotorCalc();return;}if(c==='diag'){openDiag();return;}if(c==='io'){openIO();return;}if(c==='lanh'){openLanh();return;}if(c==='proj'){openProj();return;}if(c==='mau'){mauToggle();return;}if(c==='tim'){mauToggle(true);const q=itemsEl.querySelector('#mauQ');if(q){q.focus();q.select();}return;}curCat=c;tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.c===c));buildItems();};tabsEl.appendChild(b);});
 function iconSvg(t,sub){
   const T=TYPES[t];const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`-8 -8 ${T.w+16} ${T.h+16}`);
   const g=el('g',{},s);drawBody(g,{id:'x',t,sub,on:T.ctl==='sw'||T.ctl==='cb',sec:5},{});
@@ -622,13 +639,19 @@ function iconSvg(t,sub){
 function mauGrp(sm){const t=sm.title||'';const lk=typeof LANH_SAMPLES!=='undefined'?Object.values(LANH_SAMPLES).flat().map(x=>x[1]):[];
   if(sm.key&&lk.includes(sm.key))return'❄️ Ngành lạnh';if(/Đài Loan|110\/220/.test(t))return'🇹🇼 Điện 110/220V';if(/Biến tần|ACS/.test(t))return'🌀 Biến tần ABB';if(/PLC/.test(t))return'💻 PLC Siemens';
   if(/MX210|MCCB|bảo vệ|Switch gạt|cảnh báo/i.test(t))return'🛡 Bảo vệ · switch gạt · cảnh báo';return'⚡ Cơ bản & động cơ';}
+let mauFind='';
 function mauToggle(v){const open=v===undefined?!itemsEl.classList.contains('open'):v;curCat='mau';if(open)buildItems();itemsEl.classList.toggle('open',open);
   const t=tabsEl.querySelector('.tab[data-c=mau]');if(t){t.textContent=open?'📂 Mạch mẫu ▴':'📂 Mạch mẫu ▾';t.classList.toggle('on',open);}}
 function buildItems(){
   itemsEl.innerHTML='';
-  if(curCat==='mau'){const G={},ord=[];SAMPLES.forEach(sm=>{const k=mauGrp(sm);if(!G[k]){G[k]=[];ord.push(k);}G[k].push(sm);});
-    ord.forEach(k=>{const h=document.createElement('div');h.className='mauHd';h.textContent=k+' · '+G[k].length;itemsEl.appendChild(h);
-      const gr=document.createElement('div');gr.className='mauGrid';G[k].forEach(sm=>{const b=document.createElement('button');b.className='item wide';b.innerHTML='<b>'+sm.title+'</b>'+sm.desc;b.onclick=()=>{mauToggle(false);loadSample(sm);};gr.appendChild(b);});itemsEl.appendChild(gr);});return;}
+  if(curCat==='mau'){const qi=document.createElement('input');qi.id='mauQ';qi.type='search';qi.placeholder='🔍 Tìm mạch: đảo chiều, sao tam giác, hành trình, biến tần, bơm, PLC…';qi.value=mauFind;qi.style.cssText='width:100%;box-sizing:border-box;margin:0 0 8px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0b121a;color:var(--txt);font-size:15px;font-family:inherit';itemsEl.appendChild(qi);
+    const box=document.createElement('div');itemsEl.appendChild(box);
+    const list=()=>{box.innerHTML='';const ws=normVN(mauFind).split(/\s+/).filter(Boolean),G={},ord=[];let n=0;
+      SAMPLES.forEach(sm=>{const hay=normVN((sm.title||'')+' '+(sm.desc||'')+' '+(sm.meta||'')+' '+(sm.hint||''));if(ws.length&&!ws.every(w=>hay.includes(w)))return;n++;const k=mauGrp(sm);if(!G[k]){G[k]=[];ord.push(k);}G[k].push(sm);});
+      if(!n){const e=document.createElement('div');e.className='mauHd';e.textContent='Không thấy mạch nào khớp “'+mauFind+'”. Thử từ khác, hoặc vào 🧩 Lập mạch để nhập yêu cầu.';box.appendChild(e);}
+      ord.forEach(k=>{const h=document.createElement('div');h.className='mauHd';h.textContent=k+' · '+G[k].length;box.appendChild(h);
+        const gr=document.createElement('div');gr.className='mauGrid';G[k].forEach(sm=>{const b=document.createElement('button');b.className='item wide';b.innerHTML='<b>'+sm.title+'</b>'+sm.desc;b.onclick=()=>{mauToggle(false);loadSample(sm);};gr.appendChild(b);});box.appendChild(gr);});};
+    qi.oninput=()=>{mauFind=qi.value;list();};list();return;}
   Object.keys(TYPES).filter(k=>TYPES[k].cat===curCat).forEach(k=>{
     const T=TYPES[k];const b=document.createElement('button');b.className='item';
     b.appendChild(iconSvg(k));b.appendChild(document.createTextNode(T.name));
@@ -920,8 +943,17 @@ function loadV(f,P,d){
   for(const p of A)for(const q of B)if(volt(p,q))return{v:0,dim:true,pa,pb};
   return{v:0,pa,pb};
 }
+const isM1=d=>d.t==='motor'||d.t==='motorwr',isM3=d=>d.t==='motor'||d.t==='motor6'||d.t==='motor2s'||d.t==='motorwr';
 function motorSt(f,P,d){
   const g=t=>pot1(f,P,key(d.id,t));
+  if(d.t==='motorwr'){const ps=['U','V','W'].map(g),ph=ps.filter(p=>p&&p[0]==='L'),u=new Set(ph);
+    if(u.size===3){const ix=ps.map(p=>+p[1]),r=['K','L','M'].map(t=>f(key(d.id,t)));return{st:'on',fwd:(ix[1]-ix[0]+3)%3===1,mode:r[0]===r[1]&&r[1]===r[2]?'RS':'RR'};}
+    if(ps.includes('N')&&ph.length)return{st:'bad'};if(u.size===2)return{st:'hum'};return{st:'off',n:u.size};}
+  if(d.t==='motor2s'){const lo=['U1','V1','W1'].map(g),hi=['U2','V2','W2'].map(g),n3=a=>new Set(a.filter(p=>p&&p[0]==='L')).size,fw=a=>{const ix=a.map(p=>+p[1]);return(ix[1]-ix[0]+3)%3===1;};
+    const rl=['U1','V1','W1'].map(t=>f(key(d.id,t))),sh=rl[0]===rl[1]&&rl[1]===rl[2];
+    if(n3(hi)===3&&sh&&!lo[0])return{st:'on',mode:'H',fwd:fw(hi)};
+    if(n3(lo)===3&&!hi.some(p=>p))return{st:'on',mode:'L',fwd:fw(lo)};
+    if(n3(lo)>=2||n3(hi)>=2)return{st:lo.concat(hi).includes('N')?'bad':'hum'};return{st:'off',n:Math.max(n3(lo),n3(hi))};}
   if(d.t==='motor'){
     const ps=['U','V','W'].map(g);const ph=ps.filter(p=>p&&p[0]==='L');const u=new Set(ph);
     if(u.size===3){const ix=ps.map(p=>+p[1]);return{st:'on',fwd:(ix[1]-ix[0]+3)%3===1};}
@@ -1056,12 +1088,12 @@ function evaluate(){
       else{res.motor[d.id]={st:'off',vfd:v.id};msgs.push(['⏸️',nm+': dừng – biến tần '+tagOf(v)+' chưa chạy.']);}
       if(S.devs.some(o=>o.t==='ol'&&['2','4','6'].some(t=>['U','V','W'].some(u=>f(key(o.id,t))===f(key(d.id,u))))))msgs.push(['ℹ️',nm+': biến tần đã có bảo vệ quá tải điện tử – không cần rơ-le nhiệt.']);
       if(!connected(d,'PE'))msgs.push(['ℹ️',nm+': nên nối dây tiếp địa PE vào vỏ động cơ.']);
-    }else if(d.t==='motor'||d.t==='motor6'){
+    }else if(isM3(d)){
       if(T.terms.every(t=>!connected(d,t.id))){errors++;msgs.push(['❌',nm+': chưa đấu dây.']);return;}
       if(d.burned){res.motor[d.id]={st:'burned'};errors++;msgs.push(['🔥',nm+': CHÁY cuộn dây do chạy mất pha / đấu sai quá lâu mà không có rơ-le nhiệt bảo vệ.']);clearT('m'+d.id);return;}
       const m=motorSt(f,P,d);res.motor[d.id]=m;
       if(m.st==='on'){clearT('m'+d.id);
-        msgs.push(['✅',nm+': chạy '+(m.mode==='Y'?'SAO (Y) – khởi động dòng thấp, ':m.mode==='D'?'TAM GIÁC (Δ) – đủ công suất, ':'')+(m.fwd?'THUẬN ↻':'NGƯỢC ↺ (đảo 2 pha để đổi chiều)')+'.']);}
+        msgs.push(['✅',nm+': chạy '+(m.mode==='Y'?'SAO (Y) – khởi động dòng thấp, ':m.mode==='D'?'TAM GIÁC (Δ) – đủ công suất, ':m.mode==='L'?'TỐC ĐỘ THẤP (Δ, nhiều cực) – ':m.mode==='H'?'TỐC ĐỘ CAO (YY, gấp đôi tốc độ) – ':m.mode==='RR'?'đang KHỞI ĐỘNG qua điện trở rô to – ':m.mode==='RS'?'rô to đã nối tắt – tốc độ định mức, ':'')+(m.fwd?'THUẬN ↻':'NGƯỢC ↺ (đảo 2 pha để đổi chiều)')+'.']);}
       else if(m.st==='hum'||m.st==='bad'){
         errors++;
         const ol=protectingOL(f,d);
@@ -1069,7 +1101,7 @@ function evaluate(){
         if(ol){clearT('m'+d.id);if(!timers['o'+ol.id])timers['o'+ol.id]=setTimeout(()=>{delete timers['o'+ol.id];if(running&&!ol.trip){ol.trip=true;sfxQ.add('alarm');dogReact('ol');spark(ol.x+TYPES.ol.w/2,ol.y+40);evaluate();save();render();}},2200);}
         else if(!timers['m'+d.id])timers['m'+d.id]=setTimeout(()=>{delete timers['m'+d.id];if(running&&!d.burned){d.burned=true;boom(d.x+T.w/2,d.y+T.h/2,1.2);evaluate();save();render();}},4000);
       }else{clearT('m'+d.id);
-        const mt=(d.t==='motor'?['U','V','W']:['U1','V1','W1']).map(t=>[...RK(d,t)].filter(p=>p[0]==='L'));
+        const mt=(isM1(d)?['U','V','W']:['U1','V1','W1']).map(t=>[...RK(d,t)].filter(p=>p[0]==='L'));
         const mok=mt.every(a=>a.length)&&new Set(mt.flat()).size===3;
         if(mok||anyTrip)msgs.push(['⏸️',nm+': đang dừng – '+(anyTrip?'aptomat đã nhảy.':'mạch động lực chưa đóng.')]);
         else{errors++;msgs.push(['❌',nm+': không chạy – '+(m.n?'mới có '+m.n+' pha tới cuộn dây.':'chưa có pha nào tới cuộn dây.')]);}
@@ -1569,11 +1601,22 @@ function drawBody(g,d,R){
     if(d.sub==='cb3w'){[['L1','#dc2626',0],['N','#2563eb',1],['L2','#111827',2]].forEach(([n,cl,k])=>{const x=T.terms[k].x;txt(g,x,15,(2*k+1)+'/'+n,{fill:cl,'font-size':6.5,'font-weight':900});txt(g,x,T.h-5.5,(2*k+2)+'/'+n,{fill:cl,'font-size':6,'font-weight':900});});
       txt(g,13,39,'1φ3W',{fill:'#64748b','font-size':5.6,'font-weight':800});txt(g,T.w-13,39,'3P2E',{fill:'#64748b','font-size':5.6,'font-weight':800});break;}
     prints(g,d);break;}
+  case'switch3':
+    el('rect',{x:0,y:6,width:64,height:52,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
+    el('rect',{x:14,y:14,width:36,height:36,rx:4,fill:'#cbd5e1'},g);
+    el('rect',{x:d.on?32:16,y:18,width:16,height:28,rx:3,fill:'#2563eb'},g);
+    txt(g,d.on?40:24,36,d.on?'2':'1',{fill:'#fff','font-size':11,'font-weight':800});
+    txt(g,32,12,'C→'+(d.on?'2':'1'),{fill:'#475569','font-size':6,'font-weight':800});break;
   case'switch':
     el('rect',{x:0,y:6,width:50,height:52,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
     el('rect',{x:12,y:14,width:26,height:36,rx:4,fill:'#cbd5e1'},g);
     el('rect',{x:14,y:d.on?16:32,width:22,height:16,rx:3,fill:d.on?'#16a34a':'#64748b'},g);
     txt(g,25,d.on?28:44,d.on?'BẬT':'TẮT',{fill:'#fff','font-size':8,'font-weight':800});break;
+  case'pb2':case'ls':{const ls=d.t==='ls';
+    el('rect',{x:0,y:6,width:64,height:52,rx:7,fill:ls?'#e2e8f0':'#1f2937',stroke:ls?'#64748b':'#0f172a'},g);
+    if(ls){el('rect',{x:18,y:d.pressed?26:20,width:28,height:22,rx:3,fill:'#f59e0b',stroke:'#92400e'},g);el('circle',{cx:32,cy:d.pressed?24:17,r:5,fill:'#475569'},g);txt(g,32,d.pressed?41:35,'LS',{fill:'#1f2937','font-size':8,'font-weight':800});}
+    else{el('circle',{cx:32,cy:30,r:15,fill:'#111827'},g);el('circle',{cx:32,cy:30,r:d.pressed?10:13,fill:d.pressed?'#1e3a8a':'#2563eb',stroke:'#0008','stroke-width':2},g);txt(g,32,33,'2 TĐ',{fill:'#fff','font-size':7,'font-weight':800});}
+    txt(g,32,55,'NC 1-2 · NO 3-4',{fill:ls?'#475569':'#9ca3af','font-size':5.6,'font-weight':700});break;}
   case'pbno':case'pbnc':{
     const no=d.t==='pbno';const c=no?'#16a34a':'#dc2626';
     el('rect',{x:0,y:6,width:50,height:52,rx:7,fill:'#1f2937',stroke:'#0f172a'},g);
@@ -1586,6 +1629,30 @@ function drawBody(g,d,R){
     el('circle',{cx:28,cy:30,r:d.latched?13:17,fill:'#dc2626',stroke:'#7f1d1d','stroke-width':2},g);
     txt(g,28,33,'STOP',{fill:'#fff','font-size':7.5,'font-weight':900});
     txt(g,28,54,d.latched?'ĐANG NHẤN':'NC 1-2',{fill:'#713f12','font-size':6.5,'font-weight':800});break;
+  case'reactor':case'rst3':case'res':case'dcbrake':case'rect':{const q={reactor:['CUỘN KHÁNG','3 pha','#e0f2fe','#0369a1'],rst3:['ĐIỆN TRỞ','mở máy 3 pha','#fee2e2','#b91c1c'],res:['R','','#fee2e2','#b91c1c'],dcbrake:['HÃM DC','biến áp + chỉnh lưu','#ede9fe','#6d28d9'],rect:['CHỈNH LƯU','AC → DC','#dcfce7','#15803d']}[d.t],W=T.w,H=T.h;
+    el('rect',{x:0,y:8,width:W,height:H-16,rx:7,fill:q[2],stroke:q[3],'stroke-width':1.4},g);
+    if(d.t==='reactor'||d.t==='rst3'||d.t==='res')(d.t==='res'?[25]:[22,55,88]).forEach(x=>el('path',{d:d.t==='reactor'?`M${x} 14v8a5 5 0 0 1 0 10a5 5 0 0 1 0 10a5 5 0 0 1 0 10v14`:`M${x} ${d.t==='res'?12:14}v8l-5 3l10 6l-10 6l10 6l-5 3v${d.t==='res'?12:20}`,fill:'none',stroke:q[3],'stroke-width':1.6},g));
+    else{txt(g,W/2,36,q[0],{fill:q[3],'font-size':9,'font-weight':900});txt(g,W/2,49,q[1],{fill:q[3],'font-size':6.5,'font-weight':700});if(d.t==='dcbrake')el('circle',{cx:W-12,cy:20,r:4,fill:R&&R.state&&R.state[d.id]==='on'?'#22c55e':'#94a3b8'},g);}
+    break;}
+  case'motordc':{const on=R&&R.state&&R.state[d.id]==='on';
+    /* động cơ DC nằm ngang: hộp cực trên lưng, thân gang có gân tản nhiệt, nắp chổi than bên trái, trục + quạt bên phải */
+    el('rect',{x:16,y:66,width:14,height:6,rx:1.5,fill:'#1e293b'},g);el('rect',{x:54,y:66,width:14,height:6,rx:1.5,fill:'#1e293b'},g);
+    el('rect',{x:80,y:39,width:13,height:6,rx:1,fill:'#cbd5e1',stroke:'#475569','stroke-width':.8},g);el('rect',{x:86,y:40.5,width:4,height:3,fill:'#475569'},g);
+    el('rect',{x:12,y:22,width:62,height:44,rx:9,fill:'#1d4ed8',stroke:'#0f172a','stroke-width':1.4},g);
+    [26,31,36,41,46,51,56,61].forEach(y=>el('line',{x1:20,y1:y,x2:66,y2:y,stroke:'#1e3a8a','stroke-width':1.3},g));
+    el('rect',{x:6,y:26,width:10,height:36,rx:4,fill:'#334155',stroke:'#0f172a','stroke-width':1},g);[32,40,48,56].forEach(y=>el('line',{x1:8,y1:y,x2:14,y2:y,stroke:'#94a3b8','stroke-width':1},g));
+    el('rect',{x:72,y:26,width:9,height:36,rx:3,fill:'#475569',stroke:'#0f172a','stroke-width':1},g);
+    el('rect',{x:28,y:10,width:36,height:14,rx:2.5,fill:'#334155',stroke:'#0f172a','stroke-width':1},g);
+    el('rect',{x:30,y:36,width:28,height:16,rx:2,fill:'#f8fafc',stroke:'#94a3b8','stroke-width':.8},g);txt(g,44,43,'DC MOTOR',{fill:'#0f172a','font-size':4.6,'font-weight':900});txt(g,44,49.5,'220 VDC',{fill:'#475569','font-size':4.2,'font-weight':700});
+    el('circle',{cx:66,cy:30,r:3,fill:on?'#22c55e':'#64748b',class:on?'blink':''},g);
+    if(on){el('path',{d:'M84 30a9 9 0 0 1 8 6',fill:'none',stroke:'#16a34a','stroke-width':1.6,'stroke-linecap':'round'},g);el('path',{d:'M92 36l-.5-4.2M92 36l-4-1',fill:'none',stroke:'#16a34a','stroke-width':1.6,'stroke-linecap':'round'},g);txt(g,44,80,'ĐANG CHẠY',{fill:'#15803d','font-size':6,'font-weight':900});}
+    break;}
+  case'softst':
+    el('rect',{x:0,y:6,width:170,height:84,rx:8,fill:'#fef3c7',stroke:'#b45309','stroke-width':1.4},g);
+    el('rect',{x:36,y:22,width:76,height:44,rx:5,fill:'#1f2937'},g);
+    el('path',{d:'M44 58 L72 30 L104 30',fill:'none',stroke:d.en?'#4ade80':'#94a3b8','stroke-width':3,'stroke-linecap':'round'},g);
+    txt(g,74,78,'SOFT STARTER',{fill:'#92400e','font-size':7.5,'font-weight':800});
+    el('circle',{cx:140,cy:44,r:6,fill:d.en?'#22c55e':'#64748b'},g);txt(g,140,62,d.en?'RUN':'STOP',{fill:'#92400e','font-size':6.5,'font-weight':800});break;
   case'contactor':{
     el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:'#f8fafc',stroke:'#64748b'},g);
     el('rect',{x:4,y:32,width:20,height:32,rx:2,fill:d.burned?'#1c1917':d.en?'#22c55e':'#e2e8f0',stroke:'#334155'},g);
@@ -1598,8 +1665,10 @@ function drawBody(g,d,R){
     el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:'#f1f5f9',stroke:'#64748b'},g);
     [20,46,72].forEach(x=>el('path',{d:`M${x} 15V28l-4 3 8 4-8 4 8 4-4 3V66`,stroke:d.trip?'#dc2626':'#334155','stroke-width':1.6,fill:'none'},g));
     T.contacts.slice(3).forEach(c=>{const t=tdef(d,c[0]);drawContact(g,t.x,15,66,conducts(d,c,'cur'),c[2]==='NC');});
-    el('rect',{x:84,y:30,width:12,height:12,rx:6,fill:d.trip?'#f97316':'#3b82f6',class:d.trip?'blink':''},g);
-    txt(g,90,52,d.trip?'TRIP':'RESET',{fill:d.trip?'#ea580c':'#1d4ed8','font-size':6,'font-weight':900});
+    /* nút TEST (đỏ) giả lập quá tải, nút RESET (xanh) trả về; đèn giữa báo TRIP */
+    el('rect',{x:77,y:14,width:26,height:14,rx:3,fill:'#dc2626',stroke:'#7f1d1d'},g);txt(g,90,24,'TEST',{fill:'#fff','font-size':6.5,'font-weight':900,style:'pointer-events:none'});
+    el('circle',{cx:90,cy:39,r:5,fill:d.trip?'#f97316':'#22c55e',class:d.trip?'blink':''},g);
+    el('rect',{x:77,y:50,width:26,height:14,rx:3,fill:d.trip?'#2563eb':'#93c5fd',stroke:'#1e3a8a'},g);txt(g,90,60,'RESET',{fill:'#fff','font-size':6,'font-weight':900,style:'pointer-events:none'});
     prints(g,d);break;}
   case'relay':case'relay24':case'timer':{
     el('rect',{x:0,y:4,width:T.w,height:T.h-8,rx:7,fill:d.t==='timer'?'#e0f2fe':'#ecfdf5',stroke:'#64748b'},g);
@@ -1718,8 +1787,8 @@ function drawBody(g,d,R){
     el('circle',{cx:28,cy:32,r:14,fill:'#374151',stroke:'#9ca3af','stroke-width':1.5},g);
     el('line',{x1:28,y1:32,x2:28+11*Math.sin(ang),y2:32-11*Math.cos(ang),stroke:'#facc15','stroke-width':3,'stroke-linecap':'round'},g);
     txt(g,28,58,pos+'%',{fill:'#0f172a','font-size':8,'font-weight':800});break;}
-  case'motor':case'motor6':{
-    const m=R.motor&&R.motor[d.id],W=T.w,run=m&&m.st==='on',hum=m&&(m.st==='hum'||m.st==='bad'),slow=run&&m.mode==='Y';
+  case'motor':case'motor6':case'motor2s':case'motorwr':{
+    const m=R.motor&&R.motor[d.id],W=T.w,run=m&&m.st==='on',hum=m&&(m.st==='hum'||m.st==='bad'),slow=run&&(m.mode==='Y'||m.mode==='L'||m.mode==='RR');
     const fanSt={run,hum,slow,fwd:!m||m.fwd!==false};
     if(d.sub==='pump'){
       /* bơm chìm nằm ngang: cáp vào trên, động cơ inox bên trái, lưới hút ở giữa, buồng cánh bơm + họng xả bên phải */
@@ -1836,7 +1905,11 @@ function drawDev(d){
 function devDown(e,d,g){
   if(ptrs.size>1)return;e.stopPropagation();
   const T=TYPES[d.t];
-  if(running&&(d.t==='pbno'||d.t==='pbnc')){unlockAudio();sfx('click');d.pressed=true;changed();
+  if(d.t==='ol'){const p=pt(e),lx=p.x-d.x,ly=p.y-d.y,trip=ly>=12&&ly<=30?true:ly>=48&&ly<=66?false:null;   /* nút TEST / RESET trên mặt rơ-le nhiệt */
+    if(lx>=74&&lx<=106&&trip!==null){unlockAudio();if(!!d.trip===trip){hint(trip?'Rơ-le nhiệt '+tagOf(d)+' đang TRIP – bấm RESET để trả về.':'Rơ-le nhiệt '+tagOf(d)+' đang bình thường.');}
+      else{sfx('clack');d.trip=trip;changed();hint(trip?'TEST '+tagOf(d)+': giả lập quá tải – 95-96 MỞ (cắt cuộn hút), 97-98 ĐÓNG (báo sự cố). Bấm RESET để trả về.':'Đã RESET rơ-le nhiệt '+tagOf(d)+' – 95-96 đóng lại.');}
+      drag={id:e.pointerId,up(){},cancel(){}};return;}}
+  if(running&&T.ctl==='pb'){unlockAudio();sfx('click');d.pressed=true;changed();
     drag={id:e.pointerId,up:()=>{d.pressed=false;changed();},cancel:()=>{d.pressed=false;changed();}};return;}
   const p0=pt(e);const ox=d.x,oy=d.y;let raf=0;
   if(!DG.guess&&!DG.meter)lpStart(e,()=>{if(drag&&!drag.moved)devMenu(d);});
@@ -1885,8 +1958,10 @@ function tapTerm(did,tid){
 }
 
 /* ================= export PDF ================= */
-const SPEC={src1:'1 pha 220V ~ (L, N, PE)',src3:'3 pha 4 dây 380V/220V + PE',cb2:'Aptomat 2 cực',cb3:'Aptomat 3 cực',switch:'Công tắc 1 chiều',
-  pbno:'Nút nhấn thường mở (NO 3-4)',pbnc:'Nút nhấn thường đóng (NC 1-2)',estop:'Nút dừng khẩn cấp, NC 1-2',
+const SPEC={src1:'1 pha 220V ~ (L, N, PE)',src3:'3 pha 4 dây 380V/220V + PE',cb2:'Aptomat 2 cực',cb3:'Aptomat 3 cực',switch:'Công tắc 1 chiều',switch3:'Công tắc 3 cực (đảo chiều / cầu thang): C nối 1 khi gạt về 1, C nối 2 khi gạt về 2. Hai công tắc 3 cực điều khiển 1 đèn từ 2 nơi',
+  pb2:'Nút nhấn kép: 1 tiếp điểm thường đóng 1-2 + 1 thường mở 3-4, nhấn là đổi cả hai (dùng cho chạy nhấp JOG, dừng có hãm)',ls:'Công tắc hành trình: cơ cấu chạm vào thì NC 1-2 mở, NO 3-4 đóng (chạm giữ trên bảng để giả lập)',pbno:'Nút nhấn thường mở (NO 3-4)',pbnc:'Nút nhấn thường đóng (NC 1-2)',estop:'Nút dừng khẩn cấp, NC 1-2',
+  motor2s:'Động cơ 2 tốc độ Dahlander: tốc độ thấp cấp nguồn 1U-1V-1W (Δ), để hở 2U-2V-2W; tốc độ cao cấp nguồn 2U-2V-2W và nối tắt 1U-1V-1W (YY)',motorwr:'Động cơ rô to dây quấn (vành trượt): stato U-V-W, rô to K-L-M ra điện trở mở máy; nối tắt K-L-M là chạy định mức',motordc:'Động cơ một chiều: phần ứng A1-A2, kích từ F1-F2. Mô phỏng: có điện vào A1-A2 là chạy, chưa thể hiện chiều quay',reactor:'Cuộn kháng 3 pha mắc nối tiếp stato để giảm dòng khởi động; khởi động xong thì contactor nối tắt',rst3:'Bộ điện trở mở máy 3 pha cho mạch rô to dây quấn',res:'Điện trở công suất (mở máy / hãm)',dcbrake:'Bộ hãm động năng: vào 220V AC (L-N), ra điện một chiều (+, −) đưa vào 2 đầu dây stato khi dừng',rect:'Cầu chỉnh lưu: vào L-N xoay chiều, ra + − một chiều',
+  softst:'Khởi động mềm: cấp 220V vào A1-A2 (lệnh RUN) thì tăng áp dần cho động cơ; 13-14 đóng khi đang chạy. Mô phỏng đơn giản: có lệnh là đóng điện, chưa thể hiện dốc tăng áp',
   contactor:'Cuộn 220V AC (A1-A2), 3 tiếp điểm chính, 1NO 13-14, 1NC 21-22',ol:'Rơ-le nhiệt: 95-96 NC, 97-98 NO',
   relay:'Rơ-le MY2, cuộn 220V (13-14), 2 tiếp điểm chuyển',timer:'Timer on-delay, cuộn 220V (2-7)',
   sel2:'Switch gạt 2 vị trí 0–1: 13-14 NO đóng ở vị trí 1, 21-22 NC đóng ở vị trí 0',sel3:'Switch gạt 3 vị trí 1–0–2: 13-14 đóng ở vị trí 1 (trái), 23-24 đóng ở vị trí 2 (phải), giữa 0 cắt',warnL:'Đèn cảnh báo chớp đỏ + còi 220V (X1-X2)',pilotG:'Đèn báo xanh 220V',pilotR:'Đèn báo đỏ 220V',pilotY:'Đèn báo vàng 220V',lamp:'Đèn 220V',fan:'Quạt 220V',socket:'Ổ cắm 220V có tiếp địa',
@@ -2078,7 +2153,7 @@ const MOTOR_KW=[[0.37,72,.73],[0.55,75,.75],[0.75,79,.76],[1.1,81,.77],[1.5,82,.
   [11,89.8,.85],[15,90.6,.86],[18.5,91.2,.86],[22,91.6,.86],[30,92.3,.86],[37,92.7,.87],[45,93.1,.87],[55,93.5,.87],[75,94,.87],[90,94.2,.87],
   [110,94.5,.88],[132,94.7,.88],[160,94.9,.89],[200,95.1,.89]];
 const PDEF={
-  motor:MOT,motor6:MOT.map(x=>x[0]==='kw'?['kw',x[1],15]:x),
+  motor2s:MOT,motorwr:MOT,motor:MOT,motor6:MOT.map(x=>x[0]==='kw'?['kw',x[1],15]:x),
   lamp:[['w','Công suất (W)',40],['len','Chiều dài dây (m)',15]],
   fan:[['w','Công suất (W)',75],['cos','Hệ số cosφ',0.9],['len','Chiều dài dây (m)',15]],
   socket:[['w','Tải dự kiến (W)',2000],['len','Chiều dài dây (m)',15]],
@@ -2115,7 +2190,7 @@ function wireUF(){
   S.wires.forEach(w=>{par[f(key(w.a.d,w.a.t))]=f(key(w.b.d,w.b.t));});
   return f;
 }
-const PWR={vfd:{a:['L1','L2','L3'],b:['U','V','W']},cb3:{a:['1','3','5'],b:['2','4','6']},contactor:{a:['1','3','5'],b:['2','4','6']},ol:{a:['1','3','5'],b:['2','4','6']},cb2:{a:['1','3'],b:['2','4']}};
+const PWR={vfd:{a:['L1','L2','L3'],b:['U','V','W']},cb3:{a:['1','3','5'],b:['2','4','6']},contactor:{a:['1','3','5'],b:['2','4','6']},softst:{a:['1','3','5'],b:['2','4','6']},reactor:{a:['1','3','5'],b:['2','4','6']},ol:{a:['1','3','5'],b:['2','4','6']},cb2:{a:['1','3'],b:['2','4']}};
 Object.keys(VFD_MODELS).forEach(k=>{PWR[k]=PWR.vfd;});PWR.mccbst=PWR.cb3;
 function powerTree(){
   const src=S.devs.find(d=>TYPES[d.t].cat==='src');if(!src)return null;
@@ -2147,8 +2222,8 @@ function powerTree(){
       }
     });
     S.devs.forEach(d=>{
-      if(d.t==='motor'||d.t==='motor6'){
-        const top=(d.t==='motor'?['U','V','W']:['U1','V1','W1']).map(t=>f(key(d.id,t)));
+      if(isM3(d)){
+        const top=(isM1(d)?['U','V','W']:['U1','V1','W1']).map(t=>f(key(d.id,t)));
         if(!visited.has(d.id)&&top.every(n=>avail.has(n))&&new Set(top).size===3){visited.add(d.id);node.children.push({kind:'motor',d,perm:top.map(idx),lines,parent:node});return;}
         if(d.t==='motor6'){const bot=['W2','U2','V2'].map(t=>f(key(d.id,t)));
           if(bot.every(n=>avail.has(n))&&new Set(bot).size===3)node.children.push({kind:'ref',d,terms:['W2','U2','V2'],perm:bot.map(idx),lines,parent:node});}
@@ -2172,7 +2247,7 @@ function calc(ptIn){
   const pt=ptIn||powerTree();const R={rec:{},rows:[],mot:{},notes:[],cables:[],sz:{},amp:{}};
   const f=pt?pt.f:wireUF();
   // động cơ
-  S.devs.filter(d=>d.t==='motor'||d.t==='motor6').forEach(d=>{
+  S.devs.filter(d=>isM3(d)).forEach(d=>{
     const kw=PV(d,'kw'),u=PV(d,'u')||380,hz=PV(d,'hz')||50,pole=PV(d,'pole')||4,cos=PV(d,'cos')||0.85,eff=(PV(d,'eff')||88)/100,len=PV(d,'len');
     const In=kw*1000/(Math.sqrt(3)*u*cos*eff),yd=d.t==='motor6',ns=120*hz/pole,nr=ns*(1-(kw<5?0.05:kw<30?0.035:0.02));
     const onVfd=d.t==='motor'&&S.devs.some(v=>isV(v)&&vfdMotor(f,v).some(x=>x.m===d));
@@ -2318,7 +2393,7 @@ function drawPower(pt,C,ctrlNets){
       return children(n,px,yOut,px[0]-24);
     }
     if(n.kind==='motor'){
-      const d=n.d,m=C.mot[d.id],cx=px[1],r=36,cy=y+28+r+4,tn=d.t==='motor'?['U','V','W']:['U1','V1','W1'];
+      const d=n.d,m=C.mot[d.id],cx=px[1],r=36,cy=y+28+r+4,tn=isM1(d)?['U','V','W']:['U1','V1','W1'];
       px.forEach((x,i)=>{const ye=cy-Math.sqrt(Math.max(0,r*r-(x-cx)*(x-cx)));s+=Ln(x,y,x,y+20)+Ring(x,y+20)+Ln(x,y+24,x,ye)+T_(x-5,y+16,tn[i],{fs:9,b:1,a:'end'});});
       s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="#111" stroke-width="1.8"/>`+T_(cx,cy+2,'M',{fs:20,b:1,a:'middle'})+T_(cx,cy+18,'3~',{fs:12,a:'middle'});
       s+=Ln(cx+r,cy,cx+r+22,cy)+Ln(cx+r+22,cy,cx+r+22,cy+10)+Ln(cx+r+12,cy+10,cx+r+32,cy+10)+Ln(cx+r+15,cy+14,cx+r+29,cy+14)+Ln(cx+r+18,cy+18,cx+r+26,cy+18)+T_(cx+r+36,cy+4,'PE',{fs:9,b:1});
@@ -2358,6 +2433,7 @@ function buildLadder(pt){
   const f=pt.f,EL=[],ctrlNets=new Set();
   const add=(d,ta,tb,kind)=>{if(!connected(d,ta)&&!connected(d,tb))return;const u=f(key(d.id,ta)),v=f(key(d.id,tb));ctrlNets.add(u);ctrlNets.add(v);EL.push({u,v,e:{t:'l',d,ta,tb,kind}});};
   S.devs.forEach(d=>{const inP=pt.visited.has(d.id);switch(d.t){
+    case'softst':add(d,'13','14','no');add(d,'A1','A2','coil');break;
     case'contactor':if(!inP){add(d,'1','2','no');add(d,'3','4','no');add(d,'5','6','no');}add(d,'13','14','no');add(d,'21','22','nc');add(d,'A1','A2','coil');break;
     case'ol':add(d,'95','96','olnc');add(d,'97','98','olno');break;
     default:if(isV(d)||isPLC(d))TYPES[d.t].contacts.forEach(c=>add(d,c[0],c[1],c[2]==='NC'?'nc':'no'));break;
@@ -2366,8 +2442,8 @@ function buildLadder(pt){
     case'hpsw':add(d,'1','2','nc');break;case'lpsw':add(d,'1','4','nc');break;case'flowsw':add(d,'C','NO','nc');break;case'tctl':add(d,'C','NO','no');add(d,'C','NC','nc');break;
     case'sv':case'wv4':add(d,'A1','A2','coil');break;case'heater':add(d,'a','b','lamp');break;
     case'vprot':add(d,'11','14','no');add(d,'11','12','nc');break;case'mccbst':add(d,'C1','C2','coil');add(d,'11','14','no');break;
-    case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
-    case'switch':add(d,'1','2','sw');break;
+    case'pb2':case'ls':add(d,'3','4','pbno');add(d,'1','2','pbnc');break;case'pbno':add(d,'3','4','pbno');break;case'pbnc':add(d,'1','2','pbnc');break;case'estop':add(d,'1','2','estop');break;
+    case'switch':add(d,'1','2','sw');break;case'switch3':add(d,'C','1','nc');add(d,'C','2','sw');break;
     case'sel2':add(d,'13','14','sw');add(d,'21','22','nc');break;case'sel3':add(d,'13','14','sw');add(d,'23','24','sw');break;
     case'cb2':if(!inP){add(d,'1','2','cb');add(d,'3','4','cb');}break;
     case'lamp':add(d,'a','b','lamp');break;case'fan':add(d,'a','b','fan');break;case'motor1':add(d,'L','N','fan');break;case'cb1':if(!inP)add(d,'1','2','cb');break;
@@ -2944,7 +3020,7 @@ function wireCurrents(){
     if(isV(d)&&d.vs&&d.vs.pw===3&&!d.burned){const m=(result.vmot&&result.vmot[d.id]||[])[0];const mi=m?motIn(m):{I:1,phi:30};const fr=Math.max(0.05,(d.fo||0)/(PV(d,'fmax')||50));
       const Iin=Math.max(0.3,mi.I*fr*0.95);['L1','L2','L3'].forEach(t=>{const a=ang(key(d.id,t));if(a!==null)inj(key(d.id,t),cx(Iin,a-5));});
       if(m&&(d.fo||0)>0.05){const Io=mi.I*(0.35+0.65*fr);const mt=['U','V','W'];mt.forEach((t,i)=>{const mk=TYPES[m.t].terms.find(x=>x.id===t);if(mk)inj(key(m.id,t),cx(Io,-120*i-mi.phi),key(d.id,t));});}}
-    if(d.t==='motor'||d.t==='motor6'){const st=result.motor&&result.motor[d.id];if(!st||st.vfd){delete MST[d.id];return;}
+    if(isM3(d)){const st=result.motor&&result.motor[d.id];if(!st||st.vfd){delete MST[d.id];return;}
       const mi=motIn(d);
       const ms=MST[d.id],dt=ms?(now-ms.t0)/1000:9;let kInr=1;
       if(st.st==='on'){if(st.mode==='Y')kInr=1+2.7*Math.max(0,1-dt/2.5);
@@ -3098,8 +3174,8 @@ document.getElementById('dgClose').onclick=()=>{document.getElementById('dgSheet
 document.querySelectorAll('#dgTabs button').forEach(b=>b.onclick=()=>openDiag(b.dataset.t));
 /* ================= 📥 NHẬP / 📤 XUẤT MÃ MẠCH ================= */
 const IO_ALIAS={pilotTR:'pilottr denthapdo thapdo',pilotTY:'pilotty denthapvang thapvang',pilotTG:'pilottg denthapxanh thapxanh',cfan:'cfan quathuttu quattu',sel2:'sel2 ss2 switchgat2 congtacgat2 switch2vitri',sel3:'sel3 ss3 switchgat3 congtacgat3 switch3vitri',warnL:'warnl dencanhbao canhbao denchop coi',src3:'nguon3p nguon3pha nguon3 3p 3pha src3',src1:'nguon1p nguon1pha nguon1 1p 1pha src1 nguon',cb3:'cb3 cb3p aptomat3p aptomat3 mccb3p cb',cb2:'cb2 cb2p aptomat2p aptomat2 mcb cb1p',
-  switch:'congtac switch sw',pbno:'pbno on nuton nutnhanon start nutstart nutno',pbnc:'pbnc off nutoff nutnhanoff stop nutstop nutnc',estop:'estop dungkhan dungkhancap emergency nutdungkhan em',
-  contactor:'contactor khoidongtu contacter kmtu k km',ol:'ol rolenhiet relaynhiet thermal ot',relay:'relay roletrunggian my2 rtg rơle',timer:'timer rolethoigian rtime t',
+  switch:'congtac switch sw',switch3:'congtac3 congtac3cuc congtaccauthang congtacdaochieu switch3 sw3',pb2:'pb2 nutkep nutnhankep jog nutjog',ls:'ls hanhtrinh congtachanhtrinh limitswitch',pbno:'pbno on nuton nutnhanon start nutstart nutno',pbnc:'pbnc off nutoff nutnhanoff stop nutstop nutnc',estop:'estop dungkhan dungkhancap emergency nutdungkhan em',
+  softst:'softst softstarter khoidongmem kdm',motor2s:'motor2s dongco2tocdo dahlander motor2tocdo',motorwr:'motorwr dongcorotodayquan rotodayquan srim',motordc:'motordc dongcodc dongco1chieu dongcomotchieu',reactor:'reactor cuonkhang',rst3:'rst3 dientro3pha dientromomay',res:'res dientrocongsuat',dcbrake:'dcbrake bohamdc hamdongnang boham',rect:'rect chinhluu cauchinhluu bochinhluu',contactor:'contactor khoidongtu contacter kmtu k km',ol:'ol rolenhiet relaynhiet thermal ot',relay:'relay roletrunggian my2 rtg rơle',timer:'timer rolethoigian rtime t',
   pilotG:'pilotg denbaoxanh denxanh hg',pilotR:'pilotr denbaodo dendo hr',pilotY:'piloty denbaovang denvang hy',lamp:'lamp den bongden',fan:'fan quat',socket:'socket ocam',
   motor:'motor dongco motor3 dongco3pha dongco3dau m',motor6:'motor6 dongco6dau motor6dau motoryd',pump:'pump bomchim bom',pot:'pot chietap',
   vfd:'vfd bientan acs580',vfd150:'vfd150 acs150',vfd310:'vfd310 acs310',vfd355:'vfd355 acs355',vfd380:'vfd380 acs380',vfd480:'vfd480 acs480',vfd880:'vfd880 acs880'};
@@ -3180,14 +3256,14 @@ function ioLayout(devs){
   const P={src:[],cb:[],k:[],ol:[],m:[]},C={plc:[],btn:[],aux:[],pil:[],l1:[]};
   devs.forEach(d=>{const T=TYPES[d.t];
     if(isPLC(d)||d.t==='psu')C.plc.push(d);else if(T.cat==='src')P.src.push(d);else if(T.ctl==='cb')P.cb.push(d);else if(d.t==='contactor'||isV(d))P.k.push(d);else if(d.t==='ol')P.ol.push(d);
-    else if(T.cat==='t3')P.m.push(d);else if(['pbno','pbnc','estop','switch','pot'].includes(d.t))C.btn.push(d);else if(d.t==='relay'||d.t==='relay24'||d.t==='timer'||d.t==='vprot')C.aux.push(d);
+    else if(T.cat==='t3')P.m.push(d);else if(['pbno','pbnc','pb2','ls','estop','switch','switch3','pot'].includes(d.t))C.btn.push(d);else if(d.t==='relay'||d.t==='relay24'||d.t==='timer'||d.t==='vprot')C.aux.push(d);
     else if(d.t.startsWith('pilot'))C.pil.push(d);else C.l1.push(d);});
   let y=24,maxX=0;
   ['src','cb','k','ol','m'].forEach(r=>{if(!P[r].length)return;let x=20,h=0;P[r].forEach(d=>{const T=TYPES[d.t];d.x=x;d.y=y;x+=T.w+50;h=Math.max(h,T.h);});maxX=Math.max(maxX,x);y+=h+90;});
   const pBottom=y;let cx=Math.max(maxX+40,260),cy=24;
   const cw=Math.max(0,...[...C.plc,...C.btn,...C.aux,...C.pil].map(d=>TYPES[d.t].w));if(cx+cw>WW-20){cx=20;cy=pBottom;}
   const col=(arr,dx)=>{let x=cx,h=0;arr.forEach(d=>{const T=TYPES[d.t];if(x+T.w>WW-20){x=cx;cy+=h+70;h=0;}d.x=x;d.y=cy;x+=T.w+(dx||40);h=Math.max(h,T.h);});if(arr.length)cy+=h+80;};
-  C.btn.sort((a,b)=>({estop:0,pbnc:1,pbno:2,switch:3,pot:4}[a.t]-{estop:0,pbnc:1,pbno:2,switch:3,pot:4}[b.t]));
+  C.btn.sort((a,b)=>({estop:0,pbnc:1,pbno:2,pb2:2,ls:3,switch:3,switch3:3,pot:4}[a.t]-{estop:0,pbnc:1,pbno:2,pb2:2,ls:3,switch:3,switch3:3,pot:4}[b.t]));
   C.plc.sort((a,b)=>(a.t==='psu')-(b.t==='psu'));col(C.plc,60);col(C.btn);col(C.aux);col(C.pil);
   let lx=20,ly=Math.max(pBottom,cy),lh=0;if(cx===20)ly=cy;C.l1.forEach(d=>{const T=TYPES[d.t];if(lx+T.w>WW-20){lx=20;ly+=lh+80;lh=0;}d.x=lx;d.y=ly;lx+=T.w+50;lh=Math.max(lh,T.h);});
   devs.forEach(d=>{d.x=Math.round(Math.min(d.x,WW-TYPES[d.t].w)/GRID)*GRID;d.y=Math.round(Math.min(d.y,WH-TYPES[d.t].h-20)/GRID)*GRID;});
@@ -3570,7 +3646,8 @@ function parseNotes(t){
   const NUM='(\\d+(?:[.,]\\d+)?)\\s*(giay|gi|s|sec|phut|ph|p)?\\b';
   const toS=(n,u)=>{let v=parseFloat(String(n).replace(',','.'));if(u&&/^(phut|ph|p)$/.test(u))v*=60;return Math.max(1,Math.round(v*10)/10);};
   const rx=p=>new RegExp(p);
-  if(/dao chieu|thuan nghich|2 chieu|hai chieu/.test(s))R.rev=true;
+  if(/cong tac (dao chieu|3 cuc|ba cuc|3 chau|ba chau|cau thang|2 chieu|hai chieu)|(2|hai) (noi|cho|vi tri|dau|cong tac)|(2|hai) cong tac|tren.{0,12}duoi|duoi.{0,12}tren/.test(s))R.two=true;
+  if(/dao chieu|thuan nghich|2 chieu|hai chieu/.test(s.replace(/cong tac (dao chieu|2 chieu|hai chieu)/g,'')))R.rev=true;
   if(/sao.{0,3}tam giac|\by ?[-/]? ?d\b|\by ?[-/]? ?delta\b|sao.?tg\b/.test(s))R.yd=true;
   if(/dung khan|khan cap|e.?stop|emergency/.test(s))R.estop=true;
   if(/den bao/.test(s))R.pilots=true;
@@ -3586,10 +3663,12 @@ function parseNotes(t){
     else if((m=s.match(rx('\\b(?:chay|bat|dong|sang)\\s*(?:trong)?\\s*'+NUM+'\\s*(?:roi|thi)?\\s*(?:tu)?\\s*(?:tat|ngat|dung)')))||(m=s.match(rx('\\btu\\s*(?:tat|ngat|dung)\\D{0,12}'+NUM))))R.run=toS(m[1],m[2]);
   }
   if(R.yd&&(m=s.match(rx(NUM))))R.ydT=toS(m[1],m[2]);
-  if(R.stair&&!R.run&&!R.cyc&&!R.delay){const mm=s.match(rx(NUM));R.run=mm?toS(mm[1],mm[2]):60;}
+  if(R.stair&&!R.run&&!R.cyc&&!R.delay){const mm=s.match(/(\d+(?:[.,]\d+)?)\s*(giay|gi|s|sec|phut|ph|p)\b/);if(mm&&!R.two)R.run=toS(mm[1],mm[2]);else R.two=true;}
+  if(R.two&&(R.run||R.cyc||R.delay||R.yd||R.vfd))R.two=false;
   return R;
 }
 function descReq(R){const a=[];
+  if(R.two)a.push('Đèn cầu thang: 2 công tắc 3 cực đặt 2 nơi, bật/tắt cùng một đèn');
   if(R.yd)a.push('Khởi động sao – tam giác, chuyển Y→Δ sau '+(R.ydT||5)+' s');
   if(R.rev&&!R.vfd)a.push('Đảo chiều thuận – nghịch, có khóa chéo');
   if(R.cyc)a.push('Chạy chu kỳ: đóng '+R.cyc.on+' s → ngắt '+R.cyc.off+' s, lặp lại');
@@ -3765,6 +3844,10 @@ function autoBuild(cnt,R){
       let lxp=x;loads.forEach(t=>{const L=take(t,lxp,swY+240);W(K,'2',L,'a');W(L,'b',Np.d,Np.t);lxp+=90;});
       W(Lp.d,Lp.t,K,'1');x=lxp;
       rep.unshift((R.stair?'Đèn cầu thang: ':'Chiếu sáng có hẹn giờ: ')+'nhấn ON → '+tagOfTmp(K)+' đóng cấp điện cho đèn/quạt.');
+    }else if((R.two||has('switch3'))&&nL>0){
+      const A=take('switch3',x,swY),B2=take('switch3',x+150,swY,{on:true});W(Lp.d,Lp.t,A,'C');W(A,'1',B2,'1');W(A,'2',B2,'2');
+      let lxp=x+150;loads.forEach(t=>{const L=take(t,lxp,ldY);W(B2,'C',L,'a');W(L,'b',Np.d,Np.t);lxp+=90;});x=Math.max(lxp,x+300);
+      rep.unshift('Đèn cầu thang: pha vào cực C của '+tagOfTmp(A)+'; hai dây liên lạc nối 1–1 và 2–2 sang '+tagOfTmp(B2)+'; cực C của '+tagOfTmp(B2)+' ra đèn; đèn về N. Gạt công tắc nào đèn cũng đổi trạng thái.');
     }else{
       loads.forEach(t=>{const sw=take('switch',x+5,swY,{on:true}),L=take(t,x,ldY);W(Lp.d,Lp.t,sw,'1');W(sw,'2',L,'a');W(L,'b',Np.d,Np.t);x+=95;});
       if(loads.length)rep.push('Mỗi đèn/quạt có 1 công tắc riêng, công tắc cắt dây pha.');
@@ -3795,7 +3878,7 @@ function autoBuild(cnt,R){
     t==='contactor'?(hasV?'động cơ chạy biến tần không cần contactor phía sau biến tần.':'dư – mạch chỉ cần số contactor đã đấu.'):
     t==='ol'?(hasV?'biến tần đã có bảo vệ quá tải điện tử, không cần rơ-le nhiệt.':'dư – mỗi động cơ 1 rơ-le nhiệt.'):
     t==='pbno'||t==='pbnc'?(hasV&&!kinds.some(k=>k!=='vfd')?'đã đủ nút cho biến tần (ON + OFF).':'nút dư so với số mạch cần điều khiển.'):
-    t==='estop'?'đã có 1 nút dừng khẩn cho mạch.':t==='switch'?'công tắc dư – mỗi đèn/quạt/động cơ 1 pha chỉ cần 1 công tắc.':
+    t==='estop'?'đã có 1 nút dừng khẩn cho mạch.':t==='switch3'?'công tắc 3 cực dư – mạch đèn cầu thang cần đúng 2 cái; muốn dùng thì ghi "đèn cầu thang" trong yêu cầu.':t==='switch'?'công tắc dư – mỗi đèn/quạt/động cơ 1 pha chỉ cần 1 công tắc.':
     t==='cb1'||t==='cb2'||t==='cb3'?'aptomat dư – mạch đã đủ aptomat bảo vệ.':
     t==='src1'||t==='src3'?'mạch chỉ dùng 1 nguồn'+(three?' (có tải 3 pha nên dùng nguồn 3 pha).':'.'):
     t==='vprot'||t==='mccbst'?'cần mạch có nguồn 3 pha / tải 3 pha để đấu.':
@@ -3822,10 +3905,10 @@ const BD_REL=(()=>{const V=Object.keys(VFD_MODELS),PL=['pilotG','pilotR','pilotY
     src1:['cb1','cb2','switch','lamp','fan','socket','motor1','contactor','ol',...CT,...PL,'plc','psu','relay24','vprot'],
     cb3:['src3','contactor','ol',...M3,...V,'vprot','mccbst'],mccbst:['src3','vprot','contactor','ol',...M3,...V,'cb2'],
     cb2:['src1','src3','switch','lamp','fan','socket','motor1','contactor',...CT,...PL,'plc','psu'],cb1:['src1','src3','switch','lamp','fan','socket','motor1','contactor','pbno','pbnc'],
-    switch:['src1','cb1','cb2','lamp','fan','socket','motor1','plc',...V],contactor:['cb3','cb2','cb1','ol',...M3,'motor1',...CT,...PL,'plc','relay24'],ol:['contactor',...M3,'motor1','cb3',...PL],
+    switch:['src1','cb1','cb2','lamp','fan','socket','motor1','plc',...V],switch3:['src1','cb1','cb2','lamp','fan','switch3'],contactor:['cb3','cb2','cb1','ol',...M3,'motor1',...CT,...PL,'plc','relay24'],ol:['contactor',...M3,'motor1','cb3',...PL],
     motor:['src3','cb3','mccbst','contactor','ol',...V,'pbno','pbnc','estop',...PL],motor6:['src3','cb3','contactor','ol','timer','pbno','pbnc','estop',...PL],
-    motor1:['src1','cb1','cb2','contactor','ol','pbno','pbnc','switch'],lamp:['src1','cb1','cb2','switch'],fan:['src1','cb1','cb2','switch'],socket:['src1','cb1','cb2'],
-    pbno:['contactor','pbnc','relay','timer','plc','estop',...PL],pbnc:['contactor','pbno','relay','timer','plc','estop',...PL],estop:['contactor','pbno','pbnc','plc',...V],
+    motor1:['src1','cb1','cb2','contactor','ol','pbno','pbnc','switch'],lamp:['src1','cb1','cb2','switch','switch3'],fan:['src1','cb1','cb2','switch','switch3'],socket:['src1','cb1','cb2'],
+    pb2:['contactor','pbno','pbnc','timer','relay'],ls:['contactor','pbno','pbnc','timer','relay'],pbno:['contactor','pbnc','relay','timer','plc','estop',...PL],pbnc:['contactor','pbno','relay','timer','plc','estop',...PL],estop:['contactor','pbno','pbnc','plc',...V],
     timer:['contactor','pbno','pbnc','relay','motor6'],relay:['contactor','pbno','pbnc','timer',...PL],relay24:['plc','psu','contactor'],psu:['plc','relay24','cb2','cb1'],
     vprot:['src3','mccbst','cb3',...PL],pot:[...V],plc:['psu','relay24','pbno','pbnc','estop','switch','contactor','ol',...PL,'cb2','src1','src3',...M3]};
   const TW=['src1p3','sub:cb3w','baw2c','kwh3','barN','barPE','lamp110','socket110','ac220'];TW.forEach(k=>r[k]=TW.filter(x=>x!==k).concat(['cb2','cb1','switch']));
@@ -3867,7 +3950,7 @@ function inferLoads(note,cnt){
   const WN={mot:1,hai:2,ba:3,bon:4,nam:5};
   const num=re=>{const m=s.match(new RegExp('(?:(\\d+|mot|hai|ba|bon|nam)\\s*(?:cai|bong|chiec|con|bo)?\\s*)?(?:'+re+')'));if(!m)return 0;const n=m[1]?(WN[m[1]]||parseInt(m[1],10)||1):1;return Math.max(1,Math.min(6,n));};
   const put=(k,n)=>{if(n>0){c[k]=(c[k]|0)+n;add[k]=n;}};
-  put('lamp',num('den(?! bao)|bong den'));put('fan',num('quat'));put('socket',num('o cam'));
+  put('lamp',num('den(?! bao)|bong den')||(R.two?1:0));put('fan',num('quat'));put('socket',num('o cam'));
   const nm=num('dong co|motor|mo to|bang tai|may nen|may khuay|may cat|may bao');
   if(nm&&/1 pha|mot pha|220 ?v/.test(s)&&!R.yd&&!R.vfd&&!R.rev)put('motor1',nm);
   else if(nm&&!R.yd&&!R.pump)put('motor',nm);
@@ -4064,6 +4147,7 @@ setInterval(()=>{const ms=S.devs.filter(d=>d.t==='kwh3'||d.t==='baw2c');if(!ms.l
   ms.forEach(d=>{const bw=d.t==='baw2c',ok=!bw||(d.mpw&&!d.merr);d.kw=running&&ok?w/1000:0;if(running&&ok)d.kwh=(d.kwh||0)+d.kw/120;const e=kwhEls[d.id];
     if(e){e[0].textContent=(d.kwh||0).toFixed(bw?2:3).padStart(8,'0')+' kWh';e[1].textContent=d.kw.toFixed(2)+' kW';
       if(e[2])e[2].setAttribute('fill',d.kw>0&&(Date.now()/500|0)%2?'#ef4444':'#cbd5e1');}});},500);
+[['Đảo chiều động cơ 3 pha','Hai contactor thuận – nghịch, khóa chéo bằng tiếp điểm 21-22, OFF rồi mới đổi chiều','đảo chiều','Bấm ▶ Chạy thử: ON1 chạy thuận, OFF, ON2 chạy ngược.'],['Động cơ chạy – nghỉ luân phiên','Nhấn ON: chạy 10 giây, nghỉ 5 giây, lặp lại bằng 2 timer','đóng 10s ngắt 5s','Bấm ▶ Chạy thử, chạm ON: động cơ chạy 10 s, nghỉ 5 s rồi lặp lại. OFF để dừng.']].forEach(([title,desc,note,hint])=>{try{const r=autoBuild({motor:1},parseNotes(note));if(!r.err)SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint});}catch(e){}});
 (()=>{const r=autoTW({src1p3:1,ac220:1,lamp110:1,socket110:1});
   SAMPLES.push({title:'🇹🇼 Tủ điện Đài Loan 110/220V',desc:'CB tổng 3P2E 40A → đồng hồ CIC BAW-2C 1P3W → CB 2P 20A máy lạnh 220V + CB 1P 20A sinh hoạt 110V (đèn, ổ cắm)',
     devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:'Tủ điện 110/220V: bấm ▶ Chạy thử, rồi dùng 🩺 VOM đo L1–N, L1–L2.'});})();
@@ -4498,7 +4582,674 @@ CB2.2 - OL2.97
 OL1.98 - SL.13
 OL2.98 - SL.13
 SL.14 - HA.X1
-HA.X2 - CB2.4`,'Bấm ▶ Chạy thử, chạm SS để gạt 1 → 0 → 2. Chạm OL1 khi đang chạy (giả lập quá tải): đèn cảnh báo chớp + còi kêu; chạm SL sang 0 để tắt còi. Mở 🗄 Tủ điện → đóng cánh để vận hành trên cánh tủ.']].forEach(([title,desc,code,h,key])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb1'||d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title,key:key||(/Heat pump/.test(title)?'heatpump':'')});});
+HA.X2 - CB2.4`,'Bấm ▶ Chạy thử, chạm SS để gạt 1 → 0 → 2. Chạm OL1 khi đang chạy (giả lập quá tải): đèn cảnh báo chớp + còi kêu; chạm SL sang 0 để tắt còi. Mở 🗄 Tủ điện → đóng cánh để vận hành trên cánh tủ.'],
+['Chạy nhấp (JOG) + chạy liên tục','Nhấn ON chạy tự giữ qua rơ-le trung gian R1; giữ nút JOG thì chạy, buông tay là dừng (JOG cấp thẳng cuộn K1, không qua mạch tự giữ)',`# Mở máy động cơ có thử nháp (JOG)
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+OL1 = ol
+M1 = motor kw=3 len=15
+R1 = relay
+OFF = off
+ON = on
+JOG = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+# chạy liên tục: ON → R1 tự giữ (9-5) → R1 12-8 cấp K1
+OFF.2 - ON.3
+OFF.2 - R1.9
+ON.4 - R1.13
+R1.5 - R1.13
+R1.14 - CB2.4
+OFF.2 - R1.12
+R1.8 - K1.A1
+# chạy nhấp: JOG cấp thẳng K1
+OFF.2 - JOG.3
+JOG.4 - K1.A1
+K1.A2 - CB2.4`,'Bấm ▶ Chạy thử. Chạm ON: động cơ chạy liên tục, OFF để dừng. Chạm GIỮ nút JOG: chạy khi đang giữ, buông ra là dừng.'],
+['Điều khiển động cơ từ 2 vị trí','Hai bộ nút ON/OFF đặt 2 nơi: ON đấu song song, OFF đấu nối tiếp',`# Mở máy động cơ ở hai vị trí
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+OL1 = ol
+M1 = motor kw=3 len=15
+OFF1 = off
+OFF2 = off
+ON1 = on
+ON2 = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF1.1
+OFF1.2 - OFF2.1
+OFF2.2 - ON1.3
+OFF2.2 - ON2.3
+OFF2.2 - K1.13
+ON1.4 - K1.A1
+ON2.4 - K1.A1
+K1.14 - K1.A1
+K1.A2 - CB2.4`,'Bấm ▶ Chạy thử. ON1 hoặc ON2 đều mở máy được; OFF1 hoặc OFF2 đều dừng được.'],
+['Giới hạn hành trình – tự đảo chiều','Bàn máy chạy thuận, chạm công tắc hành trình LS1 thì tự dừng và chạy ngược; chạm LS2 thì chạy thuận lại',`# Giới hạn hành trình tự động
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+M1 = motor kw=3 len=15
+OFF = off
+ONT = on
+ONN = on
+LS1 = hanhtrinh
+LS2 = hanhtrinh
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+CB1.2,4,6 - K2.5,3,1
+K1.2,4,6 - OL1.1,3,5
+K2.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+# thuận: ONT (hoặc LS2 chạm) → LS1 NC → khóa chéo K2 → K1
+OFF.2 - ONT.3
+OFF.2 - K1.13
+OFF.2 - LS2.3
+ONT.4 - LS1.1
+K1.14 - LS1.1
+LS2.4 - LS1.1
+LS1.2 - K2.21
+K2.22 - K1.A1
+# ngược: ONN (hoặc LS1 chạm) → LS2 NC → khóa chéo K1 → K2
+OFF.2 - ONN.3
+OFF.2 - K2.13
+OFF.2 - LS1.3
+ONN.4 - LS2.1
+K2.14 - LS2.1
+LS1.4 - LS2.1
+LS2.2 - K1.21
+K1.22 - K2.A1
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ONT cho chạy thuận. Chạm GIỮ LS1 một chút (giả lập bàn máy chạm cuối hành trình): K1 nhả, K2 đóng – chạy ngược. Chạm giữ LS2 thì chạy thuận lại. OFF để dừng.'],
+['Hãm ngược khi dừng','Nhấn STOP: cắt K1, đóng K2 đảo 2 pha để hãm trong 2 giây rồi tự cắt (timer)',`# Hãm ngược động cơ 3 pha
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+T1 = timer sec=2
+M1 = motor kw=3 len=15
+STOP = nutkep
+ON = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+CB1.2,4,6 - K2.5,3,1
+K1.2,4,6 - OL1.1,3,5
+K2.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+# chạy: STOP (NC 1-2) → ON → khóa chéo K2 → K1
+OL1.96 - STOP.1
+STOP.2 - ON.3
+STOP.2 - K1.13
+ON.4 - K2.21
+K1.14 - K2.21
+K2.22 - K1.A1
+# hãm: STOP (NO 3-4) → timer NC 1-4 → khóa chéo K1 → K2, K2 tự giữ, T1 đếm 2 s rồi cắt
+OL1.96 - STOP.3
+OL1.96 - K2.13
+STOP.4 - T1.1
+K2.14 - T1.1
+T1.4 - K1.21
+K1.22 - K2.A1
+K2.A1 - T1.2
+T1.7 - CB2.4
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON cho động cơ chạy. Chạm STOP: K1 nhả, K2 đóng đảo pha để hãm, sau 2 giây T1 cắt K2. Trên mô phỏng, lúc hãm động cơ hiện quay ngược trong 2 giây.'],
+['Mở máy 2 động cơ theo thứ tự','Nhấn ON: động cơ 1 chạy trước, sau 5 giây timer đóng động cơ 2; OFF dừng cả hai',`# Mở máy động cơ theo thứ tự
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+OL2 = ol
+T1 = timer sec=5
+M1 = motor kw=3 len=15
+M2 = motor kw=3 len=15
+OFF = off
+ON = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+CB1.2,4,6 - K2.1,3,5
+K2.2,4,6 - OL2.1,3,5
+OL2.2,4,6 - M2.U,V,W
+NGUON.PE - M2.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OL2.95
+OL2.96 - OFF.1
+OFF.2 - ON.3
+OFF.2 - K1.13
+ON.4 - K1.A1
+K1.14 - K1.A1
+# K1 chạy → T1 đếm → 1-3 đóng cấp K2
+K1.A1 - T1.2
+K1.A1 - T1.1
+T1.3 - K2.A1
+T1.7 - CB2.4
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: M1 chạy ngay, 5 giây sau M2 chạy. OFF dừng cả hai. Chạm T1 khi chưa chạy để đổi thời gian.'],
+['Động cơ dự phòng tự vào khi động cơ chính sự cố','Động cơ chính M1 quá tải (OL1 nhảy) thì tiếp điểm 97-98 tự đóng động cơ dự phòng M2',`# Tự động đóng động cơ dự phòng khi động cơ chính bị sự cố
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+OL2 = ol
+R1 = relay
+M1 = motor kw=3 len=15
+M2 = motor kw=3 len=15
+OFF = off
+ON = on
+H1 = denbaoxanh
+H2 = denbaovang
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+CB1.2,4,6 - K2.1,3,5
+K2.2,4,6 - OL2.1,3,5
+OL2.2,4,6 - M2.U,V,W
+NGUON.PE - M2.PE
+NGUON.L1,N - CB2.1,3
+# R1 nhớ lệnh chạy: ON → R1 tự giữ qua 9-5
+CB2.2 - OFF.1
+OFF.2 - ON.3
+OFF.2 - R1.9
+ON.4 - R1.13
+R1.5 - R1.13
+R1.14 - CB2.4
+# R1 12-8 cấp lệnh chạy: OL1 bình thường (95-96) → K1; OL1 nhảy (97-98) → K2
+OFF.2 - R1.12
+R1.8 - OL1.95
+R1.8 - OL1.97
+OL1.96 - K1.A1
+OL1.98 - OL2.95
+OL2.96 - K2.A1
+K1.A2 - CB2.4
+K2.A2 - CB2.4
+H1.X1 - K1.A1
+H2.X1 - K2.A1
+H1.X2 - CB2.4
+H2.X2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: M1 chạy (đèn xanh). Chạm OL1 để giả lập quá tải: K1 nhả, K2 đóng – M2 dự phòng chạy thay (đèn vàng). OFF để dừng.'],
+['Đảo chiều dùng nút nhấn kép (đổi chiều trực tiếp)','Nhấn nút chiều ngược là tự cắt chiều thuận rồi đóng chiều ngược, không cần nhấn OFF trước; khóa chéo 2 lớp (nút + tiếp điểm)',`# Đảo chiều quay động cơ dùng nút nhấn kép
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+M1 = motor kw=3 len=15
+OFF = off
+SF = nutkep
+SR = nutkep
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+CB1.2,4,6 - K2.5,3,1
+K1.2,4,6 - OL1.1,3,5
+K2.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+# thuận: SF (NO 3-4) → SR (NC 1-2) → khóa chéo K2 → K1
+OFF.2 - SF.3
+OFF.2 - K1.13
+SF.4 - SR.1
+K1.14 - SR.1
+SR.2 - K2.21
+K2.22 - K1.A1
+# ngược: SR (NO 3-4) → SF (NC 1-2) → khóa chéo K1 → K2
+OFF.2 - SR.3
+OFF.2 - K2.13
+SR.4 - SF.1
+K2.14 - SF.1
+SF.2 - K1.21
+K1.22 - K2.A1
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử. Chạm SF: chạy thuận. Đang chạy thuận chạm GIỮ SR một chút: K1 nhả, K2 đóng – đổi sang chạy ngược ngay, không cần OFF. OFF để dừng.'],
+['Đảo chiều + giới hạn hành trình đơn','Chạy thuận tới khi chạm LS_F thì dừng; chạy ngược tới khi chạm LS_R thì dừng (cửa cuốn, cổng trượt, bàn máy)',`# Đảo chiều quay động cơ và giới hạn hành trình đơn
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+M1 = motor kw=3 len=15
+OFF = off
+ONF = on
+ONR = on
+LSF = hanhtrinh
+LSR = hanhtrinh
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - K1.1,3,5
+CB1.2,4,6 - K2.5,3,1
+K1.2,4,6 - OL1.1,3,5
+K2.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+# thuận: ONF → LSF (NC 1-2) → khóa chéo K2 → K1
+OFF.2 - ONF.3
+OFF.2 - K1.13
+ONF.4 - LSF.1
+K1.14 - LSF.1
+LSF.2 - K2.21
+K2.22 - K1.A1
+# ngược: ONR → LSR (NC 1-2) → khóa chéo K1 → K2
+OFF.2 - ONR.3
+OFF.2 - K2.13
+ONR.4 - LSR.1
+K2.14 - LSR.1
+LSR.2 - K1.21
+K1.22 - K2.A1
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử. Chạm ONF: chạy thuận; chạm LSF (giả lập chạm cuối hành trình): dừng. Chạm ONR: chạy ngược; chạm LSR: dừng.'],
+['Khởi động mềm (Soft starter)','Nhấn ON: rơ-le R1 tự giữ cấp lệnh RUN cho bộ khởi động mềm, động cơ tăng tốc êm; đèn xanh sáng khi đang chạy',`# Khởi động mềm – Soft starter
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+KM1 = khoidongmem
+OL1 = ol
+R1 = relay
+M1 = motor kw=7.5 len=20
+OFF = off
+ON = on
+H1 = denbaoxanh
+NGUON.L1,L2,L3 - CB1.1,3,5
+CB1.2,4,6 - KM1.1,3,5
+KM1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+NGUON.L1,N - CB2.1,3
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+OFF.2 - ON.3
+OFF.2 - R1.9
+ON.4 - R1.13
+R1.5 - R1.13
+R1.14 - CB2.4
+# R1 12-8 cấp lệnh RUN cho khởi động mềm
+OFF.2 - R1.12
+R1.8 - KM1.A1
+KM1.A2 - CB2.4
+# đèn báo đang chạy qua tiếp điểm 13-14 của khởi động mềm
+OFF.2 - KM1.13
+KM1.14 - H1.X1
+H1.X2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: khởi động mềm nhận lệnh RUN, động cơ chạy, đèn xanh sáng. OFF để dừng. Mô phỏng chưa thể hiện giai đoạn tăng áp dần.'],
+['Mở máy qua cuộn kháng','Khởi động giảm dòng qua cuộn kháng nối tiếp stato; sau 3 giây timer đóng contactor nối trực tiếp',`# Mở máy động cơ lồng sóc qua cuộn kháng
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+LK = cuonkhang
+OL1 = ol
+T1 = timer sec=3
+M1 = motor kw=7.5 len=20
+OFF = off
+ON = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+NGUON.L1,N - CB2.1,3
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - LK.1,3,5
+LK.2,4,6 - OL1.1,3,5
+CB1.2,4,6 - K2.1,3,5
+K2.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+OFF.2 - ON.3
+OFF.2 - K1.13
+ON.4 - K1.A1
+K1.14 - K1.A1
+# K1 chạy qua cuộn kháng → T1 đếm 3 s → K2 nối trực tiếp
+K1.A1 - T1.2
+K1.A1 - T1.1
+T1.3 - K2.A1
+T1.7 - CB2.4
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: K1 đóng, động cơ khởi động qua cuộn kháng LK; 3 giây sau K2 đóng nối thẳng lưới. Mô phỏng chưa thể hiện điện áp giảm lúc khởi động.'],
+['Hãm động năng khi dừng','Nhấn STOP: cắt nguồn xoay chiều, đóng contactor hãm đưa điện một chiều vào 2 đầu dây stato trong 3 giây',`# Hãm động năng động cơ 3 pha
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+K1 = contactor
+K2 = contactor
+OL1 = ol
+T1 = timer sec=3
+HB = bohamdc
+M1 = motor kw=3 len=15
+STOP = nutkep
+ON = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+NGUON.L1,N - CB2.1,3
+CB1.2,4,6 - K1.1,3,5
+K1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+# bộ hãm: 220V vào L-N, ra + − qua K2 vào U, V
+CB2.2 - HB.L
+CB2.4 - HB.N
+HB.DP - K2.1
+HB.DN - K2.3
+K2.2 - M1.U
+K2.4 - M1.V
+CB2.2 - OL1.95
+OL1.96 - STOP.1
+STOP.2 - ON.3
+STOP.2 - K1.13
+ON.4 - K2.21
+K1.14 - K2.21
+K2.22 - K1.A1
+# hãm: STOP (NO 3-4) → T1 NC 1-4 → khóa chéo K1 → K2 tự giữ; T1 đếm 3 s rồi cắt
+OL1.96 - STOP.3
+OL1.96 - K2.13
+STOP.4 - T1.1
+K2.14 - T1.1
+T1.4 - K1.21
+K1.22 - K2.A1
+K2.A1 - T1.2
+T1.7 - CB2.4
+K1.A2 - CB2.4
+K2.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON cho động cơ chạy. Chạm STOP: K1 nhả, K2 đóng đưa điện DC từ bộ hãm HB vào U-V, 3 giây sau T1 cắt K2. Mô phỏng hiện động cơ dừng ngay, chưa thể hiện tốc độ giảm dần.'],
+['Sao – tam giác có hãm động năng','Khởi động Y → Δ bằng timer; nhấn STOP thì cắt nguồn và hãm bằng điện một chiều trong 3 giây',`# Khởi động sao – tam giác hãm động năng
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+KM = contactor
+KY = contactor
+KD = contactor
+KB = contactor
+OL1 = ol
+T1 = timer sec=5
+T2 = timer sec=3
+HB = bohamdc
+M1 = motor6 kw=15 len=20
+STOP = nutkep
+ON = on
+NGUON.L1,L2,L3 - CB1.1,3,5
+NGUON.L1,N - CB2.1,3
+CB1.2,4,6 - KM.1,3,5
+KM.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U1,V1,W1
+OL1.2,4,6 - KD.1,3,5
+KD.2,4,6 - M1.W2,U2,V2
+M1.W2,U2,V2 - KY.1,3,5
+KY.2 - KY.4
+KY.4 - KY.6
+NGUON.PE - M1.PE
+CB2.2 - HB.L
+CB2.4 - HB.N
+HB.DP - KB.1
+HB.DN - KB.3
+KB.2 - M1.U1
+KB.4 - M1.V1
+CB2.2 - OL1.95
+# chạy: STOP NC → khóa KB → ON → KM tự giữ
+OL1.96 - STOP.1
+STOP.2 - KB.21
+KB.22 - ON.3
+KB.22 - KM.13
+ON.4 - KM.A1
+KM.14 - KM.A1
+# T1: sao trước (NC 1-4), hết giờ sang tam giác (NO 1-3), khóa chéo KY/KD
+KM.A1 - T1.2
+KM.A1 - T1.1
+T1.4 - KD.21
+KD.22 - KY.A1
+T1.3 - KY.21
+KY.22 - KD.A1
+# hãm: STOP NO → T2 NC → khóa KM → KB tự giữ, T2 đếm 3 s rồi cắt
+OL1.96 - STOP.3
+OL1.96 - KB.13
+STOP.4 - T2.1
+KB.14 - T2.1
+T2.4 - KM.21
+KM.22 - KB.A1
+KB.A1 - T2.2
+T1.7 - CB2.4
+T2.7 - CB2.4
+KM.A2 - CB2.4
+KY.A2 - CB2.4
+KD.A2 - CB2.4
+KB.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: chạy SAO, 5 giây sau chuyển TAM GIÁC. Chạm STOP: KM nhả, KB đóng đưa DC vào U1-V1 để hãm, 3 giây sau tự cắt.'],
+['Động cơ 2 cấp tốc độ (Dahlander Δ/YY)','Nút THẤP: cấp nguồn 1U-1V-1W (tam giác); nút CAO: cấp 2U-2V-2W và nối tắt 1U-1V-1W (sao kép); đổi tốc độ trực tiếp bằng nút kép',`# Mở máy động cơ hai cấp tốc độ
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+KL = contactor
+KH = contactor
+KY = contactor
+OL1 = ol
+M1 = dongco2tocdo kw=5.5 len=15
+OFF = off
+SL = nutkep
+SH = nutkep
+NGUON.L1,L2,L3 - CB1.1,3,5
+NGUON.L1,N - CB2.1,3
+CB1.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - KL.1,3,5
+OL1.2,4,6 - KH.1,3,5
+KL.2,4,6 - M1.U1,V1,W1
+KH.2,4,6 - M1.U2,V2,W2
+M1.U1,V1,W1 - KY.1,3,5
+KY.2 - KY.4
+KY.4 - KY.6
+NGUON.PE - M1.PE
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+# thấp: SL (NO) → SH (NC) → khóa KH, KY → KL
+OFF.2 - SL.3
+OFF.2 - KL.13
+SL.4 - SH.1
+KL.14 - SH.1
+SH.2 - KH.21
+KH.22 - KY.21
+KY.22 - KL.A1
+# cao: SH (NO) → SL (NC) → khóa KL → KH + KY
+OFF.2 - SH.3
+OFF.2 - KH.13
+SH.4 - SL.1
+KH.14 - SL.1
+SL.2 - KL.21
+KL.22 - KH.A1
+KH.A1 - KY.A1
+KL.A2 - CB2.4
+KH.A2 - CB2.4
+KY.A2 - CB2.4`,'Bấm ▶ Chạy thử. Chạm SL: chạy tốc độ THẤP. Chạm giữ SH một chút: chuyển sang tốc độ CAO (KH + KY đóng). OFF để dừng.'],
+['Khởi động động cơ rô to dây quấn','Mở máy với điện trở phụ trong mạch rô to, 2 timer lần lượt cắt từng cấp điện trở rồi nối tắt rô to',`# Khởi động động cơ rô to dây quấn
+NGUON = nguon3p
+CB1 = cb3
+CB2 = cb2
+KM = contactor
+K2 = contactor
+K3 = contactor
+OL1 = ol
+T1 = timer sec=3
+T2 = timer sec=3
+R1 = dientro3pha
+R2 = dientro3pha
+M1 = rotodayquan kw=15 len=20
+OFF = off
+ON = on
+H1 = denbaoxanh
+NGUON.L1,L2,L3 - CB1.1,3,5
+NGUON.L1,N - CB2.1,3
+CB1.2,4,6 - KM.1,3,5
+KM.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+# rô to: K-L-M → R1 → R2 → điểm sao
+M1.K,L,M - R1.1,3,5
+R1.2,4,6 - R2.1,3,5
+R2.2 - R2.4
+R2.4 - R2.6
+# K2 cắt cấp R2 (nối tắt sau R1), K3 nối tắt hẳn rô to
+R1.2,4,6 - K2.1,3,5
+K2.2 - K2.4
+K2.4 - K2.6
+M1.K,L,M - K3.1,3,5
+K3.2 - K3.4
+K3.4 - K3.6
+CB2.2 - OL1.95
+OL1.96 - OFF.1
+OFF.2 - ON.3
+OFF.2 - KM.13
+ON.4 - KM.A1
+KM.14 - KM.A1
+KM.A1 - T1.2
+KM.A1 - T1.1
+T1.3 - K2.A1
+K2.A1 - T2.2
+K2.A1 - T2.1
+T2.3 - K3.A1
+K3.A1 - H1.X1
+H1.X2 - CB2.4
+T1.7 - CB2.4
+T2.7 - CB2.4
+KM.A2 - CB2.4
+K2.A2 - CB2.4
+K3.A2 - CB2.4`,'Bấm ▶ Chạy thử, chạm ON: động cơ khởi động với toàn bộ điện trở rô to. Sau 3 giây K2 cắt một cấp, 3 giây nữa K3 nối tắt rô to – chạy định mức, đèn xanh sáng.'],
+['Động cơ một chiều: khởi động – đảo chiều – hãm','Khởi động qua điện trở mở máy (timer cắt), đảo chiều bằng cách đổi cực phần ứng, nhấn giữ STOP để hãm động năng qua điện trở',`# Khởi động – đảo chiều và hãm động cơ một chiều
+NGUON = nguon1p
+CB2 = cb2
+CL = chinhluu
+KF = contactor
+KR = contactor
+K1 = contactor
+KB = contactor
+T1 = timer sec=3
+RM = dientrocongsuat
+RB = dientrocongsuat
+MD = dongcodc
+STOP = nutkep
+ONF = on
+ONR = on
+NGUON.L,N - CB2.1,3
+CB2.2 - CL.L
+CB2.4 - CL.N
+# kích từ độc lập
+CL.DP - MD.F1
+CL.DN - MD.F2
+# phần ứng: + → RM → KF/KR đổi cực → −
+CL.DP - RM.1
+RM.2 - KF.1
+RM.2 - KR.1
+KF.2 - MD.A1
+KF.4 - MD.A2
+KR.2 - MD.A2
+KR.4 - MD.A1
+CL.DN - KF.3
+CL.DN - KR.3
+# K1 nối tắt điện trở mở máy
+CL.DP - K1.1
+K1.2 - RM.2
+# hãm động năng: KB nối RB song song phần ứng
+MD.A1 - KB.1
+KB.2 - RB.1
+RB.2 - MD.A2
+# điều khiển
+CB2.2 - STOP.1
+STOP.2 - KB.21
+KB.22 - ONF.3
+KB.22 - KF.13
+ONF.4 - KR.21
+KF.14 - KR.21
+KR.22 - KF.A1
+KB.22 - ONR.3
+KB.22 - KR.13
+ONR.4 - KF.21
+KR.14 - KF.21
+KF.22 - KR.A1
+# T1 đấu song song phần ứng: có điện phần ứng thì đếm 3 s rồi đóng K1
+MD.A1 - T1.2
+MD.A2 - T1.7
+KB.22 - T1.1
+T1.3 - K1.A1
+# hãm: giữ STOP (NO 3-4) → KB
+CB2.2 - STOP.3
+STOP.4 - KB.A1
+KF.A2 - CB2.4
+KR.A2 - CB2.4
+K1.A2 - CB2.4
+KB.A2 - CB2.4`,'Bấm ▶ Chạy thử. Chạm ONF: chạy thuận qua điện trở RM, 3 giây sau K1 nối tắt RM. Chạm GIỮ STOP: KF nhả, KB đóng điện trở hãm RB. Chạm ONR: chạy nghịch. Mô phỏng chưa thể hiện chiều quay của động cơ một chiều.'],
+['Tự động chuyển nguồn (ATS) lưới – dự phòng','Mất nguồn chính thì sau 3 giây tự đóng nguồn dự phòng; có lưới lại thì tự trả về lưới (ưu tiên lưới)',`# Tự động chuyển nguồn khi nguồn chính mất điện
+NGUON = nguon3p
+CBL = cb3
+CBG = cb3
+KL = contactor
+KG = contactor
+RL = relay
+T1 = timer sec=3
+OL1 = ol
+M1 = motor kw=3 len=15
+HL = denbaoxanh
+HG = denbaovang
+NGUON.L1,L2,L3 - CBL.1,3,5
+NGUON.L1,L2,L3 - CBG.1,3,5
+CBL.2,4,6 - KL.1,3,5
+CBG.2,4,6 - KG.1,3,5
+KL.2,4,6 - OL1.1,3,5
+KG.2,4,6 - OL1.1,3,5
+OL1.2,4,6 - M1.U,V,W
+NGUON.PE - M1.PE
+# RL giám sát lưới
+CBL.2 - RL.13
+RL.14 - NGUON.N
+# KL: có lưới và KG đã nhả thì đóng
+CBL.2 - KG.21
+KG.22 - KL.A1
+KL.A2 - OL1.95
+OL1.96 - NGUON.N
+HL.X1 - KL.A1
+HL.X2 - NGUON.N
+# KG: mất lưới (RL nhả, 12-4 đóng) + KL đã nhả → T1 đếm 3 s → đóng dự phòng
+CBG.2 - RL.12
+RL.4 - KL.21
+KL.22 - T1.2
+KL.22 - T1.1
+T1.7 - NGUON.N
+T1.3 - KG.A1
+KG.A2 - OL1.95
+HG.X1 - KG.A1
+HG.X2 - NGUON.N`,'Bấm ▶ Chạy thử: tải chạy bằng lưới (KL, đèn xanh). Chạm CBL để cắt (giả lập mất lưới): 3 giây sau KG đóng nguồn dự phòng (đèn vàng). Chạm CBL đóng lại: tự trả về lưới. Trong mô phỏng, CBG lấy chung từ khối nguồn để đóng vai máy phát.']].forEach(([title,desc,code,h,key])=>{const r=parseCircuit(code);ioLayout(r.devs);r.devs.forEach(d=>{if(d.t==='cb1'||d.t==='cb2'||d.t==='cb3')d.on=true;});SAMPLES.push({title,desc,devs:r.devs,wires:r.wires.map(w=>({a:w.a,b:w.b})),hint:h,meta:r.title,key:key||(/Heat pump/.test(title)?'heatpump':'')});});
 /* ================= TỦ ĐIỆN: kích thước thật theo hãng, bố trí ray DIN · máng cáp · hàng kẹp, đề xuất vỏ tủ ================= */
 /* w rộng × h cao × dp sâu (mm). m = cách lắp: din (ray DIN 35 mm), plate (bắt vít lên tấm đế), door (khoét lỗ trên cánh tủ),
    out (ở ngoài tủ – ra dây qua hàng kẹp X1), src (cáp nguồn vào thẳng CB tổng). ref = mã hàng lấy kích thước. */
@@ -4508,6 +5259,9 @@ const DIM={
   cb1:MCB_(1),cb2:MCB_(2),cb3:MCB_(3),
   mccbst:{w:75,h:130,dp:60,m:'plate',ref:'MCCB 3P 100AF LS ABN103c + shunt trip'},
   vprot:{w:71,h:85,dp:70,m:'din',ref:'Mikro MX210'},
+  softst:{w:45,h:140,dp:114,m:'din',ref:'ABB PSR 3–25 A (khởi động mềm)'},
+  reactor:{w:152,h:146,dp:120,m:'plate',ref:'Cuộn kháng 3 pha 7,5 kW · 21,9 A · 3,35 mH (152×120×146 mm)'},rst3:{m:'out'},res:{m:'out'},
+  dcbrake:{w:45,h:90,dp:115,m:'din',ref:'Mô-đun hãm DC cho động cơ (kích thước tham khảo)'},rect:{w:60,h:60,dp:35,m:'plate',ref:'Cầu chỉnh lưu 35 A 1000 V kiểu KBPC3510 + tản nhiệt (tham khảo)'},
   contactor:{w:45,h:77,dp:86,m:'din',ref:'Schneider TeSys D LC1D09'},
   ol:{w:45,h:66,dp:70,m:'din',ref:'Schneider LRD (cắm dưới contactor hoặc đế LAD7B106)'},
   relay:{w:22,h:73,dp:66,m:'din',ref:'Omron MY2N + đế PYF08A-N'},
@@ -4517,8 +5271,8 @@ const DIM={
   barPE:{w:67.5,h:35,dp:15,m:'din',ref:'Thanh tiếp địa 4 lỗ 7×10, vít M5, đế nhựa xanh lá (kiểu VIOX)'},
   baw2c:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'巧力 CIC BAW-2C · lỗ dây Φ9'},
   kwh3:{w:95,h:139,dp:48.5,m:'plate',win:1,ref:'Đồng hồ 1P3W điện tử (tham khảo cỡ BAW)'},
-  pbno:PB22('Nút nhấn Schneider XB7 Ø22'),pbnc:PB22('Nút nhấn Schneider XB7 Ø22'),
-  switch:PB22('Công tắc xoay XB7 Ø22'),pot:PB22('Chiết áp 10 kΩ lỗ Ø22'),
+  pb2:PB22('Nút nhấn kép 1NO+1NC Schneider XB5 Ø22'),ls:{m:'out'},pbno:PB22('Nút nhấn Schneider XB7 Ø22'),pbnc:PB22('Nút nhấn Schneider XB7 Ø22'),
+  switch:PB22('Công tắc xoay XB7 Ø22'),switch3:PB22('Công tắc 3 cực (2 vị trí, 1 tiếp điểm chuyển đổi) Ø22'),pot:PB22('Chiết áp 10 kΩ lỗ Ø22'),
   estop:PB22('Nút dừng khẩn nấm Ø40 XB7',{w:40,h:40,dp:60}),
   pilotG:PB22('Đèn báo LED Ø22 XB7',{dp:45}),pilotR:PB22('Đèn báo LED Ø22 XB7',{dp:45}),pilotY:PB22('Đèn báo LED Ø22 XB7',{dp:45}),
   sel2:PB22('Switch gạt 2 vị trí Schneider XB7ND21 (Hanyoung CR-252)'),sel3:PB22('Switch gạt 3 vị trí Schneider XB7ND33 (Hanyoung CR-253)'),
@@ -4559,7 +5313,7 @@ function dimOf(d){
 const dimTxt=t=>{const D=dimOf({t});return D.m==='top'?'nóc tủ · '+D.ref:D.m==='out'?'ngoài tủ · ra dây qua hàng kẹp X1':D.m==='src'?'cáp nguồn vào tủ':D.w+'×'+D.h+'×'+D.dp+' mm · '+({din:'ray DIN',plate:'bắt tấm đế',door:'cánh tủ '+(D.hole||'')})[D.m]+' · '+D.ref;};
 /* hàng kẹp Phoenix Contact: UT 2.5 rộng 5.2 · UT 4 rộng 6.2 · UT 10 rộng 10.2 mm; chặn ray E/UK 9.5 mm */
 const TB={s:{w:5.2,ref:'UT 2.5'},m:{w:6.2,ref:'UT 4'},l:{w:10.2,ref:'UT 10'}};
-function tbSize(d){if(d.t==='motor'||d.t==='motor6')return PV(d,'kw')>7.5?'l':'m';return d.t==='ac220'?'m':'s';}
+function tbSize(d){if(isM3(d))return PV(d,'kw')>7.5?'l':'m';return d.t==='ac220'?'m':'s';}
 /* vỏ tủ sắt sơn tĩnh điện thông dụng: cao × rộng × sâu (mm). Tấm đế ≈ (cao − 50) × (rộng − 50). */
 const ENCL=[[300,200,150],[300,250,150],[400,300,150],[400,300,200],[500,400,200],[600,400,200],[600,500,200],[600,500,250],[700,500,250],
   [800,600,250],[800,600,300],[1000,700,300],[1000,800,300],[1200,800,300],[1200,800,400],[1600,800,400],[1800,800,500],[2000,800,600],[2000,1000,600]];
@@ -4829,9 +5583,9 @@ function doorFace(L,o){o=o||{};const W=L.E[1],H=L.E[0],u='d'+(doorUid++);let s='
     const lamp=(on,cOn,cOff,bl)=>(on?`<circle cx="${x}" cy="${y}" r="20" fill="${cOn}" opacity=".55" filter="url(#${u}h)"${bl?' class="blink"':''}/>`:'')+ring(15)+`<circle cx="${x}" cy="${y}" r="11" fill="${on?cOn:cOff}" stroke="#0f172a"${on&&bl?' class="blink"':''}/>`+`<ellipse cx="${x-3}" cy="${y-4}" rx="4" ry="2.5" fill="#fff" opacity="${on?.8:.35}"/>`;
     if(d.t==='pilotG')g=lamp(S0.on,'#4ade80','#14532d');else if(d.t==='pilotR')g=lamp(S0.on,'#f87171','#7f1d1d');else if(d.t==='pilotY')g=lamp(S0.on,'#fde047','#713f12');
     else if(d.t==='warnL'){g=lamp(S0.on,'#ef4444','#5f1010',1);for(let i=-2;i<=2;i++)g+=`<line x1="${x+i*4}" y1="${y-8}" x2="${x+i*4}" y2="${y+8}" stroke="${S0.on?'#fecaca':'#2a0606'}" stroke-width="1.4"/>`;}
-    else if(d.t==='pbno'||d.t==='pbnc'){const c=d.t==='pbno'?'#16a34a':'#dc2626',pr=S0.pressed;g=ring(15)+`<circle cx="${x}" cy="${y}" r="${pr?9.5:11}" fill="${c}" stroke="#0f172a" stroke-width="${pr?2.5:1}"/>`+(pr?'':`<ellipse cx="${x-3}" cy="${y-4}" rx="4" ry="2.5" fill="#fff" opacity=".4"/>`)+Tx(x,y+3.5,d.t==='pbno'?'I':'O',10,'#fff',' font-weight="900"');}
+    else if(d.t==='pbno'||d.t==='pbnc'||d.t==='pb2'){const c=d.t==='pbno'?'#16a34a':d.t==='pb2'?'#2563eb':'#dc2626',pr=S0.pressed;g=ring(15)+`<circle cx="${x}" cy="${y}" r="${pr?9.5:11}" fill="${c}" stroke="#0f172a" stroke-width="${pr?2.5:1}"/>`+(pr?'':`<ellipse cx="${x-3}" cy="${y-4}" rx="4" ry="2.5" fill="#fff" opacity=".4"/>`)+Tx(x,y+3.5,d.t==='pbno'?'I':'O',10,'#fff',' font-weight="900"');}
     else if(d.t==='estop'){const lt=S0.latched;g=`<circle cx="${x}" cy="${y}" r="27" fill="#facc15" stroke="#a16207" stroke-width="1.5"/>`+Tx(x,y-19,'EMERGENCY',5,'#111',' font-weight="900"')+Tx(x,y+24,'STOP',5.5,'#111',' font-weight="900"')+`<circle cx="${x}" cy="${y}" r="${lt?16:19}" fill="${lt?'#991b1b':'#dc2626'}" stroke="#450a0a" stroke-width="1.5"/><ellipse cx="${x-5}" cy="${y-6}" rx="7" ry="4" fill="#fff" opacity="${lt?.15:.4}"/>`;}
-    else if(d.t==='sel2'||d.t==='sel3'||d.t==='switch'){const P=d.t==='switch'?[[0,-45,'0'],[1,45,'1']]:SEL_POS(d),v=d.t==='switch'?(S0.sw?1:0):S0.pos,cur=P.find(q=>q[0]===v)||P[0];
+    else if(d.t==='sel2'||d.t==='sel3'||d.t==='switch'||d.t==='switch3'){const P=(d.t==='switch'||d.t==='switch3')?[[0,-45,d.t==='switch3'?'1':'0'],[1,45,d.t==='switch3'?'2':'1']]:SEL_POS(d),v=(d.t==='switch'||d.t==='switch3')?(S0.sw?1:0):S0.pos,cur=P.find(q=>q[0]===v)||P[0];
       g=ring(16)+`<circle cx="${x}" cy="${y}" r="12" fill="#111827"/>`;P.forEach(([vv,a,lb])=>{const r=a*Math.PI/180;g+=Tx(x+21*Math.sin(r),y-21*Math.cos(r)+2.5,lb,7,vv===v?'#b45309':'#334155',' font-weight="900"');});
       g+=`<g transform="rotate(${cur[1]} ${x} ${y})"><rect x="${x-3.5}" y="${y-15}" width="7" height="24" rx="3" fill="#1f2937" stroke="#000"/><rect x="${x-1.5}" y="${y-14}" width="3" height="7" fill="#f8fafc"/></g>`;}
     else if(d.t==='pot'){const a=-135+2.7*S0.pot;g=ring(15)+`<circle cx="${x}" cy="${y}" r="11" fill="#111827"/><g transform="rotate(${a} ${x} ${y})"><rect x="${x-1.2}" y="${y-11}" width="2.4" height="8" fill="#fff"/></g>`+Tx(x,y+24,S0.pot+'%',6,'#334155');}
@@ -5063,7 +5817,7 @@ function lessonBar(){let b=document.getElementById('lsBar');const Ls=LESSONS.fin
   b.querySelector('#lsGo').onclick=lessonGrade;b.querySelector('#lsHint').onclick=()=>{const m=showModal('<div class="ic">💡</div><h2>Đề bài & gợi ý</h2><p style="text-align:left">'+esc(Ls.d)+'</p><div class="calcbox">'+esc(Ls.hint)+'</div><div class="row"><button class="btn" id="hOk">Đóng</button></div>');m.querySelector('#hOk').onclick=closeModal;};}
 /* ================= 👷 ANH SÁU ĐIỆN: thợ trong xưởng 3D – ngồi bàn, bấm chạy thử thì chạy lại tủ giảng nguyên lý + đố vui theo đúng mạch đang có ================= */
 function npcScript(){const has=t=>S.devs.some(d=>d.t===t),cnt=t=>S.devs.filter(d=>d.t===t).length,isVfd=S.devs.some(d=>TYPES[d.t].ctl==='vfd'),isPlc=S.devs.some(d=>TYPES[d.t].ctl==='plc');
-  const mot=S.devs.find(d=>d.t==='motor'||d.t==='motor6'),kw=mot?PV(mot,'kw')||1:0,In=mot?(CABAMP[mot.id]||kw*2):0,inS=In?In.toFixed(1):'';
+  const mot=S.devs.find(d=>isM3(d)),kw=mot?PV(mot,'kw')||1:0,In=mot?(CABAMP[mot.id]||kw*2):0,inS=In?In.toFixed(1):'';
   const L=[],Q=[],q=(t,o,why)=>Q.push({q:t,o,why});/* o[0] luôn là đáp án đúng, lúc hỏi sẽ xáo */
   if(has('contactor'))L.push('Con contactor này á, cuộn hút A1–A2 có điện là nó "cạch" một cái, kéo 3 tiếp điểm chính 1-2, 3-4, 5-6 đóng lại cho tải ăn điện. Nghe "cạch" mà motor hổng quay thì coi lại mạch động lực, đừng đổ thừa contactor nghen.');
   if(has('contactor')&&has('pbno')){L.push('Nhấn ON rồi nhả mà motor vẫn chạy là nhờ tiếp điểm 13-14 mắc song song với nút ON, kêu là mạch tự giữ. Hổng có nó thì em đứng đè nút tới chiều, mỏi tay ráng chịu.');
@@ -5093,6 +5847,17 @@ function npcScript(){const has=t=>S.devs.some(d=>d.t===t),cnt=t=>S.devs.filter(d
   L.push('Dây tiếp địa xanh sọc vàng là để lỡ rò điện thì nó chạy xuống đất chứ đừng chạy qua người. Tiết kiệm sợi dây đó là tiết kiệm sai chỗ rồi.');
   q('Dây tiếp địa PE màu gì?',['Xanh lá sọc vàng','Đỏ','Đen'],'Xanh lá sọc vàng là tiếp địa, cả thế giới xài chung quy ước này. Đừng lấy màu đó đi dây pha nha.');
   L.push('Dây trong tủ đi máng cho gọn, đầu dây bấm cốt, đánh số đàng hoàng. Tủ mà dây như tô hủ tiếu thì mai mốt sửa khóc tiếng Miên.');
+  if(has('switch3')){L.push('Mạch đèn cầu thang hả? Hai cái công tắc ba cực, hai sợi dây liên lạc nối 1 qua 1, 2 qua 2. Đứng dưới bật, lên lầu tắt, khỏi mò mẫm té cầu thang. Hồi đó anh đấu cho nguyên cái chung cư ba chục tầng, tầng nào cũng bật tắt được… ờ thì nói vậy cho vui chớ hai nơi thôi.');q('Mạch đèn cầu thang 2 nơi dùng công tắc gì?',['2 công tắc 3 cực','2 công tắc thường','1 công tắc + 1 nút nhấn'],'Hai công tắc 3 cực nối với nhau bằng 2 dây liên lạc, gạt cái nào đèn cũng đổi trạng thái.');}
+  if(has('pb2'))L.push('Cái nút nhấn kép này một phát ăn hai: tiếp điểm thường đóng nhả ra trước, thường mở đóng vô sau. Nhờ vậy bấm đảo chiều là nó tự cắt chiều kia rồi mới đóng chiều này, khỏi cần bấm OFF. Anh mà bấm thì nhanh tới mức contactor nó còn chưa kịp biết.');
+  if(has('ls')){L.push('Công tắc hành trình đó, bàn máy chạy tới đụng cái cần là nó cắt điện, khỏi lo tông vô tường. Cửa cuốn, cổng trượt, thang máy toàn nhờ thằng nhỏ này canh. Hồi anh chưa gắn cái này, cái cửa cuốn nó cuốn luôn lên nóc nhà hàng xóm.');q('Công tắc hành trình dùng để làm gì?',['Dừng hoặc đảo chiều khi cơ cấu chạy tới cuối hành trình','Đo tốc độ động cơ','Bảo vệ quá tải'],'Cơ cấu chạm vào thì tiếp điểm NC mở cắt contactor, tiếp điểm NO đóng có thể gọi chiều ngược lại.');}
+  if(has('softst'))L.push('Khởi động mềm nè, nó cho điện áp lên từ từ nên motor đề êm ru, không giật đùng đùng như đóng trực tiếp. Bơm với băng tải khoái cái này lắm. Anh thì khỏi cần, anh đề máy bằng… niềm tin.');
+  if(has('reactor'))L.push('Cuộn kháng mắc nối tiếp với motor lúc đề máy, nó ghìm dòng khởi động lại cho lưới đỡ sụt áp. Chạy lên tốc độ rồi thì contactor nối tắt nó đi. Lưới yếu mà đề thẳng motor lớn là cả xóm chớp đèn chửi anh đó.');
+  if(has('motor2s')){L.push('Motor hai tốc độ Dahlander: cấp điện vô 1U 1V 1W là chạy chậm, đấu tam giác. Muốn chạy nhanh gấp đôi thì cấp vô 2U 2V 2W rồi chập ba đầu 1U 1V 1W lại thành sao kép. Nhớ khóa chéo nghen, hai tốc độ mà đóng một lượt là nổ thiệt chớ hổng phải nổ như anh.');q('Motor Dahlander chạy tốc độ CAO thì đấu sao?',['Cấp nguồn 2U-2V-2W, nối tắt 1U-1V-1W','Cấp nguồn 1U-1V-1W, để hở 2U-2V-2W','Cấp nguồn cả 6 đầu'],'Tốc độ cao là sao kép YY: nguồn vào 2U-2V-2W, ba đầu 1U-1V-1W chập lại.');}
+  if(has('motorwr'))L.push('Motor rô to dây quấn, ba cái vành trượt đưa dây rô to ra ngoài nối với điện trở. Đề máy thì để nguyên điện trở cho mô men mạnh mà dòng nhỏ, rồi cắt dần từng cấp, cuối cùng chập hẳn rô to lại. Máy nghiền, máy cán toàn xài con này. Anh từng đề con cả ngàn ký-lô-oát, cả nhà máy đứng coi vỗ tay.');
+  if(has('dcbrake'))L.push('Hãm động năng là vầy: cắt điện xoay chiều xong bơm điện một chiều vô hai đầu dây stato, từ trường đứng yên nó ghì cái rô to lại, motor đứng khựng liền. Nhưng nhớ có timer cắt điện một chiều ra, để lâu là nướng cuộn dây đó.');
+  if(has('motordc'))L.push('Motor một chiều nè: phần ứng A1 A2, kích từ F1 F2. Đề máy phải qua điện trở, không thôi dòng phần ứng nó vọt lên cháy chổi than. Muốn đảo chiều thì đổi cực phần ứng, đừng đụng tới kích từ. Anh Sáu mà đảo chiều là đảo luôn cả ý kiến của sếp.');
+  if(cnt('cb3')>=2&&has('relay')&&cnt('contactor')>=2)L.push('Tủ ATS chuyển nguồn tự động: mất lưới là rơ-le nhả, chờ vài giây rồi đóng nguồn dự phòng. Có lưới lại thì trả về lưới. Hai contactor phải khóa chéo, lưới với máy phát mà đấu chung là máy phát nó bay qua nhà hàng xóm.');
+  if(has('ol'))L.push('Trên mặt rơ-le nhiệt có nút TEST màu đỏ đó, bấm thử coi: 95-96 nhả ra là contactor phải rớt, motor phải dừng. Bấm mà motor còn chạy tỉnh bơ thì mạch bảo vệ đấu trật rồi, coi lại liền. Xong bấm RESET màu xanh trả nó về.');
   return{L,Q};}
 const NPC_OK=['Trúng phóc! Giỏi cỡ này chỉ thua anh Sáu có… chín bậc thôi à.','Đúng rồi! Hồi đó anh trả lời câu này lúc đang ngủ, mà em thức cũng trả lời được là quý lắm rồi.','Chuẩn không cần chỉnh! Mai anh giới thiệu em qua NASA đấu tủ điện, anh quen hết bên đó.','Ngon! Trả lời vậy là đủ trình xách kìm cho anh Sáu rồi đó nghen.'],NPC_NO=['Trật lất! Trời ơi, anh Sáu nhắm mắt đấu còn đúng hơn em mở mắt trả lời.','Sai bét! Hồi anh ba tuổi anh đã biết câu này rồi… thiệt, hổng nổ đâu.','Hổng phải! Câu này mà sai là con thằn lằn trên tủ nó cũng cười đó em.','Trật! Mà thôi, sai trên máy đỡ hơn sai ngoài công trình, ngoài đó nó nổ thiệt chớ hổng nổ miệng như anh.'];
 const npcSay=t=>{try{if(muted||!window.speechSynthesis)return;speechSynthesis.cancel();const vs=speechSynthesis.getVoices().filter(x=>/^vi/i.test(x.lang)),male=vs.find(x=>/nam ?minh|\bnam\b|\ban\b|male|vi-vn-x-(vid|vif)/i.test(x.name+' '+(x.voiceURI||''))&&!/female|hoai|linh/i.test(x.name)),v=male||vs[0];if(!v)return;const u=new SpeechSynthesisUtterance(t.replace(/[^\p{L}\p{N}\s.,!?%–\-/×=]/gu,' '));u.voice=v;u.lang='vi-VN';u.rate=male?1.15:1.1;u.pitch=male?.8:.35;speechSynthesis.speak(u);}catch(e){}};
@@ -5228,7 +5993,7 @@ async function open3D(box){
   const maxAn=ren.capabilities.getMaxAnisotropy();const cTex=c=>{const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=hi?maxAn:Math.min(4,maxAn);t.generateMipmaps=true;t.minFilter=T.LinearMipmapLinearFilter;return t;};
   const canv=(w,h,fn)=>{const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c;};
   /* ---- bố trí thiết bị ngoài tủ trước để biết chiều dài xưởng ---- */
-  const outs=S.devs.filter(d=>dimOf(d).m==='out'),isMot=d=>{const T0=TYPES[d.t];return(T0.cat==='t3'&&!T0.ctl)||d.t==='motor1';};
+  const outs=S.devs.filter(d=>dimOf(d).m==='out'),isMot=d=>{const T0=TYPES[d.t];return(T0.cat==='t3'&&!T0.ctl)||d.t==='motor1'||d.t==='motordc';};
   const sizeOf=d=>{if(isMot(d)){const f=frameOf(PV(d,'kw')||1),len=f[2]/1000,r=f[1]*.95/1000;const load=d.sub==='comp'||d.sub==='comp1'?0:d.sub==='fanm'?0:r*2.4+.25;return{w:len+load+.35,dz:r*2+.5,f};}
     return{w:d.t==='ac220'?.95:d.t==='fan'?.6:.45,dz:.6};};
   let ox=W+.9;const lay=outs.map((d,i)=>{const s=sizeOf(d),x=ox+s.w/2;ox+=s.w+.6;return{d,s,x,z:D+.75+s.dz/2+(i%2)*.25};});
@@ -5496,6 +6261,7 @@ async function open3D(box){
     if(u.kind==='door'){const d=C.doorA>-.2?doorDevAt(h):null;if(d){doorAct(d);return;}cabOpen=!cabOpen;const b=document.getElementById('cabDoorBtn');if(b)b.textContent=cabOpen?'🚪 Đóng cánh':'🚪 Mở cánh';unlockAudio();sfx('clack');return;}
     const d=dev(u.dev);if(!d)return;const D0=dimOf(d);
     if(TYPES[d.t].ctl==='cb'&&running){d.on=!d.on;d.trip=false;sfx('click');changed();}
+    if(d.t==='ol'){d.trip=!d.trip;sfx('clack');changed();cabMsg(d.trip?'TEST '+tagOf(d)+': giả lập quá tải – 95-96 mở, 97-98 đóng. Chạm lần nữa để RESET.':'Đã RESET rơ-le nhiệt '+tagOf(d)+'.');}
     const m=result&&result.motor&&result.motor[d.id],s=result&&result.state&&result.state[d.id];const f=isMot(d)?frameOf(PV(d,'kw')||1):null;
     tip.innerHTML='<b>'+esc(nameOf(d))+'</b><br>'+esc(f?(PV(d,'kw')||1)+' kW · khung IEC '+f[1]+' (tâm trục '+f[1]+' mm, dài ≈ '+f[2]+' mm, trục Ø'+f[3]+')':D0.m==='top'?'Nóc tủ · '+D0.ref:D0.m==='out'?'Ngoài tủ – cáp ra từ hàng kẹp X1':D0.w+'×'+D0.h+'×'+D0.dp+' mm · '+D0.ref)+
       (d.burned?'<br>🔥 ĐÃ CHÁY – bấm ■ Dừng, sửa đấu dây rồi chạy lại':running?'<br>'+(m?(m.st==='on'?'🟢 Đang chạy'+(m.vfd?' qua biến tần':''):m.st==='burned'?'🔥 Cháy':'⚪ Dừng'):s==='on'?'🟢 Có điện':TYPES[d.t].ctl==='cb'?(d.on?'🟢 ĐÓNG':'🔴 CẮT'):'⚪ Không có điện'):'');
@@ -5636,7 +6402,7 @@ document.getElementById('cabZp').onclick=()=>cabSetZ(cabZ*1.4);document.getEleme
 let LANG='vi';try{LANG=localStorage.getItem('bd_lang')||'vi';}catch(e){}
 const LI=LANG==='en'?0:LANG==='zh'?1:-1;
 const DEVN={src1:['1-phase supply','單相電源'],src3:['3-phase supply','三相電源'],src1p3:['1-phase 3-wire 110/220V supply','單相三線 110/220V 電源'],cb1:['MCB 1P','無熔絲開關 1P'],cb2:['MCB 2P','無熔絲開關 2P'],cb3:['MCB 3P','無熔絲開關 3P'],
-  mccbst:['MCCB 3P with 220V shunt trip + aux contact','MCCB 3P 附 220V 分勵跳脫＋輔助接點'],switch:['Switch','開關'],pbno:['ON button (NO 3-4)','ON 按鈕 (NO 3-4)'],pbnc:['OFF button (NC 1-2)','OFF 按鈕 (NC 1-2)'],estop:['Emergency stop (NC)','緊急停止 (NC)'],
+  mccbst:['MCCB 3P with 220V shunt trip + aux contact','MCCB 3P 附 220V 分勵跳脫＋輔助接點'],switch:['Switch','開關'],switch3:['Two-way (3-terminal) switch','三路開關 (樓梯開關)'],softst:['Soft starter','軟啟動器'],motor2s:['2-speed motor (Dahlander Δ/YY)','雙速馬達 (Dahlander Δ/YY)'],motorwr:['Wound-rotor (slip-ring) motor','繞線式轉子馬達'],motordc:['DC motor (separately excited)','直流馬達 (他激)'],reactor:['3-phase starting reactor','三相啟動電抗器'],rst3:['3-phase starting resistor (rotor)','三相啟動電阻 (轉子)'],res:['Power resistor','功率電阻'],dcbrake:['DC injection brake unit','直流制動單元'],rect:['Bridge rectifier AC → DC','橋式整流器 AC → DC'],pb2:['Push button 1NO+1NC','雙接點按鈕 (1NO+1NC)'],ls:['Limit switch (1NO+1NC)','極限開關 (1NO+1NC)'],pbno:['ON button (NO 3-4)','ON 按鈕 (NO 3-4)'],pbnc:['OFF button (NC 1-2)','OFF 按鈕 (NC 1-2)'],estop:['Emergency stop (NC)','緊急停止 (NC)'],
   contactor:['Contactor 3P (1NO+1NC)','電磁接觸器 3P (1NO+1NC)'],ol:['Thermal overload relay (OL)','積熱電驛 (OL)'],relay:['Control relay MY2','中間繼電器 MY2'],relay24:['Control relay MY2 24VDC','中間繼電器 MY2 24VDC'],timer:['8-pin timer (on-delay)','8 腳計時器 (通電延遲)'],
   pilotG:['Green pilot lamp','綠色指示燈'],pilotR:['Red pilot lamp','紅色指示燈'],pilotY:['Yellow pilot lamp','黃色指示燈'],pilotTR:['Tower light – red tier 220V (cabinet top)','警示燈塔 – 紅色層 220V (箱頂)'],pilotTY:['Tower light – yellow tier 220V (cabinet top)','警示燈塔 – 黃色層 220V (箱頂)'],pilotTG:['Tower light – green tier 220V (cabinet top)','警示燈塔 – 綠色層 220V (箱頂)'],
   warnL:['Flashing warning light + buzzer Ø22 220V','閃光警示燈＋蜂鳴器 Ø22 220V'],sel2:['Selector switch 2-position 0–1 (1NO+1NC) Ø22','選擇開關 2 段 0–1 (1NO+1NC) Ø22'],sel3:['Selector switch 3-position 1–0–2 (2NO) Ø22','選擇開關 3 段 1–0–2 (2NO) Ø22'],
@@ -5685,6 +6451,7 @@ document.getElementById('langBtn').onclick=openLang;
 
 load();buildItems();sizeBoard();applyView();snap();render();dogApply();lessonBar();
 if(!S.devs.length)hint('Bấm 🗄 Tủ điện hoặc 🧩 Lập mạch để dựng mạch, hoặc chọn 📂 Mạch mẫu.');
+if(/[?&]dbg=1/.test(location.search))window.__bd={SAMPLES,loadSample,start,stop,evaluate,get S(){return S},get result(){return result}};
 })();
 </script>
 </body>
